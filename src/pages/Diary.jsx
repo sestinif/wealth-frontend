@@ -13,7 +13,8 @@ export default function Diary() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [asset, setAsset] = useState('BTC');
   const [amountEur, setAmountEur] = useState('');
-  const [priceEur, setPriceEur] = useState('');
+  const [priceEur, setPriceEur] = useState(''); // EUR per VUAA, EUR per BTC (convertito da USD)
+  const [priceUsd, setPriceUsd] = useState(''); // USD solo per BTC
   const [notes, setNotes] = useState('');
   const [useLivePrice, setUseLivePrice] = useState(true);
   const [filterAsset, setFilterAsset] = useState('ALL');
@@ -47,11 +48,18 @@ export default function Diary() {
   }, []);
 
   useEffect(() => {
-    if (useLivePrice && prices[asset]) {
-      setPriceEur(prices[asset]);
+    if (useLivePrice) {
+      if (asset === 'BTC') {
+        setPriceUsd(prices.BTC_USD || '');
+        setPriceEur(prices.BTC || '');
+      } else {
+        setPriceEur(prices[asset] || '');
+        setPriceUsd('');
+      }
     }
   }, [asset, useLivePrice, prices]);
 
+  // Per BTC: quantità = amountEur / priceEur (prezzo BTC in EUR)
   const quantity = amountEur && priceEur ? (parseFloat(amountEur) / parseFloat(priceEur)).toFixed(8) : 0;
 
   const handleSubmit = async (e) => {
@@ -63,7 +71,8 @@ export default function Diary() {
 
     setSubmitting(true);
     try {
-      await api.addPurchase(date, asset, parseFloat(amountEur), parseFloat(priceEur), notes);
+      const usd = asset === 'BTC' ? parseFloat(priceUsd) || 0 : 0;
+      await api.addPurchase(date, asset, parseFloat(amountEur), parseFloat(priceEur), notes, usd);
       const updatedPurchases = await api.getPurchases();
       setPurchases(updatedPurchases);
       setAmountEur('');
@@ -174,28 +183,61 @@ export default function Diary() {
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Prezzo EUR</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={priceEur}
-                    onChange={(e) => setPriceEur(e.target.value)}
-                    placeholder="0.00"
-                    disabled={useLivePrice}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: useLivePrice ? 'rgba(139, 92, 246, 0.05)' : 'rgba(139, 92, 246, 0.05)',
-                      border: '1px solid rgba(139, 92, 246, 0.15)',
-                      borderRadius: '10px',
-                      color: '#FFFFFF',
-                      fontSize: '12px',
-                      outline: 'none',
-                      opacity: useLivePrice ? 0.6 : 1
-                    }}
-                  />
-                </div>
+                {asset === 'BTC' ? (
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Prezzo BTC (USD $)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={priceUsd}
+                      onChange={(e) => {
+                        setPriceUsd(e.target.value);
+                        // Aggiorna anche priceEur se cambia manualmente USD (usa cambio approssimativo)
+                        if (prices.BTC && prices.BTC_USD && parseFloat(e.target.value) > 0) {
+                          const rate = prices.BTC / prices.BTC_USD;
+                          setPriceEur((parseFloat(e.target.value) * rate).toFixed(2));
+                        }
+                      }}
+                      placeholder="es. 85000"
+                      disabled={useLivePrice}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        background: 'rgba(139, 92, 246, 0.05)',
+                        border: '1px solid rgba(139, 92, 246, 0.15)',
+                        borderRadius: '10px',
+                        color: '#FFFFFF',
+                        fontSize: '12px',
+                        outline: 'none',
+                        opacity: useLivePrice ? 0.6 : 1
+                      }}
+                    />
+                    {priceEur && <div style={{ fontSize: '10px', color: '#8B85A8', marginTop: '4px' }}>≈ € {parseFloat(priceEur).toLocaleString('it-IT', { minimumFractionDigits: 0 })}</div>}
+                  </div>
+                ) : (
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Prezzo EUR</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={priceEur}
+                      onChange={(e) => setPriceEur(e.target.value)}
+                      placeholder="0.00"
+                      disabled={useLivePrice}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        background: 'rgba(139, 92, 246, 0.05)',
+                        border: '1px solid rgba(139, 92, 246, 0.15)',
+                        borderRadius: '10px',
+                        color: '#FFFFFF',
+                        fontSize: '12px',
+                        outline: 'none',
+                        opacity: useLivePrice ? 0.6 : 1
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>

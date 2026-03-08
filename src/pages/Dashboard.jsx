@@ -102,9 +102,10 @@ export default function Dashboard() {
             <KPICard label="Valore Totale" value={`€ ${summary.total_value.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#8B5CF6', '#C026D3']} />
             <KPICard label="Profitto/Perdita" value={`${summary.pnl >= 0 ? '+' : ''}€ ${summary.pnl.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={summary.pnl >= 0 ? ['#00E676', '#00C853'] : ['#FF5252', '#D32F2F']} subtext={`${summary.pnl_pct >= 0 ? '+' : ''}${summary.pnl_pct.toFixed(2)}%`} />
             <KPICard label="Investito Totale" value={`€ ${summary.total_invested.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#8B85A8', '#6B63B5']} subtext={`${summary.n_purchases} acquisti`} />
-            <KPICard label="BTC Prezzo" value={`€ ${prices.BTC.toLocaleString('it-IT', { minimumFractionDigits: 0 })}`} color={['#F7931A', '#FB8500']} subtext={`Qty: ${summary.btc_qty.toFixed(4)}`} />
+            <KPICard label="BTC Prezzo" value={`$ ${(prices.BTC_USD || prices.BTC).toLocaleString('en-US', { minimumFractionDigits: 0 })}`} color={['#F7931A', '#FB8500']} subtext={`Qty: ${summary.btc_qty.toFixed(4)}`} />
             <KPICard label="VUAA Prezzo" value={`€ ${prices.VUAA.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#00BCD4', '#0097A7']} subtext={`Qty: ${summary.vuaa_qty.toFixed(2)}`} />
-            <KPICard label="DCA Medio BTC" value={`€ ${summary.btc_avg_price.toLocaleString('it-IT', { minimumFractionDigits: 0 })}`} color={['#9C27B0', '#7B1FA2']} subtext={`vs € ${prices.BTC.toLocaleString('it-IT', { minimumFractionDigits: 0 })}`} />
+            <KPICard label="DCA Medio BTC" value={`$ ${(summary.btc_avg_price_usd || summary.btc_avg_price).toLocaleString('en-US', { minimumFractionDigits: 0 })}`} color={['#9C27B0', '#7B1FA2']} subtext={`vs $ ${(prices.BTC_USD || prices.BTC).toLocaleString('en-US', { minimumFractionDigits: 0 })}`} />
+            <KPICard label="DCA Medio VUAA" value={`€ ${summary.vuaa_avg_price.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#00BCD4', '#0097A7']} subtext={`vs € ${prices.VUAA.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>

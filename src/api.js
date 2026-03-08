@@ -87,14 +87,14 @@ export const api = {
     return handleResponse(response);
   },
 
-  addPurchase: async (date, asset, amountEur, priceEur, notes = '') => {
+  addPurchase: async (date, asset, amountEur, priceEur, notes = '', priceUsd = 0) => {
     const response = await fetch(`${BASE_URL}/purchases`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, notes })
+      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, price_usd: priceUsd, notes })
     });
     return handleResponse(response);
   },
