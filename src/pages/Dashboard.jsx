@@ -29,14 +29,19 @@ export default function Dashboard() {
   }, []);
 
   const generateChartData = () => {
-    if (!data || !data.purchases) return [];
-    
+    if (!data || !data.purchases || data.purchases.length === 0) return [];
+    const purchases = [...data.purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const prices = data.prices;
     const last30Days = [];
     for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      last30Days.push({ date: dateStr, value: Math.random() * 5000 + 10000 });
+      const pastPurchases = purchases.filter(p => p.date <= dateStr);
+      const btcQty = pastPurchases.filter(p => p.asset === 'BTC').reduce((s, p) => s + p.quantity, 0);
+      const vuaaQty = pastPurchases.filter(p => p.asset === 'VUAA').reduce((s, p) => s + p.quantity, 0);
+      const value = btcQty * prices.BTC + vuaaQty * prices.VUAA;
+      last30Days.push({ date: dateStr, value: Math.round(value) });
     }
     return last30Days;
   };

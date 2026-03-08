@@ -67,13 +67,10 @@ export const api = {
     const response = await fetch(`${BASE_URL}/auth/change-password`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: new URLSearchParams({
-        old_password: oldPassword,
-        new_password: newPassword
-      })
+      body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
     });
     return handleResponse(response);
   },
@@ -94,16 +91,10 @@ export const api = {
     const response = await fetch(`${BASE_URL}/purchases`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: new URLSearchParams({
-        date,
-        asset,
-        amount_eur: amountEur,
-        price_eur: priceEur,
-        notes
-      })
+      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, notes })
     });
     return handleResponse(response);
   },
@@ -112,16 +103,10 @@ export const api = {
     const response = await fetch(`${BASE_URL}/purchases/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: new URLSearchParams({
-        date,
-        asset,
-        amount_eur: amountEur,
-        price_eur: priceEur,
-        notes
-      })
+      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, notes })
     });
     return handleResponse(response);
   },
