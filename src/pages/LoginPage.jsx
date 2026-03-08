@@ -26,9 +26,15 @@ export default function LoginPage({ onLogin }) {
   };
 
   const LogoIcon = () => (
-    <svg width="60" height="60" viewBox="0 0 40 40" fill="none" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%)' }}>
-      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="32" fontWeight="700" fill="white" fontFamily="Inter">W</text>
-    </svg>
+    <div style={{
+      width: '64px', height: '64px',
+      background: 'linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%)',
+      borderRadius: '16px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: '2rem', fontWeight: '800', color: '#FFF',
+      boxShadow: '0 12px 32px rgba(139,92,246,0.45)',
+      fontFamily: 'Inter, sans-serif'
+    }}>W</div>
   );
 
   return (

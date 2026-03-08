@@ -5,9 +5,14 @@ export default function Sidebar({ username }) {
   const location = useLocation();
 
   const LogoIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%)', padding: '8px' }}>
-      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="24" fontWeight="700" fill="white" fontFamily="Inter">W</text>
-    </svg>
+    <div style={{
+      width: '40px', height: '40px',
+      background: 'linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%)',
+      borderRadius: '12px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: '1.3rem', fontWeight: '800', color: '#FFF',
+      fontFamily: 'Inter, sans-serif', flexShrink: 0
+    }}>W</div>
   );
 
   const DashboardIcon = () => (
