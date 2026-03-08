@@ -26,11 +26,28 @@ export default function App() {
       try {
         const result = await api.checkSetupRequired();
         setSetupRequired(result.required);
+        if (result.required) {
+          window.location.href = '/setup';
+        }
       } catch (error) {
         console.error('Setup check failed:', error);
-      } finally {
-        setIsLoading(false);
+        // Retry after 2 seconds if backend is sleeping
+        setTimeout(async () => {
+          try {
+            const result = await api.checkSetupRequired();
+            setSetupRequired(result.required);
+            if (result.required) {
+              window.location.href = '/setup';
+            }
+          } catch (e) {
+            console.error('Retry failed:', e);
+          } finally {
+            setIsLoading(false);
+          }
+        }, 2000);
+        return;
       }
+      setIsLoading(false);
     };
 
     checkSetup();
@@ -101,6 +118,7 @@ export default function App() {
           } 
         />
         
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : (setupRequired ? "/setup" : "/login")} />} />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : (setupRequired ? "/setup" : "/login")} />} />
       </Routes>
     </BrowserRouter>
