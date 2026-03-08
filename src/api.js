@@ -41,8 +41,8 @@ export const api = {
   setup: async (username, email, password) => {
     const response = await fetch(`${BASE_URL}/auth/setup`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ username, email, password })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
     });
     return handleResponse(response);
   },
@@ -50,8 +50,8 @@ export const api = {
   login: async (username, password) => {
     const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ username, password })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
     });
     return handleResponse(response);
   },
