@@ -4,10 +4,12 @@ import DataTable from '../components/DataTable';
 import FormInput from '../components/FormInput';
 import AssetBadge from '../components/AssetBadge';
 import AlertMessage from '../components/AlertMessage';
+import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatDate } from '../utils/format';
 
 export default function Diary() {
+  const toast = useToast();
   const [user, setUser] = useState(null);
   const [purchases, setPurchases] = useState([]);
   const [prices, setPrices] = useState({});
@@ -79,6 +81,7 @@ export default function Diary() {
       setAmountEur(''); setPriceEur(''); setNotes('');
       setDate(new Date().toISOString().split('T')[0]);
       setError('');
+      toast(`Acquisto ${asset} aggiunto`, 'success');
     } catch (err) { setError(err.message); }
     finally { setSubmitting(false); }
   };
@@ -88,6 +91,7 @@ export default function Diary() {
       await api.deletePurchase(id);
       setPurchases(prev => prev.filter(p => p.id !== id));
       setDeleteConfirm(null);
+      toast('Acquisto eliminato', 'success');
     } catch (err) { setError(err.message); }
   };
 

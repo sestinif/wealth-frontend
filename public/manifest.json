@@ -1,0 +1,17 @@
+{
+  "name": "Wealth — Investment Tracker",
+  "short_name": "Wealth",
+  "description": "Multi-asset investment portfolio tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0d14",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

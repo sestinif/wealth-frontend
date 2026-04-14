@@ -3,6 +3,7 @@ import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tool
 import PageLayout from '../components/PageLayout';
 import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
+import AnimatedNumber from '../components/AnimatedNumber';
 import { api } from '../api.js';
 import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, TOOLTIP_STYLE } from '../utils/format';
 
@@ -10,6 +11,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [user, setUser] = useState(null);
   const [assets, setAssets] = useState([]);
+  const [marketInfo, setMarketInfo] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +19,8 @@ export default function Dashboard() {
       try {
         const [d, u, a] = await Promise.all([api.getDashboard(), api.getMe(), api.getAssets()]);
         setData(d); setUser(u); setAssets(a);
+        // Fetch market info in background (non-blocking)
+        api.getMarketInfo().then(setMarketInfo).catch(() => {});
       } catch (err) {}
       finally { setLoading(false); }
     };
@@ -48,45 +52,84 @@ export default function Dashboard() {
   const recent = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
   const assetCount = assets.filter(a => summary.by_asset[a.symbol]).length;
 
+  // Greeting based on time
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Buongiorno' : hour < 18 ? 'Buon pomeriggio' : 'Buonasera';
+
+  // Best performer
+  const performers = assets
+    .filter(a => summary.by_asset[a.symbol])
+    .map(a => ({ symbol: a.symbol, pnl_pct: summary.by_asset[a.symbol].invested > 0 ? ((summary.by_asset[a.symbol].value / summary.by_asset[a.symbol].invested - 1) * 100) : 0 }))
+    .sort((a, b) => b.pnl_pct - a.pnl_pct);
+  const best = performers[0];
+
   return (
     <PageLayout title="Dashboard" username={user.username}>
 
+      {/* Greeting */}
+      <div className="animate-in" style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-1)', marginBottom: 3 }}>
+          {greeting}, {user.username}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
+          {best && best.pnl_pct > 0
+            ? `${best.symbol} è il tuo asset migliore con ${best.pnl_pct.toFixed(1)}% di rendimento`
+            : `${summary.n_purchases} acquisti nel tuo portfolio`
+          }
+        </div>
+      </div>
+
       {/* Hero Stats */}
-      <div className="hero-stats animate-in">
+      <div className="hero-stats animate-in-1">
         <div className="hero-stat">
-          <div className="hero-stat__label">Valore Totale</div>
-          <div className="hero-stat__value" style={{ color: 'var(--text-1)' }}>{formatEUR(summary.total_value)}</div>
+          <div className="hero-stat__label"><span className="live-dot" />Valore Totale</div>
+          <AnimatedNumber value={summary.total_value} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-1)' }} />
         </div>
         <div className="hero-stat">
           <div className="hero-stat__label">Profitto / Perdita</div>
-          <div className="hero-stat__value" style={{ color: pnlC }}>{formatPnL(summary.pnl)}</div>
+          <AnimatedNumber value={Math.abs(summary.pnl)} prefix={summary.pnl >= 0 ? '+€ ' : '-€ '} className="hero-stat__value" style={{ color: pnlC }} />
           <div className="hero-stat__sub">{formatPct(summary.pnl_pct)}</div>
         </div>
         <div className="hero-stat">
           <div className="hero-stat__label">Totale Investito</div>
-          <div className="hero-stat__value" style={{ color: 'var(--text-2)' }}>{formatEUR(summary.total_invested)}</div>
+          <AnimatedNumber value={summary.total_invested} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-2)' }} />
           <div className="hero-stat__sub">{summary.n_purchases} acquisti</div>
         </div>
       </div>
 
       {/* Asset Cards */}
-      <div className="asset-cards animate-in" style={{ gridTemplateColumns: `repeat(${Math.min(assetCount || 1, 4)}, 1fr)`, animationDelay: '0.05s' }}>
+      <div className="asset-cards animate-in-2" style={{ gridTemplateColumns: `repeat(${Math.min(assetCount || 1, 4)}, 1fr)` }}>
         {assets.map(asset => {
           const d = summary.by_asset[asset.symbol];
           if (!d) return null;
           const pi = prices[asset.symbol] || {};
+          const mi = marketInfo[asset.symbol] || {};
           const price = asset.asset_type === 'crypto' ? formatUSD(pi.usd || pi.eur || 0) : formatEUR(pi.eur || 0);
           const pc = d.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+          const ch24 = mi.change_24h || 0;
+          const ch24Color = ch24 >= 0 ? 'var(--green)' : 'var(--red-soft)';
           return (
             <div key={asset.symbol} className="asset-card">
               <div className="asset-card__header">
                 <AssetBadge asset={asset.symbol} color={asset.color} />
-                <span style={{ fontSize: 11, color: pc, fontWeight: 500 }}>{formatPnL(d.pnl)}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontSize: 11, color: pc, fontWeight: 500 }}>{formatPnL(d.pnl)}</span>
+                  {ch24 !== 0 && <div style={{ fontSize: 10, color: ch24Color, marginTop: 1 }}>{ch24 >= 0 ? '+' : ''}{ch24}% 24h</div>}
+                </div>
               </div>
               <div className="asset-card__price">{price}</div>
-              <div className="asset-card__detail">
+              <div className="asset-card__detail" style={{ marginBottom: mi.ath_usd ? 6 : 0 }}>
                 {formatQty(d.qty, asset.decimals)} · Inv. {formatEUR(d.invested)}
               </div>
+              {/* ATH + Market data */}
+              {mi.ath_usd > 0 && (
+                <div style={{ fontSize: 10, color: 'var(--text-3)', borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: '6px 12px' }}>
+                  <span>ATH ${mi.ath_usd.toLocaleString('en-US')} <span style={{ color: 'var(--red-soft)' }}>({mi.ath_change_pct}%)</span></span>
+                  {mi.market_cap_usd > 0 && <span>MCap ${mi.market_cap_usd >= 1e9 ? (mi.market_cap_usd / 1e9).toFixed(1) + 'B' : (mi.market_cap_usd / 1e6).toFixed(0) + 'M'}</span>}
+                  {mi.rank > 0 && <span>#{mi.rank}</span>}
+                  {mi.change_7d !== undefined && mi.change_7d !== 0 && <span style={{ color: mi.change_7d >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>7d {mi.change_7d >= 0 ? '+' : ''}{mi.change_7d}%</span>}
+                </div>
+              )}
             </div>
           );
         })}
@@ -143,9 +186,14 @@ export default function Dashboard() {
       </div>
 
       {/* Recent */}
-      <div className="card overflow-auto animate-in" style={{ animationDelay: '0.15s' }}>
+      <div className="card overflow-auto animate-in-4">
         <h3 className="card__title">Ultimi acquisti</h3>
         <DataTable columns={cols} data={recent} defaultSort={{ key: 'date', direction: 'desc' }} />
+      </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: 'center', padding: '16px 0 8px', fontSize: 10, color: 'var(--text-3)' }}>
+        Ultimo aggiornamento: {new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })} · Dati aggiornati ogni 60s
       </div>
     </PageLayout>
   );

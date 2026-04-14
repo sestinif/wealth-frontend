@@ -181,6 +181,13 @@ export const api = {
     return handleResponse(response);
   },
 
+  getMarketInfo: async () => {
+    const response = await fetch(`${BASE_URL}/assets/market-info`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   searchAssets: async (query, type) => {
     const response = await fetch(`${BASE_URL}/assets/search?q=${encodeURIComponent(query)}&type=${type}`, {
       headers: authHeaders()

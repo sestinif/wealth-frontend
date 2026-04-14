@@ -3,10 +3,12 @@ import PageLayout from '../components/PageLayout';
 import FormInput from '../components/FormInput';
 import AlertMessage from '../components/AlertMessage';
 import AssetBadge from '../components/AssetBadge';
+import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { formatEUR, formatUSD } from '../utils/format';
 
 export default function Settings() {
+  const toast = useToast();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,12 +57,13 @@ export default function Settings() {
         symbol: result.symbol, name: result.name, asset_type: result.asset_type,
         coingecko_id: result.coingecko_id || null,
         yfinance_symbols: result.yfinance_symbols || null,
-        color: '#7c3aed', decimals: result.asset_type === 'crypto' ? 4 : 2,
+        color: '', decimals: result.asset_type === 'crypto' ? 4 : 2,
       });
       const [updated, newPrices] = await Promise.all([api.getAssets(), api.getPrices()]);
       setAssets(updated); setPrices(newPrices);
       setSearchResults(prev => prev.filter(r => r.symbol !== result.symbol));
       setAssetSuccess(`${result.symbol} aggiunto`);
+      toast(`${result.symbol} aggiunto al portfolio`, 'success');
     } catch (err) { setAssetError(err.message); }
   };
 
@@ -70,6 +73,7 @@ export default function Settings() {
       await api.removeAsset(symbol);
       setAssets(prev => prev.filter(a => a.symbol !== symbol));
       setAssetSuccess(`${symbol} rimosso`);
+      toast(`${symbol} rimosso`, 'success');
     } catch (err) { setAssetError(err.message); }
   };
 
@@ -155,6 +159,11 @@ export default function Settings() {
                   <div className="search-result__symbol">{r.symbol}</div>
                   <div className="search-result__name">{r.name}</div>
                 </div>
+                {(r.price_usd || r.price_eur) ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-1)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', marginRight: 8 }}>
+                    {r.price_usd ? formatUSD(r.price_usd) : formatEUR(r.price_eur)}
+                  </div>
+                ) : null}
                 <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Aggiungi</button>
               </div>
             ))}
