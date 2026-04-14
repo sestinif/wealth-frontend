@@ -108,8 +108,11 @@ export default function Dashboard() {
           const pc = d.pnl >= 0 ? 'var(--green)' : 'var(--red)';
           const ch24 = mi.change_24h || 0;
           const ch24Color = ch24 >= 0 ? 'var(--green)' : 'var(--red-soft)';
+          const L = { fontSize: 10, color: 'var(--text-3)', marginBottom: 1 };
+          const V = { fontSize: 12, color: 'var(--text-1)', fontFamily: 'var(--font-num)' };
           return (
             <div key={asset.symbol} className="asset-card">
+              {/* Header: badge + P&L + 24h */}
               <div className="asset-card__header">
                 <AssetBadge asset={asset.symbol} color={asset.color} />
                 <div style={{ textAlign: 'right' }}>
@@ -117,17 +120,62 @@ export default function Dashboard() {
                   {ch24 !== 0 && <div style={{ fontSize: 10, color: ch24Color, marginTop: 1 }}>{ch24 >= 0 ? '+' : ''}{ch24}% 24h</div>}
                 </div>
               </div>
+
+              {/* Price */}
               <div className="asset-card__price">{price}</div>
-              <div className="asset-card__detail" style={{ marginBottom: mi.ath_usd ? 6 : 0 }}>
-                {formatQty(d.qty, asset.decimals)} · Inv. {formatEUR(d.invested)}
+
+              {/* Stats grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', marginTop: 10 }}>
+                <div>
+                  <div style={L}>Detenuti</div>
+                  <div style={V}>{formatQty(d.qty, asset.decimals)} {asset.symbol}</div>
+                </div>
+                <div>
+                  <div style={L}>Investito</div>
+                  <div style={V}>{formatEUR(d.invested)}</div>
+                </div>
+                <div>
+                  <div style={L}>Prezzo medio</div>
+                  <div style={V}>{asset.asset_type === 'crypto' ? formatUSD(d.avg_price_usd || d.avg_price || 0) : formatEUR(d.avg_price || 0)}</div>
+                </div>
+                <div>
+                  <div style={L}>Valore attuale</div>
+                  <div style={V}>{formatEUR(d.value)}</div>
+                </div>
               </div>
-              {/* ATH + Market data */}
-              {mi.ath_usd > 0 && (
-                <div style={{ fontSize: 10, color: 'var(--text-3)', borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: '6px 12px' }}>
-                  <span>ATH ${mi.ath_usd.toLocaleString('en-US')} <span style={{ color: 'var(--red-soft)' }}>({mi.ath_change_pct}%)</span></span>
-                  {mi.market_cap_usd > 0 && <span>MCap ${mi.market_cap_usd >= 1e9 ? (mi.market_cap_usd / 1e9).toFixed(1) + 'B' : (mi.market_cap_usd / 1e6).toFixed(0) + 'M'}</span>}
-                  {mi.rank > 0 && <span>#{mi.rank}</span>}
-                  {mi.change_7d !== undefined && mi.change_7d !== 0 && <span style={{ color: mi.change_7d >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>7d {mi.change_7d >= 0 ? '+' : ''}{mi.change_7d}%</span>}
+
+              {/* ATH + Market data — always show if available */}
+              {(mi.ath_usd > 0 || mi.market_cap_usd > 0) && (
+                <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+                    {mi.ath_usd > 0 && (
+                      <div>
+                        <div style={L}>Massimo storico (ATH)</div>
+                        <div style={{ ...V, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          ${mi.ath_usd.toLocaleString('en-US')}
+                          <span style={{ fontSize: 10, color: 'var(--red-soft)' }}>{mi.ath_change_pct}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {mi.market_cap_usd > 0 && (
+                      <div>
+                        <div style={L}>Market Cap</div>
+                        <div style={V}>${mi.market_cap_usd >= 1e9 ? (mi.market_cap_usd / 1e9).toFixed(1) + 'B' : (mi.market_cap_usd / 1e6).toFixed(0) + 'M'}</div>
+                      </div>
+                    )}
+                    {mi.change_7d !== undefined && mi.change_7d !== 0 && (
+                      <div>
+                        <div style={L}>Ultima settimana</div>
+                        <div style={{ ...V, color: mi.change_7d >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>{mi.change_7d >= 0 ? '+' : ''}{mi.change_7d}%</div>
+                      </div>
+                    )}
+                    {mi.rank > 0 && (
+                      <div>
+                        <div style={L}>Ranking</div>
+                        <div style={V}>#{mi.rank}</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
