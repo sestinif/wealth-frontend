@@ -4,12 +4,9 @@ export default function KPICard({ label, value, color, subtext, interactive = tr
   const cardClass = `card kpi-card ${interactive ? 'card--interactive' : ''}`;
 
   return (
-    <div className={cardClass}>
+    <div className={cardClass} style={{ borderLeft: `3px solid ${color[0]}` }}>
       <div className="kpi-card__label">{label}</div>
-      <div
-        className="kpi-card__value"
-        style={{ background: `linear-gradient(135deg, ${color[0]}, ${color[1]})` }}
-      >
+      <div className="kpi-card__value" style={{ color: color[0] }}>
         {value}
       </div>
       {subtext && <div className="kpi-card__subtext">{subtext}</div>}

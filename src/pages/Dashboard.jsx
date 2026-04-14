@@ -38,77 +38,81 @@ export default function Dashboard() {
   const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
 
   const chartData = buildChartData(purchases, prices);
-
-  // Dynamic allocation data
   const allocData = assets
     .filter(a => summary.by_asset[a.symbol]?.value > 0)
     .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value, color: a.color }));
 
   const recentColumns = [
     { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
-    { key: 'asset', label: 'Asset', render: (v) => <AssetBadge asset={v} color={getColor(v)} /> },
+    { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={getColor(v)} /> },
     { key: 'amount_eur', label: 'Importo', align: 'right', sortable: true, render: v => formatEUR(v) },
     { key: 'quantity', label: 'Quantità', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
     { key: 'price_eur', label: 'Prezzo', align: 'right', muted: true, render: v => formatEUR(v) },
   ];
 
-  const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
 
   return (
     <PageLayout title="Dashboard" username={user.username}>
-      <div className="kpi-grid">
-        <KPICard label="Valore Totale" value={formatEUR(summary.total_value)} color={['#8B5CF6', '#C026D3']} />
-        <KPICard label="Profitto/Perdita" value={formatPnL(summary.pnl)} color={summary.pnl >= 0 ? ['#00E676', '#00C853'] : ['#FF5252', '#D32F2F']} subtext={formatPct(summary.pnl_pct)} />
-        <KPICard label="Investito Totale" value={formatEUR(summary.total_invested)} color={['#8B85A8', '#6B63B5']} subtext={`${summary.n_purchases} acquisti`} />
 
-        {/* Dynamic per-asset KPI cards */}
+      {/* Hero KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
+        <KPICard label="Valore Totale" value={formatEUR(summary.total_value)} color={['#8B5CF6', '#8B5CF6']} />
+        <KPICard label="Profitto / Perdita" value={formatPnL(summary.pnl)} color={summary.pnl >= 0 ? ['#4ade80', '#4ade80'] : ['#f87171', '#f87171']} subtext={formatPct(summary.pnl_pct)} />
+        <KPICard label="Totale Investito" value={formatEUR(summary.total_invested)} color={['#9590ad', '#9590ad']} subtext={`${summary.n_purchases} acquisti`} />
+      </div>
+
+      {/* Per-asset KPIs */}
+      <div className="kpi-grid">
         {assets.map(asset => {
-          const assetData = summary.by_asset[asset.symbol];
-          if (!assetData) return null;
+          const d = summary.by_asset[asset.symbol];
+          if (!d) return null;
           const priceInfo = prices[asset.symbol] || {};
-          const displayPrice = asset.asset_type === 'crypto'
-            ? formatUSD(priceInfo.usd || 0)
-            : formatEUR(priceInfo.eur || 0);
+          const price = asset.asset_type === 'crypto' ? formatUSD(priceInfo.usd || 0) : formatEUR(priceInfo.eur || 0);
+          const pnlColor = d.pnl >= 0 ? '#4ade80' : '#f87171';
           return (
             <KPICard
               key={asset.symbol}
-              label={`${asset.symbol} Prezzo`}
-              value={displayPrice}
+              label={asset.symbol}
+              value={price}
               color={[asset.color, asset.color]}
-              subtext={`Qty: ${formatQty(assetData.qty, asset.decimals)}`}
+              subtext={`${formatQty(d.qty, asset.decimals)} · P&L ${formatPnL(d.pnl)}`}
             />
           );
         })}
       </div>
 
+      {/* Charts */}
       <div className="grid-2col section-gap">
         <div className="card">
-          <h3 className="card__title">Valore Portfolio — 30 Giorni</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="dashGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#C026D3" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
-              <XAxis dataKey="date" stroke="#8B85A8" style={{ fontSize: '10px' }} />
-              <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fillOpacity={1} fill="url(#dashGradient)" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <h3 className="card__title">Portfolio — 30 Giorni</h3>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.07)" />
+                <XAxis dataKey="date" stroke="#3a3455" tick={{ fill: '#5c5675', fontSize: 10 }} />
+                <YAxis stroke="#3a3455" tick={{ fill: '#5c5675', fontSize: 10 }} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fill="url(#dg)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : <div className="no-data">Nessun dato</div>}
         </div>
 
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h3 className="card__title" style={{ alignSelf: 'flex-start' }}>Allocazione Asset</h3>
+        <div className="card">
+          <h3 className="card__title">Allocazione</h3>
           {allocData.length > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={allocData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
-                    {allocData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  <Pie data={allocData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                    {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip contentStyle={TOOLTIP_STYLE} />
                 </PieChart>
@@ -118,18 +122,17 @@ export default function Dashboard() {
                   <div key={item.name} className="chart-legend__item">
                     <div className="chart-legend__dot" style={{ background: item.color }} />
                     <span className="chart-legend__text">
-                      {item.name}: {summary.total_value > 0 ? (item.value / summary.total_value * 100).toFixed(1) : '0.0'}%
+                      {item.name} {summary.total_value > 0 ? (item.value / summary.total_value * 100).toFixed(1) : '0'}%
                     </span>
                   </div>
                 ))}
               </div>
             </>
-          ) : (
-            <div className="no-data">Nessun asset con valore</div>
-          )}
+          ) : <div className="no-data">Nessun asset</div>}
         </div>
       </div>
 
+      {/* Recent */}
       <div className="card overflow-auto">
         <h3 className="card__title">Ultimi Acquisti</h3>
         <DataTable columns={recentColumns} data={recentPurchases} defaultSort={{ key: 'date', direction: 'desc' }} />
@@ -144,16 +147,13 @@ function buildChartData(purchases, prices) {
   const days = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    const past = sorted.filter(p => p.date <= dateStr);
-    const qtyByAsset = {};
-    past.forEach(p => { qtyByAsset[p.asset] = (qtyByAsset[p.asset] || 0) + p.quantity; });
-    let totalValue = 0;
-    for (const [symbol, qty] of Object.entries(qtyByAsset)) {
-      const priceInfo = prices[symbol] || {};
-      totalValue += qty * (priceInfo.eur || 0);
-    }
-    days.push({ date: dateStr, value: Math.round(totalValue) });
+    const ds = d.toISOString().split('T')[0];
+    const past = sorted.filter(p => p.date <= ds);
+    const qty = {};
+    past.forEach(p => { qty[p.asset] = (qty[p.asset] || 0) + p.quantity; });
+    let val = 0;
+    for (const [s, q] of Object.entries(qty)) { val += q * ((prices[s] || {}).eur || 0); }
+    days.push({ date: ds, value: Math.round(val) });
   }
   return days;
 }
