@@ -121,8 +121,15 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Price */}
-              <div className="asset-card__price">{price}</div>
+              {/* Price + ATH inline */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <div className="asset-card__price">{price}</div>
+                {(mi.ath_usd > 0 || mi.ath_eur > 0) && (
+                  <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-num)', opacity: 0.45 }}>
+                    {mi.ath_label || 'ATH'} {mi.ath_usd > 0 ? '$' + mi.ath_usd.toLocaleString('en-US') : '€ ' + mi.ath_eur.toLocaleString('it-IT')}
+                  </span>
+                )}
+              </div>
 
               {/* Stats grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', marginTop: 10 }}>
@@ -218,7 +225,7 @@ export default function Dashboard() {
                       {mi.change_7d ? (mi.change_7d >= 0 ? '+' : '') + mi.change_7d + '%' : '—'}
                     </td>
                     <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: 'var(--text-1)' }}>
-                      {mi.ath_usd > 0 ? '$' + mi.ath_usd.toLocaleString('en-US') : '—'}
+                      {mi.ath_usd > 0 ? '$' + mi.ath_usd.toLocaleString('en-US') : mi.ath_eur > 0 ? '€ ' + mi.ath_eur.toLocaleString('it-IT') : '—'}
                     </td>
                     <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: 'var(--red-soft)' }}>
                       {mi.ath_change_pct ? mi.ath_change_pct + '%' : '—'}
