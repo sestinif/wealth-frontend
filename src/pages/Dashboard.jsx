@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import PageLayout from '../components/PageLayout';
-import KPICard from '../components/KPICard';
 import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
 import { api } from '../api.js';
@@ -16,90 +15,101 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [dashboardData, userData, assetsData] = await Promise.all([
-          api.getDashboard(), api.getMe(), api.getAssets()
-        ]);
-        setData(dashboardData);
-        setUser(userData);
-        setAssets(assetsData);
-      } catch (err) { /* handled by loading state */ }
+        const [d, u, a] = await Promise.all([api.getDashboard(), api.getMe(), api.getAssets()]);
+        setData(d); setUser(u); setAssets(a);
+      } catch (err) {}
       finally { setLoading(false); }
     };
     fetchData();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
+    const iv = setInterval(fetchData, 60000);
+    return () => clearInterval(iv);
   }, []);
 
   if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
   if (!data || !user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const { summary, prices, purchases } = data;
-  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B5CF6';
-  const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
+  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B5CF6';
+  const gd = (s) => assets.find(a => a.symbol === s)?.decimals || 2;
+  const pnlC = summary.pnl >= 0 ? 'var(--green)' : 'var(--red)';
 
   const chartData = buildChartData(purchases, prices);
-  const allocData = assets
-    .filter(a => summary.by_asset[a.symbol]?.value > 0)
+  const allocData = assets.filter(a => summary.by_asset[a.symbol]?.value > 0)
     .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value, color: a.color }));
 
-  const recentColumns = [
+  const cols = [
     { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
-    { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={getColor(v)} /> },
+    { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={gc(v)} /> },
     { key: 'amount_eur', label: 'Importo', align: 'right', sortable: true, render: v => formatEUR(v) },
-    { key: 'quantity', label: 'Quantità', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
+    { key: 'quantity', label: 'Quantità', align: 'right', muted: true, render: (v, r) => formatQty(v, gd(r.asset)) },
     { key: 'price_eur', label: 'Prezzo', align: 'right', muted: true, render: v => formatEUR(v) },
   ];
 
-  const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  const recent = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  const assetCount = assets.filter(a => summary.by_asset[a.symbol]).length;
 
   return (
     <PageLayout title="Dashboard" username={user.username}>
 
-      {/* Hero KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
-        <KPICard label="Valore Totale" value={formatEUR(summary.total_value)} color={['#8B5CF6', '#8B5CF6']} />
-        <KPICard label="Profitto / Perdita" value={formatPnL(summary.pnl)} color={summary.pnl >= 0 ? ['#4ade80', '#4ade80'] : ['#f87171', '#f87171']} subtext={formatPct(summary.pnl_pct)} />
-        <KPICard label="Totale Investito" value={formatEUR(summary.total_invested)} color={['#9590ad', '#9590ad']} subtext={`${summary.n_purchases} acquisti`} />
+      {/* Hero Stats */}
+      <div className="hero-stats animate-in">
+        <div className="hero-stat">
+          <div className="hero-stat__label">Valore Totale</div>
+          <div className="hero-stat__value" style={{ color: 'var(--text-1)' }}>{formatEUR(summary.total_value)}</div>
+        </div>
+        <div className="hero-stat">
+          <div className="hero-stat__label">Profitto / Perdita</div>
+          <div className="hero-stat__value" style={{ color: pnlC }}>{formatPnL(summary.pnl)}</div>
+          <div className="hero-stat__sub">{formatPct(summary.pnl_pct)}</div>
+        </div>
+        <div className="hero-stat">
+          <div className="hero-stat__label">Totale Investito</div>
+          <div className="hero-stat__value" style={{ color: 'var(--text-2)' }}>{formatEUR(summary.total_invested)}</div>
+          <div className="hero-stat__sub">{summary.n_purchases} acquisti</div>
+        </div>
       </div>
 
-      {/* Per-asset KPIs */}
-      <div className="kpi-grid">
+      {/* Asset Cards */}
+      <div className="asset-cards animate-in" style={{ gridTemplateColumns: `repeat(${Math.min(assetCount || 1, 4)}, 1fr)`, animationDelay: '0.05s' }}>
         {assets.map(asset => {
           const d = summary.by_asset[asset.symbol];
           if (!d) return null;
-          const priceInfo = prices[asset.symbol] || {};
-          const price = asset.asset_type === 'crypto' ? formatUSD(priceInfo.usd || 0) : formatEUR(priceInfo.eur || 0);
-          const pnlColor = d.pnl >= 0 ? '#4ade80' : '#f87171';
+          const pi = prices[asset.symbol] || {};
+          const price = asset.asset_type === 'crypto' ? formatUSD(pi.usd || pi.eur || 0) : formatEUR(pi.eur || 0);
+          const pc = d.pnl >= 0 ? 'var(--green)' : 'var(--red)';
           return (
-            <KPICard
-              key={asset.symbol}
-              label={asset.symbol}
-              value={price}
-              color={[asset.color, asset.color]}
-              subtext={`${formatQty(d.qty, asset.decimals)} · P&L ${formatPnL(d.pnl)}`}
-            />
+            <div key={asset.symbol} className="asset-card">
+              <div className="asset-card__header">
+                <AssetBadge asset={asset.symbol} color={asset.color} />
+                <span style={{ fontSize: 11, color: pc, fontWeight: 500 }}>{formatPnL(d.pnl)}</span>
+              </div>
+              <div className="asset-card__price">{price}</div>
+              <div className="asset-card__detail">
+                {formatQty(d.qty, asset.decimals)} · Inv. {formatEUR(d.invested)}
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Charts */}
-      <div className="grid-2col section-gap">
+      <div className="grid-2col section-gap animate-in" style={{ animationDelay: '0.1s' }}>
         <div className="card">
-          <h3 className="card__title">Portfolio — 30 Giorni</h3>
+          <h3 className="card__title">Portfolio — 30 giorni</h3>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={chartData}>
                 <defs>
-                  <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.5} />
+                  <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.3} />
                     <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.07)" />
-                <XAxis dataKey="date" stroke="#3a3455" tick={{ fill: '#5c5675', fontSize: 10 }} />
-                <YAxis stroke="#3a3455" tick={{ fill: '#5c5675', fontSize: 10 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#4e4968', fontSize: 10 }} />
+                <YAxis stroke="transparent" tick={{ fill: '#4e4968', fontSize: 10 }} />
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fill="url(#dg)" />
+                <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={1.5} fill="url(#ag)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : <div className="no-data">Nessun dato</div>}
@@ -109,20 +119,20 @@ export default function Dashboard() {
           <h3 className="card__title">Allocazione</h3>
           {allocData.length > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={allocData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                  <Pie data={allocData} cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3} dataKey="value" strokeWidth={0}>
                     {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip contentStyle={TOOLTIP_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="chart-legend">
-                {allocData.map(item => (
-                  <div key={item.name} className="chart-legend__item">
-                    <div className="chart-legend__dot" style={{ background: item.color }} />
+                {allocData.map(it => (
+                  <div key={it.name} className="chart-legend__item">
+                    <div className="chart-legend__dot" style={{ background: it.color }} />
                     <span className="chart-legend__text">
-                      {item.name} {summary.total_value > 0 ? (item.value / summary.total_value * 100).toFixed(1) : '0'}%
+                      {it.name} {summary.total_value > 0 ? (it.value / summary.total_value * 100).toFixed(1) : '0'}%
                     </span>
                   </div>
                 ))}
@@ -133,16 +143,16 @@ export default function Dashboard() {
       </div>
 
       {/* Recent */}
-      <div className="card overflow-auto">
-        <h3 className="card__title">Ultimi Acquisti</h3>
-        <DataTable columns={recentColumns} data={recentPurchases} defaultSort={{ key: 'date', direction: 'desc' }} />
+      <div className="card overflow-auto animate-in" style={{ animationDelay: '0.15s' }}>
+        <h3 className="card__title">Ultimi acquisti</h3>
+        <DataTable columns={cols} data={recent} defaultSort={{ key: 'date', direction: 'desc' }} />
       </div>
     </PageLayout>
   );
 }
 
 function buildChartData(purchases, prices) {
-  if (!purchases || purchases.length === 0) return [];
+  if (!purchases?.length) return [];
   const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
   const days = [];
   for (let i = 29; i >= 0; i--) {
@@ -151,9 +161,9 @@ function buildChartData(purchases, prices) {
     const past = sorted.filter(p => p.date <= ds);
     const qty = {};
     past.forEach(p => { qty[p.asset] = (qty[p.asset] || 0) + p.quantity; });
-    let val = 0;
-    for (const [s, q] of Object.entries(qty)) { val += q * ((prices[s] || {}).eur || 0); }
-    days.push({ date: ds, value: Math.round(val) });
+    let v = 0;
+    for (const [s, q] of Object.entries(qty)) v += q * ((prices[s] || {}).eur || 0);
+    days.push({ date: ds, value: Math.round(v) });
   }
   return days;
 }
