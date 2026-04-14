@@ -183,6 +183,64 @@ export default function Dashboard() {
         })}
       </div>
 
+      {/* Market Overview Table */}
+      <div className="card section-gap animate-in-3">
+        <h3 className="card__title">Panoramica Mercato</h3>
+        {Object.keys(marketInfo).length > 0 ? (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th className="text-right">Prezzo</th>
+                <th className="text-right">24h</th>
+                <th className="text-right">7g</th>
+                <th className="text-right">ATH</th>
+                <th className="text-right">Da ATH</th>
+                <th className="text-right">Market Cap</th>
+                <th className="text-right">Rank</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assets.map(asset => {
+                const mi = marketInfo[asset.symbol];
+                if (!mi) return null;
+                const pi = prices[asset.symbol] || {};
+                return (
+                  <tr key={asset.symbol}>
+                    <td><AssetBadge asset={asset.symbol} color={asset.color} /></td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)' }}>
+                      {asset.asset_type === 'crypto' ? formatUSD(pi.usd || 0) : formatEUR(pi.eur || 0)}
+                    </td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: (mi.change_24h || 0) >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
+                      {mi.change_24h >= 0 ? '+' : ''}{mi.change_24h || 0}%
+                    </td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: (mi.change_7d || 0) >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
+                      {mi.change_7d ? (mi.change_7d >= 0 ? '+' : '') + mi.change_7d + '%' : '—'}
+                    </td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: 'var(--text-1)' }}>
+                      {mi.ath_usd > 0 ? '$' + mi.ath_usd.toLocaleString('en-US') : '—'}
+                    </td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: 'var(--red-soft)' }}>
+                      {mi.ath_change_pct ? mi.ath_change_pct + '%' : '—'}
+                    </td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)' }}>
+                      {mi.market_cap_usd > 0 ? '$' + (mi.market_cap_usd >= 1e9 ? (mi.market_cap_usd / 1e9).toFixed(1) + 'B' : (mi.market_cap_usd / 1e6).toFixed(0) + 'M') : '—'}
+                    </td>
+                    <td className="text-right" style={{ fontFamily: 'var(--font-num)' }}>
+                      {mi.rank > 0 ? '#' + mi.rank : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ fontSize: 12, color: 'var(--text-3)', padding: '12px 0' }}>
+            <span className="live-dot" /> Caricamento dati di mercato...
+          </div>
+        )}
+      </div>
+
       {/* Charts */}
       <div className="grid-2col section-gap animate-in" style={{ animationDelay: '0.1s' }}>
         <div className="card">
