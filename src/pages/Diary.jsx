@@ -1,414 +1,187 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Topbar from '../components/Topbar';
+import PageLayout from '../components/PageLayout';
+import DataTable from '../components/DataTable';
+import FormInput from '../components/FormInput';
+import AssetBadge from '../components/AssetBadge';
+import AlertMessage from '../components/AlertMessage';
 import { api } from '../api.js';
+import { formatEUR, formatQty, formatDate } from '../utils/format';
 
 export default function Diary() {
   const [user, setUser] = useState(null);
   const [purchases, setPurchases] = useState([]);
   const [prices, setPrices] = useState({});
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [asset, setAsset] = useState('BTC');
+  const [asset, setAsset] = useState('');
   const [amountEur, setAmountEur] = useState('');
-  const [priceEur, setPriceEur] = useState(''); // EUR per VUAA, EUR per BTC (convertito da USD)
-  const [priceUsd, setPriceUsd] = useState(''); // USD solo per BTC
+  const [priceEur, setPriceEur] = useState('');
+  const [priceUsd, setPriceUsd] = useState('');
   const [notes, setNotes] = useState('');
   const [useLivePrice, setUseLivePrice] = useState(true);
   const [filterAsset, setFilterAsset] = useState('ALL');
   const [submitting, setSubmitting] = useState(false);
-
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  const currentAsset = assets.find(a => a.symbol === asset);
+  const isCrypto = currentAsset?.asset_type === 'crypto';
+  const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
+  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B5CF6';
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userData, purchasesData, pricesData] = await Promise.all([
-          api.getMe(),
-          api.getPurchases(),
-          api.getPrices()
+        const [userData, purchasesData, pricesData, assetsData] = await Promise.all([
+          api.getMe(), api.getPurchases(), api.getPrices(), api.getAssets()
         ]);
         setUser(userData);
         setPurchases(purchasesData);
         setPrices(pricesData);
-
-        if (useLivePrice && asset) {
-          setPriceEur(pricesData[asset] || '');
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+        setAssets(assetsData);
+        if (assetsData.length > 0 && !asset) setAsset(assetsData[0].symbol);
+      } catch (err) { setError(err.message); }
+      finally { setLoading(false); }
     };
-
     fetchData();
   }, []);
 
   useEffect(() => {
-    if (useLivePrice) {
-      if (asset === 'BTC') {
-        setPriceUsd(prices.BTC_USD || '');
-        setPriceEur(prices.BTC || '');
+    if (useLivePrice && asset && prices[asset]) {
+      const priceInfo = prices[asset];
+      setPriceEur(priceInfo.eur || '');
+      if (isCrypto) {
+        setPriceUsd(priceInfo.usd || '');
       } else {
-        setPriceEur(prices[asset] || '');
         setPriceUsd('');
       }
     }
-  }, [asset, useLivePrice, prices]);
+  }, [asset, useLivePrice, prices, assets]);
 
-  // Per BTC: quantità = amountEur / priceEur (prezzo BTC in EUR)
   const quantity = amountEur && priceEur ? (parseFloat(amountEur) / parseFloat(priceEur)).toFixed(8) : 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!date || !asset || !amountEur || !priceEur) {
-      setError('Completa tutti i campi');
-      return;
-    }
+    if (!date || !asset || !amountEur || !priceEur) { setError('Completa tutti i campi'); return; }
+    const parsedAmount = parseFloat(amountEur);
+    const parsedPrice = parseFloat(priceEur);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) { setError('Importo deve essere maggiore di zero'); return; }
+    if (isNaN(parsedPrice) || parsedPrice <= 0) { setError('Prezzo deve essere maggiore di zero'); return; }
 
     setSubmitting(true);
     try {
-      const usd = asset === 'BTC' ? parseFloat(priceUsd) || 0 : 0;
-      await api.addPurchase(date, asset, parseFloat(amountEur), parseFloat(priceEur), notes, usd);
+      const usd = isCrypto ? parseFloat(priceUsd) || 0 : 0;
+      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd);
       const updatedPurchases = await api.getPurchases();
       setPurchases(updatedPurchases);
-      setAmountEur('');
-      setPriceEur('');
-      setNotes('');
+      setAmountEur(''); setPriceEur(''); setNotes('');
       setDate(new Date().toISOString().split('T')[0]);
       setError('');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setSubmitting(false); }
   };
 
   const handleDelete = async (id) => {
     try {
       await api.deletePurchase(id);
-      const updatedPurchases = await api.getPurchases();
-      setPurchases(updatedPurchases);
+      setPurchases(prev => prev.filter(p => p.id !== id));
       setDeleteConfirm(null);
-    } catch (err) {
-      setError(err.message);
-    }
+    } catch (err) { setError(err.message); }
   };
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#8B85A8' }}>Loading...</div>;
-  if (!user) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#FF5252' }}>Error loading data</div>;
+  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (!user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const filteredPurchases = filterAsset === 'ALL' ? purchases : purchases.filter(p => p.asset === filterAsset);
 
+  const columns = [
+    { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
+    { key: 'asset', label: 'Asset', sortable: true, render: v => <AssetBadge asset={v} color={getColor(v)} /> },
+    { key: 'amount_eur', label: 'Importo', align: 'right', sortable: true, render: v => formatEUR(v) },
+    { key: 'quantity', label: 'Quantità', align: 'right', muted: true, sortable: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
+    { key: 'price_eur', label: 'Prezzo', align: 'right', muted: true, sortable: true, render: v => formatEUR(v) },
+  ];
+
+  const renderActions = (row) => {
+    if (deleteConfirm === row.id) {
+      return (
+        <div className="delete-actions">
+          <button className="btn btn--danger btn--sm" onClick={() => handleDelete(row.id)}>Sì</button>
+          <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(null)}>No</button>
+        </div>
+      );
+    }
+    return <button className="btn btn--danger btn--sm" onClick={() => setDeleteConfirm(row.id)}>Elimina</button>;
+  };
+
+  const assetOptions = assets.map(a => ({ value: a.symbol, label: `${a.symbol} — ${a.name}` }));
+  const filterButtons = ['ALL', ...assets.map(a => a.symbol)];
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0B21' }}>
-      <Sidebar username={user.username} />
-      <div style={{ flex: 1, marginLeft: '220px', marginTop: '70px' }}>
-        <Topbar title="Diario" username={user.username} />
-        
-        <div style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{
-            background: 'rgba(26, 23, 53, 0.9)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(139, 92, 246, 0.15)',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px'
-          }}>
-            <h2 style={{ fontSize: '14px', fontWeight: '700', color: '#FFFFFF', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Aggiungi Acquisto</h2>
-            
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Data</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'rgba(139, 92, 246, 0.05)',
-                      border: '1px solid rgba(139, 92, 246, 0.15)',
-                      borderRadius: '10px',
-                      color: '#FFFFFF',
-                      fontSize: '12px',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Asset</label>
-                  <select
-                    value={asset}
-                    onChange={(e) => setAsset(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'rgba(139, 92, 246, 0.05)',
-                      border: '1px solid rgba(139, 92, 246, 0.15)',
-                      borderRadius: '10px',
-                      color: '#FFFFFF',
-                      fontSize: '12px',
-                      outline: 'none'
-                    }}
-                  >
-                    <option value="BTC">BTC</option>
-                    <option value="VUAA">VUAA</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Importo EUR</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={amountEur}
-                    onChange={(e) => setAmountEur(e.target.value)}
-                    placeholder="0.00"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'rgba(139, 92, 246, 0.05)',
-                      border: '1px solid rgba(139, 92, 246, 0.15)',
-                      borderRadius: '10px',
-                      color: '#FFFFFF',
-                      fontSize: '12px',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-
-                {asset === 'BTC' ? (
-                  <div>
-                    <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Prezzo BTC (USD $)</label>
-                    <input
-                      type="number"
-                      step="1"
-                      value={priceUsd}
-                      onChange={(e) => {
-                        setPriceUsd(e.target.value);
-                        // Aggiorna anche priceEur se cambia manualmente USD (usa cambio approssimativo)
-                        if (prices.BTC && prices.BTC_USD && parseFloat(e.target.value) > 0) {
-                          const rate = prices.BTC / prices.BTC_USD;
-                          setPriceEur((parseFloat(e.target.value) * rate).toFixed(2));
-                        }
-                      }}
-                      placeholder="es. 85000"
-                      disabled={useLivePrice}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'rgba(139, 92, 246, 0.05)',
-                        border: '1px solid rgba(139, 92, 246, 0.15)',
-                        borderRadius: '10px',
-                        color: '#FFFFFF',
-                        fontSize: '12px',
-                        outline: 'none',
-                        opacity: useLivePrice ? 0.6 : 1
-                      }}
-                    />
-                    {priceEur && <div style={{ fontSize: '10px', color: '#8B85A8', marginTop: '4px' }}>≈ € {parseFloat(priceEur).toLocaleString('it-IT', { minimumFractionDigits: 0 })}</div>}
-                  </div>
-                ) : (
-                  <div>
-                    <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Prezzo EUR</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={priceEur}
-                      onChange={(e) => setPriceEur(e.target.value)}
-                      placeholder="0.00"
-                      disabled={useLivePrice}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'rgba(139, 92, 246, 0.05)',
-                        border: '1px solid rgba(139, 92, 246, 0.15)',
-                        borderRadius: '10px',
-                        color: '#FFFFFF',
-                        fontSize: '12px',
-                        outline: 'none',
-                        opacity: useLivePrice ? 0.6 : 1
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+    <PageLayout title="Diario" username={user.username} size="md">
+      <div className="card section-gap">
+        <h2 className="card__title card__title--lg">Aggiungi Acquisto</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <FormInput label="Data" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <FormInput label="Asset" type="select" value={asset} onChange={e => setAsset(e.target.value)} options={assetOptions} />
+            <FormInput label="Importo EUR" type="number" step="0.01" value={amountEur} onChange={e => setAmountEur(e.target.value)} placeholder="0.00" />
+            {isCrypto ? (
+              <div className="form-group">
+                <label className="form-label">Prezzo {asset} (USD $)</label>
                 <input
-                  type="checkbox"
-                  checked={useLivePrice}
-                  onChange={(e) => setUseLivePrice(e.target.checked)}
-                  id="livePrice"
-                  style={{ cursor: 'pointer' }}
+                  type="number" step="1" className="form-input"
+                  value={priceUsd}
+                  onChange={e => {
+                    setPriceUsd(e.target.value);
+                    if (prices[asset]?.eur && prices[asset]?.usd && parseFloat(e.target.value) > 0) {
+                      const rate = prices[asset].eur / prices[asset].usd;
+                      setPriceEur((parseFloat(e.target.value) * rate).toFixed(2));
+                    }
+                  }}
+                  placeholder="es. 85000" disabled={useLivePrice}
                 />
-                <label htmlFor="livePrice" style={{ fontSize: '12px', color: '#8B85A8', fontWeight: '500', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  USA PREZZO LIVE
-                </label>
+                {priceEur && <div className="form-hint">≈ {formatEUR(priceEur, 0)}</div>}
               </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '11px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '8px' }}>Note</label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Aggiungi una nota..."
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    background: 'rgba(139, 92, 246, 0.05)',
-                    border: '1px solid rgba(139, 92, 246, 0.15)',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    fontSize: '12px',
-                    outline: 'none',
-                    minHeight: '80px',
-                    resize: 'vertical'
-                  }}
-                />
-              </div>
-
-              {error && (
-                <div style={{
-                  color: '#FF5252',
-                  fontSize: '12px',
-                  marginBottom: '16px',
-                  padding: '12px',
-                  background: 'rgba(255, 82, 82, 0.1)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 82, 82, 0.3)'
-                }}>
-                  {error}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: '12px', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Quantita: <span style={{ color: '#8B5CF6' }}>{quantity}</span>
-                </div>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  style={{
-                    padding: '10px 20px',
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontSize: '12px',
-                    fontWeight: '700',
-                    cursor: submitting ? 'not-allowed' : 'pointer',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    opacity: submitting ? 0.7 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!submitting) e.target.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!submitting) e.target.style.transform = 'translateY(0)';
-                  }}
-                >
-                  {submitting ? 'AGGIUNTA IN CORSO...' : 'AGGIUNGI'}
-                </button>
-              </div>
-            </form>
+            ) : (
+              <FormInput label="Prezzo EUR" type="number" step="0.01" value={priceEur} onChange={e => setPriceEur(e.target.value)} placeholder="0.00" disabled={useLivePrice} />
+            )}
           </div>
 
-          <div style={{
-            background: 'rgba(26, 23, 53, 0.9)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(139, 92, 246, 0.15)',
-            borderRadius: '16px',
-            padding: '24px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '14px', fontWeight: '700', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Acquisti</h2>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {['ALL', 'BTC', 'VUAA'].map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilterAsset(f)}
-                    style={{
-                      padding: '6px 12px',
-                      background: filterAsset === f ? 'linear-gradient(135deg, #8B5CF6 0%, #C026D3 100%)' : 'rgba(139, 92, 246, 0.1)',
-                      color: '#FFFFFF',
-                      border: filterAsset === f ? 'none' : '1px solid rgba(139, 92, 246, 0.15)',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="form-row">
+            <label className="checkbox-wrapper">
+              <input type="checkbox" checked={useLivePrice} onChange={e => setUseLivePrice(e.target.checked)} />
+              <span className="checkbox-label">Usa prezzo live</span>
+            </label>
+          </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.15)' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Data</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Asset</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Importo</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quantita</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Prezzo</th>
-                  <th style={{ padding: '12px', textAlign: 'center', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPurchases.map((purchase, idx) => (
-                  <tr key={purchase.id} style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.1)', backgroundColor: idx % 2 === 0 ? 'rgba(139, 92, 246, 0.05)' : 'transparent' }}>
-                    <td style={{ padding: '12px', color: '#FFFFFF' }}>{new Date(purchase.date).toLocaleDateString('it-IT')}</td>
-                    <td style={{ padding: '12px' }}>
-                      <span style={{ background: purchase.asset === 'BTC' ? 'rgba(247, 147, 26, 0.2)' : 'rgba(0, 188, 212, 0.2)', color: purchase.asset === 'BTC' ? '#F7931A' : '#00BCD4', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
-                        {purchase.asset}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#FFFFFF' }}>€ {purchase.amount_eur.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#8B85A8' }}>{purchase.quantity.toFixed(4)}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#8B85A8' }}>€ {purchase.price_eur.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      {deleteConfirm === purchase.id ? (
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => handleDelete(purchase.id)}
-                            style={{ padding: '4px 8px', background: '#FF5252', color: '#FFFFFF', border: 'none', borderRadius: '4px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', textTransform: 'uppercase' }}
-                          >
-                            Si
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(null)}
-                            style={{ padding: '4px 8px', background: 'rgba(139, 92, 246, 0.2)', color: '#8B85A8', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '4px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', textTransform: 'uppercase' }}
-                          >
-                            No
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setDeleteConfirm(purchase.id)}
-                          style={{ padding: '4px 8px', background: 'rgba(255, 82, 82, 0.1)', color: '#FF5252', border: '1px solid rgba(255, 82, 82, 0.3)', borderRadius: '4px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', textTransform: 'uppercase' }}
-                        >
-                          Elimina
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <FormInput label="Note" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Aggiungi una nota..." />
+          <AlertMessage type="error" message={error} />
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="qty-preview">Quantità: <span className="qty-preview__value">{quantity}</span></div>
+            <button type="submit" className="btn btn--primary" disabled={submitting}>
+              {submitting ? 'Aggiunta in corso...' : 'Aggiungi'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="card overflow-auto">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 className="card__title mb-0">Acquisti</h2>
+          <div className="filter-bar">
+            {filterButtons.map(f => (
+              <button key={f} className={`btn btn--ghost btn--sm ${filterAsset === f ? 'active' : ''}`} onClick={() => setFilterAsset(f)}>
+                {f}
+              </button>
+            ))}
           </div>
         </div>
+        <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
       </div>
-    </div>
+    </PageLayout>
   );
 }

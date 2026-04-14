@@ -10,29 +10,15 @@ import Charts from './pages/Charts';
 import Settings from './pages/Settings';
 
 function ProtectedRoute({ children, isAuthenticated, isLoading }) {
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
+  if (isLoading) return <LoadingScreen />;
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
 function LoadingScreen({ message = "CARICAMENTO..." }) {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      height: '100vh', background: '#0D0B21', gap: '20px'
-    }}>
-      <div style={{
-        width: '48px', height: '48px',
-        background: 'linear-gradient(135deg, #8B5CF6, #C026D3)',
-        borderRadius: '12px', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        fontSize: '1.5rem', fontWeight: '800', color: '#FFF'
-      }}>W</div>
-      <div style={{ color: '#8B85A8', fontSize: '0.75rem', letterSpacing: '2px' }}>
-        {message}
-      </div>
+    <div className="loading-screen">
+      <div className="loading-logo">W</div>
+      <div className="loading-text">{message}</div>
     </div>
   );
 }
@@ -46,7 +32,6 @@ export default function App() {
   useEffect(() => {
     let attempts = 0;
     const maxAttempts = 5;
-
     const checkSetup = async () => {
       try {
         const result = await api.checkSetupRequired();
@@ -55,7 +40,6 @@ export default function App() {
       } catch (error) {
         attempts++;
         if (attempts < maxAttempts) {
-          // Backend sleeping, retry without reloading page
           setTimeout(checkSetup, 3000);
         } else {
           setBackendError(true);
@@ -63,52 +47,26 @@ export default function App() {
         }
       }
     };
-
     checkSetup();
   }, []);
 
-  const handleLogin = (token, username) => {
-    setToken(token);
-    setIsAuthenticated(true);
-  };
+  const handleLogin = (token, username) => { setToken(token); setIsAuthenticated(true); };
+  const handleLogout = () => { removeToken(); setIsAuthenticated(false); };
+  const handleSetupComplete = () => { setSetupRequired(false); };
 
-  const handleLogout = () => {
-    removeToken();
-    setIsAuthenticated(false);
-  };
-
-  const handleSetupComplete = () => {
-    setSetupRequired(false);
-  };
-
-  if (isLoading) {
-    return <LoadingScreen message="CONNESSIONE AL SERVER..." />;
-  }
+  if (isLoading) return <LoadingScreen message="CONNESSIONE AL SERVER..." />;
 
   if (backendError) {
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0D0B21', gap: '16px'
-      }}>
-        <div style={{
-          width: '48px', height: '48px',
-          background: 'linear-gradient(135deg, #8B5CF6, #C026D3)',
-          borderRadius: '12px', display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.5rem', fontWeight: '800', color: '#FFF'
-        }}>W</div>
-        <div style={{ color: '#FF5252', fontSize: '0.85rem' }}>BACKEND NON RAGGIUNGIBILE</div>
+      <div className="loading-screen">
+        <div className="loading-logo">W</div>
+        <div className="loading-error">BACKEND NON RAGGIUNGIBILE</div>
         <button
+          className="btn btn--primary"
           onClick={() => { setIsLoading(true); setBackendError(false); window.location.reload(); }}
-          style={{
-            background: 'linear-gradient(135deg, #8B5CF6, #C026D3)',
-            border: 'none', borderRadius: '8px', color: '#FFF',
-            padding: '10px 24px', cursor: 'pointer', fontWeight: '600',
-            fontSize: '0.82rem', letterSpacing: '0.04em'
-          }}
-        >RIPROVA</button>
+        >
+          RIPROVA
+        </button>
       </div>
     );
   }
@@ -116,47 +74,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/setup" element={
-          setupRequired
-            ? <SetupPage onComplete={handleSetupComplete} />
-            : <Navigate to="/login" />
-        } />
-        <Route path="/login" element={
-          !isAuthenticated
-            ? <LoginPage onLogin={handleLogin} />
-            : <Navigate to="/dashboard" />
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}>
-            <Dashboard onLogout={handleLogout} />
-          </ProtectedRoute>
-        } />
-        <Route path="/diary" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}>
-            <Diary onLogout={handleLogout} />
-          </ProtectedRoute>
-        } />
-        <Route path="/reports" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}>
-            <Reports onLogout={handleLogout} />
-          </ProtectedRoute>
-        } />
-        <Route path="/charts" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}>
-            <Charts onLogout={handleLogout} />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}>
-            <Settings onLogout={handleLogout} />
-          </ProtectedRoute>
-        } />
-        <Route path="/" element={
-          <Navigate to={isAuthenticated ? "/dashboard" : (setupRequired ? "/setup" : "/login")} />
-        } />
-        <Route path="*" element={
-          <Navigate to={isAuthenticated ? "/dashboard" : (setupRequired ? "/setup" : "/login")} />
-        } />
+        <Route path="/setup" element={setupRequired ? <SetupPage onComplete={handleSetupComplete} /> : <Navigate to="/login" />} />
+        <Route path="/login" element={!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
+        <Route path="/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Dashboard /></ProtectedRoute>} />
+        <Route path="/diary" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Diary /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Reports /></ProtectedRoute>} />
+        <Route path="/charts" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Charts /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Settings /></ProtectedRoute>} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : (setupRequired ? "/setup" : "/login")} />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : (setupRequired ? "/setup" : "/login")} />} />
       </Routes>
     </BrowserRouter>
   );

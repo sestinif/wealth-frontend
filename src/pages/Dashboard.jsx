@@ -1,212 +1,159 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import Sidebar from '../components/Sidebar';
-import Topbar from '../components/Topbar';
+import PageLayout from '../components/PageLayout';
+import KPICard from '../components/KPICard';
+import DataTable from '../components/DataTable';
+import AssetBadge from '../components/AssetBadge';
 import { api } from '../api.js';
+import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, TOOLTIP_STYLE } from '../utils/format';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [user, setUser] = useState(null);
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [dashboardData, userData] = await Promise.all([api.getDashboard(), api.getMe()]);
+        const [dashboardData, userData, assetsData] = await Promise.all([
+          api.getDashboard(), api.getMe(), api.getAssets()
+        ]);
         setData(dashboardData);
         setUser(userData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+        setAssets(assetsData);
+      } catch (err) { /* handled by loading state */ }
+      finally { setLoading(false); }
     };
-
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const generateChartData = () => {
-    if (!data || !data.purchases || data.purchases.length === 0) return [];
-    const purchases = [...data.purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const prices = data.prices;
-    const last30Days = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const pastPurchases = purchases.filter(p => p.date <= dateStr);
-      const btcQty = pastPurchases.filter(p => p.asset === 'BTC').reduce((s, p) => s + p.quantity, 0);
-      const vuaaQty = pastPurchases.filter(p => p.asset === 'VUAA').reduce((s, p) => s + p.quantity, 0);
-      const value = btcQty * prices.BTC + vuaaQty * prices.VUAA;
-      last30Days.push({ date: dateStr, value: Math.round(value) });
-    }
-    return last30Days;
-  };
+  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (!data || !user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#8B85A8' }}>Loading...</div>;
-  if (!data || !user) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#FF5252' }}>Error loading data</div>;
+  const { summary, prices, purchases } = data;
+  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B5CF6';
+  const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
 
-  const summary = data.summary;
-  const prices = data.prices;
+  const chartData = buildChartData(purchases, prices);
 
-  const KPICard = ({ label, value, color, subtext }) => (
-    <div style={{
-      flex: 1,
-      minWidth: '150px',
-      background: 'rgba(26, 23, 53, 0.9)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(139, 92, 246, 0.15)',
-      borderRadius: '16px',
-      padding: '20px',
-      textAlign: 'center',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease'
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.background = 'rgba(26, 23, 53, 0.95)';
-      e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
-      e.currentTarget.style.transform = 'translateY(-2px)';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.background = 'rgba(26, 23, 53, 0.9)';
-      e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.15)';
-      e.currentTarget.style.transform = 'translateY(0)';
-    }}>
-      <div style={{ fontSize: '11px', color: '#8B85A8', marginBottom: '8px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '20px', fontWeight: '700', background: `linear-gradient(135deg, ${color[0]} 0%, ${color[1]} 100%)`, backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '4px' }}>
-        {value}
-      </div>
-      {subtext && <div style={{ fontSize: '10px', color: '#8B85A8', fontWeight: '500' }}>{subtext}</div>}
-    </div>
-  );
+  // Dynamic allocation data
+  const allocData = assets
+    .filter(a => summary.by_asset[a.symbol]?.value > 0)
+    .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value, color: a.color }));
 
-  const chartData = generateChartData();
-  const allocData = [
-    { name: 'BTC', value: summary.btc_value, color: '#F7931A' },
-    { name: 'VUAA', value: summary.vuaa_value, color: '#00BCD4' }
+  const recentColumns = [
+    { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
+    { key: 'asset', label: 'Asset', render: (v) => <AssetBadge asset={v} color={getColor(v)} /> },
+    { key: 'amount_eur', label: 'Importo', align: 'right', sortable: true, render: v => formatEUR(v) },
+    { key: 'quantity', label: 'Quantità', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
+    { key: 'price_eur', label: 'Prezzo', align: 'right', muted: true, render: v => formatEUR(v) },
   ];
 
+  const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0B21' }}>
-      <Sidebar username={user.username} />
-      <div style={{ flex: 1, marginLeft: '220px', marginTop: '70px' }}>
-        <Topbar title="Dashboard" username={user.username} />
-        
-        <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-            <KPICard label="Valore Totale" value={`€ ${summary.total_value.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#8B5CF6', '#C026D3']} />
-            <KPICard label="Profitto/Perdita" value={`${summary.pnl >= 0 ? '+' : ''}€ ${summary.pnl.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={summary.pnl >= 0 ? ['#00E676', '#00C853'] : ['#FF5252', '#D32F2F']} subtext={`${summary.pnl_pct >= 0 ? '+' : ''}${summary.pnl_pct.toFixed(2)}%`} />
-            <KPICard label="Investito Totale" value={`€ ${summary.total_invested.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#8B85A8', '#6B63B5']} subtext={`${summary.n_purchases} acquisti`} />
-            <KPICard label="BTC Prezzo" value={`$ ${(prices.BTC_USD || prices.BTC).toLocaleString('en-US', { minimumFractionDigits: 0 })}`} color={['#F7931A', '#FB8500']} subtext={`Qty: ${summary.btc_qty.toFixed(4)}`} />
-            <KPICard label="VUAA Prezzo" value={`€ ${prices.VUAA.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#00BCD4', '#0097A7']} subtext={`Qty: ${summary.vuaa_qty.toFixed(2)}`} />
-            <KPICard label="DCA Medio BTC" value={`$ ${(summary.btc_avg_price_usd || summary.btc_avg_price).toLocaleString('en-US', { minimumFractionDigits: 0 })}`} color={['#9C27B0', '#7B1FA2']} subtext={`vs $ ${(prices.BTC_USD || prices.BTC).toLocaleString('en-US', { minimumFractionDigits: 0 })}`} />
-            <KPICard label="DCA Medio VUAA" value={`€ ${summary.vuaa_avg_price.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} color={['#00BCD4', '#0097A7']} subtext={`vs € ${prices.VUAA.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`} />
-          </div>
+    <PageLayout title="Dashboard" username={user.username}>
+      <div className="kpi-grid">
+        <KPICard label="Valore Totale" value={formatEUR(summary.total_value)} color={['#8B5CF6', '#C026D3']} />
+        <KPICard label="Profitto/Perdita" value={formatPnL(summary.pnl)} color={summary.pnl >= 0 ? ['#00E676', '#00C853'] : ['#FF5252', '#D32F2F']} subtext={formatPct(summary.pnl_pct)} />
+        <KPICard label="Investito Totale" value={formatEUR(summary.total_invested)} color={['#8B85A8', '#6B63B5']} subtext={`${summary.n_purchases} acquisti`} />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
-            <div style={{
-              background: 'rgba(26, 23, 53, 0.9)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(139, 92, 246, 0.15)',
-              borderRadius: '16px',
-              padding: '24px'
-            }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#FFFFFF', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Valore Portfolio - 30 Giorni</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#C026D3" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
-                  <XAxis dataKey="date" stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                  <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                  <Tooltip contentStyle={{ background: 'rgba(13, 11, 33, 0.95)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }} />
-                  <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+        {/* Dynamic per-asset KPI cards */}
+        {assets.map(asset => {
+          const assetData = summary.by_asset[asset.symbol];
+          if (!assetData) return null;
+          const priceInfo = prices[asset.symbol] || {};
+          const displayPrice = asset.asset_type === 'crypto'
+            ? formatUSD(priceInfo.usd || 0)
+            : formatEUR(priceInfo.eur || 0);
+          return (
+            <KPICard
+              key={asset.symbol}
+              label={`${asset.symbol} Prezzo`}
+              value={displayPrice}
+              color={[asset.color, asset.color]}
+              subtext={`Qty: ${formatQty(assetData.qty, asset.decimals)}`}
+            />
+          );
+        })}
+      </div>
 
-            <div style={{
-              background: 'rgba(26, 23, 53, 0.9)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(139, 92, 246, 0.15)',
-              borderRadius: '16px',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#FFFFFF', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Allocazione Asset</h3>
+      <div className="grid-2col section-gap">
+        <div className="card">
+          <h3 className="card__title">Valore Portfolio — 30 Giorni</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="dashGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#C026D3" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.1)" />
+              <XAxis dataKey="date" stroke="#8B85A8" style={{ fontSize: '10px' }} />
+              <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fillOpacity={1} fill="url(#dashGradient)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h3 className="card__title" style={{ alignSelf: 'flex-start' }}>Allocazione Asset</h3>
+          {allocData.length > 0 ? (
+            <>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie data={allocData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
-                    {allocData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                    {allocData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: 'rgba(13, 11, 33, 0.95)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ marginTop: '16px', display: 'flex', gap: '24px', fontSize: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '12px', height: '12px', background: '#F7931A', borderRadius: '3px' }}></div>
-                  <span style={{ color: '#8B85A8' }}>BTC: {(summary.btc_value / summary.total_value * 100).toFixed(1)}%</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '12px', height: '12px', background: '#00BCD4', borderRadius: '3px' }}></div>
-                  <span style={{ color: '#8B85A8' }}>VUAA: {(summary.vuaa_value / summary.total_value * 100).toFixed(1)}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{
-            background: 'rgba(26, 23, 53, 0.9)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(139, 92, 246, 0.15)',
-            borderRadius: '16px',
-            padding: '24px',
-            overflowX: 'auto'
-          }}>
-            <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#FFFFFF', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ultimi Acquisti</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.15)' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Data</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Asset</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Importo</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quantita</th>
-                  <th style={{ padding: '12px', textAlign: 'right', color: '#8B85A8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Prezzo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.purchases.slice(-5).reverse().map((purchase, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.1)', backgroundColor: idx % 2 === 0 ? 'rgba(139, 92, 246, 0.05)' : 'transparent' }}>
-                    <td style={{ padding: '12px', color: '#FFFFFF' }}>{new Date(purchase.date).toLocaleDateString('it-IT')}</td>
-                    <td style={{ padding: '12px' }}>
-                      <span style={{ background: purchase.asset === 'BTC' ? 'rgba(247, 147, 26, 0.2)' : 'rgba(0, 188, 212, 0.2)', color: purchase.asset === 'BTC' ? '#F7931A' : '#00BCD4', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
-                        {purchase.asset}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#FFFFFF' }}>€ {purchase.amount_eur.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#8B85A8' }}>{purchase.quantity.toFixed(4)}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', color: '#8B85A8' }}>€ {purchase.price_eur.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</td>
-                  </tr>
+              <div className="chart-legend">
+                {allocData.map(item => (
+                  <div key={item.name} className="chart-legend__item">
+                    <div className="chart-legend__dot" style={{ background: item.color }} />
+                    <span className="chart-legend__text">
+                      {item.name}: {summary.total_value > 0 ? (item.value / summary.total_value * 100).toFixed(1) : '0.0'}%
+                    </span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </>
+          ) : (
+            <div className="no-data">Nessun asset con valore</div>
+          )}
         </div>
       </div>
-    </div>
+
+      <div className="card overflow-auto">
+        <h3 className="card__title">Ultimi Acquisti</h3>
+        <DataTable columns={recentColumns} data={recentPurchases} defaultSort={{ key: 'date', direction: 'desc' }} />
+      </div>
+    </PageLayout>
   );
+}
+
+function buildChartData(purchases, prices) {
+  if (!purchases || purchases.length === 0) return [];
+  const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const past = sorted.filter(p => p.date <= dateStr);
+    const qtyByAsset = {};
+    past.forEach(p => { qtyByAsset[p.asset] = (qtyByAsset[p.asset] || 0) + p.quantity; });
+    let totalValue = 0;
+    for (const [symbol, qty] of Object.entries(qtyByAsset)) {
+      const priceInfo = prices[symbol] || {};
+      totalValue += qty * (priceInfo.eur || 0);
+    }
+    days.push({ date: dateStr, value: Math.round(totalValue) });
+  }
+  return days;
 }

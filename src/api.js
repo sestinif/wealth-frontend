@@ -17,13 +17,14 @@ const handleResponse = async (response) => {
   if (response.status === 401) {
     removeToken();
     window.location.href = '/login';
+    throw new Error('Session expired');
   }
-  
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'API Error' }));
-    throw new Error(error.detail || `HTTP ${response.status}`);
+    const error = await response.json().catch(() => ({ detail: 'Errore del server' }));
+    throw new Error(error.detail || 'Errore del server');
   }
-  
+
   return response.json().catch(() => ({}));
 };
 
@@ -145,5 +146,45 @@ export const api = {
       headers: authHeaders()
     });
     return handleResponse(response);
-  }
+  },
+
+  // --- Asset Management ---
+
+  getAssets: async () => {
+    const response = await fetch(`${BASE_URL}/assets`);
+    return handleResponse(response);
+  },
+
+  addAsset: async (assetData) => {
+    const response = await fetch(`${BASE_URL}/assets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(assetData)
+    });
+    return handleResponse(response);
+  },
+
+  removeAsset: async (symbol) => {
+    const response = await fetch(`${BASE_URL}/assets/${symbol}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  updateAssetColor: async (symbol, color) => {
+    const response = await fetch(`${BASE_URL}/assets/${symbol}/color`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ color })
+    });
+    return handleResponse(response);
+  },
+
+  searchAssets: async (query, type) => {
+    const response = await fetch(`${BASE_URL}/assets/search?q=${encodeURIComponent(query)}&type=${type}`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
 };

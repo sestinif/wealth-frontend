@@ -1,216 +1,203 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import Sidebar from '../components/Sidebar';
-import Topbar from '../components/Topbar';
+import PageLayout from '../components/PageLayout';
+import FormInput from '../components/FormInput';
 import { api } from '../api.js';
+import { TOOLTIP_STYLE } from '../utils/format';
+
+const GRID_STROKE = 'rgba(139, 92, 246, 0.1)';
+const AXIS_STYLE = { fontSize: '10px' };
 
 export default function Charts() {
   const [user, setUser] = useState(null);
   const [dashboard, setDashboard] = useState(null);
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [dcaAsset, setDcaAsset] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userData, dashboardData] = await Promise.all([api.getMe(), api.getDashboard()]);
+        const [userData, dashboardData, assetsData] = await Promise.all([
+          api.getMe(), api.getDashboard(), api.getAssets()
+        ]);
         setUser(userData);
         setDashboard(dashboardData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+        setAssets(assetsData);
+        if (assetsData.length > 0 && !dcaAsset) setDcaAsset(assetsData[0].symbol);
+      } catch (err) { /* handled by loading */ }
+      finally { setLoading(false); }
     };
     fetchData();
   }, []);
 
-  const buildPortfolioData = () => {
-    if (!dashboard || !dashboard.purchases || dashboard.purchases.length === 0) return [];
-    const prices = dashboard.prices;
-    const purchases = [...dashboard.purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const last30Days = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const pastPurchases = purchases.filter(p => p.date <= dateStr);
-      const btcQty = pastPurchases.filter(p => p.asset === 'BTC').reduce((s, p) => s + p.quantity, 0);
-      const vuaaQty = pastPurchases.filter(p => p.asset === 'VUAA').reduce((s, p) => s + p.quantity, 0);
-      const value = btcQty * prices.BTC + vuaaQty * prices.VUAA;
-      last30Days.push({ date: dateStr, value: Math.round(value) });
-    }
-    return last30Days;
-  };
+  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (!user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
-  const buildAllocationData = () => {
-    if (!dashboard || !dashboard.purchases || dashboard.purchases.length === 0) return [];
-    const prices = dashboard.prices;
-    const purchases = [...dashboard.purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const last30Days = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const pastPurchases = purchases.filter(p => p.date <= dateStr);
-      const btcQty = pastPurchases.filter(p => p.asset === 'BTC').reduce((s, p) => s + p.quantity, 0);
-      const vuaaQty = pastPurchases.filter(p => p.asset === 'VUAA').reduce((s, p) => s + p.quantity, 0);
-      last30Days.push({
-        date: dateStr,
-        BTC: Math.round(btcQty * prices.BTC),
-        VUAA: Math.round(vuaaQty * prices.VUAA)
-      });
-    }
-    return last30Days;
-  };
-
-  const buildMonthlyData = () => {
-    if (!dashboard || !dashboard.purchases || dashboard.purchases.length === 0) return [];
-    const prices = dashboard.prices;
-    const purchases = dashboard.purchases;
-    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-    const year = new Date().getFullYear();
-    return months.map((month, i) => {
-      const monthStr = `${year}-${String(i + 1).padStart(2, '0')}`;
-      const monthPurchases = purchases.filter(p => p.date.startsWith(monthStr));
-      const invested = monthPurchases.reduce((s, p) => s + p.amount_eur, 0);
-      const btcQty = monthPurchases.filter(p => p.asset === 'BTC').reduce((s, p) => s + p.quantity, 0);
-      const vuaaQty = monthPurchases.filter(p => p.asset === 'VUAA').reduce((s, p) => s + p.quantity, 0);
-      const value = btcQty * prices.BTC + vuaaQty * prices.VUAA;
-      return { month, invested: Math.round(invested), value: Math.round(value) };
-    }).filter(d => d.invested > 0 || d.value > 0);
-  };
-
-  const buildDCAData = () => {
-    if (!dashboard || !dashboard.purchases || dashboard.purchases.length === 0) return [];
-    const prices = dashboard.prices;
-    const btcPurchases = dashboard.purchases
-      .filter(p => p.asset === 'BTC')
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (btcPurchases.length === 0) return [];
-    let totalInvested = 0;
-    let totalQty = 0;
-    return btcPurchases.map((p, i) => {
-      totalInvested += p.amount_eur;
-      totalQty += p.quantity;
-      const avgPrice = totalInvested / totalQty;
-      return {
-        acquisto: i + 1,
-        'DCA Medio': Math.round(avgPrice),
-        'Prezzo Market': Math.round(prices.BTC)
-      };
-    });
-  };
-
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#8B85A8' }}>Loading...</div>;
-  if (!user) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#FF5252' }}>Error loading data</div>;
-
-  const portfolioData = buildPortfolioData();
-  const allocationData = buildAllocationData();
-  const monthlyData = buildMonthlyData();
-  const dcaData = buildDCAData();
-
-  const ChartCard = ({ title, children }) => (
-    <div style={{
-      background: 'rgba(26, 23, 53, 0.9)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(139, 92, 246, 0.15)',
-      borderRadius: '16px',
-      padding: '24px'
-    }}>
-      <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#FFFFFF', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
-
-  const NoData = () => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: '#8B85A8', fontSize: '13px' }}>
-      Nessun dato — aggiungi acquisti nel Diario
-    </div>
-  );
+  const portfolioData = buildPortfolioData(dashboard);
+  const allocationData = buildAllocationData(dashboard, assets);
+  const monthlyData = buildMonthlyData(dashboard);
+  const dcaData = buildDCAData(dashboard, dcaAsset);
+  const dcaOptions = assets.map(a => ({ value: a.symbol, label: a.symbol }));
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0B21' }}>
-      <Sidebar username={user.username} />
-      <div style={{ flex: 1, marginLeft: '220px', marginTop: '70px' }}>
-        <Topbar title="Grafici" username={user.username} />
+    <PageLayout title="Grafici" username={user.username}>
+      <div className="grid-2col section-gap">
+        <ChartCard title="Valore Portfolio — 30 Giorni" data={portfolioData}>
+          <AreaChart data={portfolioData}>
+            <defs>
+              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#C026D3" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+            <XAxis dataKey="date" stroke="#8B85A8" style={AXIS_STYLE} />
+            <YAxis stroke="#8B85A8" style={AXIS_STYLE} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fill="url(#chartGradient)" />
+          </AreaChart>
+        </ChartCard>
 
-        <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-            <ChartCard title="Valore Portfolio - 30 Giorni">
-              {portfolioData.length === 0 ? <NoData /> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={portfolioData}>
-                    <defs>
-                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#C026D3" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
-                    <XAxis dataKey="date" stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <Tooltip contentStyle={{ background: 'rgba(13, 11, 33, 0.95)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }} />
-                    <Area type="monotone" dataKey="value" stroke="#8B5CF6" strokeWidth={2} fill="url(#colorValue)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
+        <ChartCard title="Allocazione Asset" data={allocationData}>
+          <AreaChart data={allocationData}>
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+            <XAxis dataKey="date" stroke="#8B85A8" style={AXIS_STYLE} />
+            <YAxis stroke="#8B85A8" style={AXIS_STYLE} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Legend />
+            {assets.map(a => (
+              <Area key={a.symbol} type="monotone" dataKey={a.symbol}
+                stackId="1" stroke={a.color} fill={a.color} fillOpacity={0.6} />
+            ))}
+          </AreaChart>
+        </ChartCard>
+      </div>
 
-            <ChartCard title="BTC vs VUAA - Allocazione">
-              {allocationData.length === 0 ? <NoData /> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={allocationData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
-                    <XAxis dataKey="date" stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <Tooltip contentStyle={{ background: 'rgba(13, 11, 33, 0.95)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }} />
-                    <Legend />
-                    <Area type="monotone" dataKey="BTC" stackId="1" stroke="#F7931A" fill="#F7931A" fillOpacity={0.6} />
-                    <Area type="monotone" dataKey="VUAA" stackId="1" stroke="#00BCD4" fill="#00BCD4" fillOpacity={0.6} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
+      <div className="grid-2col">
+        <ChartCard title="Investimenti Mensili" data={monthlyData}>
+          <BarChart data={monthlyData}>
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+            <XAxis dataKey="month" stroke="#8B85A8" style={AXIS_STYLE} />
+            <YAxis stroke="#8B85A8" style={AXIS_STYLE} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Legend />
+            <Bar dataKey="invested" name="Investito" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="value" name="Valore" fill="#C026D3" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ChartCard>
+
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 className="card__title mb-0">DCA vs Market Price</h3>
+            <div style={{ width: '120px' }}>
+              <FormInput type="select" value={dcaAsset} onChange={e => setDcaAsset(e.target.value)} options={dcaOptions} />
+            </div>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-            <ChartCard title="Investimenti Mensili">
-              {monthlyData.length === 0 ? <NoData /> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
-                    <XAxis dataKey="month" stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <Tooltip contentStyle={{ background: 'rgba(13, 11, 33, 0.95)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }} />
-                    <Legend />
-                    <Bar dataKey="invested" name="Investito" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="value" name="Valore" fill="#C026D3" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
-
-            <ChartCard title="DCA BTC vs Market Price">
-              {dcaData.length === 0 ? <NoData /> : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={dcaData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
-                    <XAxis dataKey="acquisto" stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <YAxis stroke="#8B85A8" style={{ fontSize: '10px' }} />
-                    <Tooltip contentStyle={{ background: 'rgba(13, 11, 33, 0.95)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }} />
-                    <Legend />
-                    <Line type="monotone" dataKey="DCA Medio" stroke="#8B5CF6" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="Prezzo Market" stroke="#F7931A" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </ChartCard>
-          </div>
+          {dcaData.length === 0 ? (
+            <div className="no-data">Nessun dato per {dcaAsset}</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={dcaData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
+                <XAxis dataKey="acquisto" stroke="#8B85A8" style={AXIS_STYLE} />
+                <YAxis stroke="#8B85A8" style={AXIS_STYLE} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Legend />
+                <Line type="monotone" dataKey="DCA Medio" stroke="#8B5CF6" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Prezzo Market" stroke="#F7931A" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
+    </PageLayout>
+  );
+}
+
+function ChartCard({ title, data, children }) {
+  return (
+    <div className="card">
+      <h3 className="card__title">{title}</h3>
+      {!data || data.length === 0 ? (
+        <div className="no-data">Nessun dato — aggiungi acquisti nel Diario</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>{children}</ResponsiveContainer>
+      )}
     </div>
   );
+}
+
+function buildPortfolioData(dashboard) {
+  if (!dashboard?.purchases?.length) return [];
+  const { prices, purchases } = dashboard;
+  const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const past = sorted.filter(p => p.date <= ds);
+    const qtyByAsset = {};
+    past.forEach(p => { qtyByAsset[p.asset] = (qtyByAsset[p.asset] || 0) + p.quantity; });
+    let value = 0;
+    for (const [sym, qty] of Object.entries(qtyByAsset)) {
+      value += qty * ((prices[sym] || {}).eur || 0);
+    }
+    days.push({ date: ds, value: Math.round(value) });
+  }
+  return days;
+}
+
+function buildAllocationData(dashboard, assets) {
+  if (!dashboard?.purchases?.length) return [];
+  const { prices, purchases } = dashboard;
+  const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const past = sorted.filter(p => p.date <= ds);
+    const qtyByAsset = {};
+    past.forEach(p => { qtyByAsset[p.asset] = (qtyByAsset[p.asset] || 0) + p.quantity; });
+    const entry = { date: ds };
+    assets.forEach(a => {
+      const qty = qtyByAsset[a.symbol] || 0;
+      entry[a.symbol] = Math.round(qty * ((prices[a.symbol] || {}).eur || 0));
+    });
+    days.push(entry);
+  }
+  return days;
+}
+
+function buildMonthlyData(dashboard) {
+  if (!dashboard?.purchases?.length) return [];
+  const { prices, purchases } = dashboard;
+  const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  const year = new Date().getFullYear();
+  return months.map((month, i) => {
+    const ms = `${year}-${String(i + 1).padStart(2, '0')}`;
+    const mp = purchases.filter(p => p.date.startsWith(ms));
+    const invested = mp.reduce((s, p) => s + p.amount_eur, 0);
+    const qtyByAsset = {};
+    mp.forEach(p => { qtyByAsset[p.asset] = (qtyByAsset[p.asset] || 0) + p.quantity; });
+    let value = 0;
+    for (const [sym, qty] of Object.entries(qtyByAsset)) {
+      value += qty * ((prices[sym] || {}).eur || 0);
+    }
+    return { month, invested: Math.round(invested), value: Math.round(value) };
+  }).filter(d => d.invested > 0 || d.value > 0);
+}
+
+function buildDCAData(dashboard, selectedAsset) {
+  if (!dashboard?.purchases?.length || !selectedAsset) return [];
+  const assetPurchases = dashboard.purchases
+    .filter(p => p.asset === selectedAsset)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (!assetPurchases.length) return [];
+  const priceInfo = dashboard.prices[selectedAsset] || {};
+  let totalInv = 0, totalQty = 0;
+  return assetPurchases.map((p, i) => {
+    totalInv += p.amount_eur; totalQty += p.quantity;
+    return { acquisto: i + 1, 'DCA Medio': Math.round(totalInv / totalQty), 'Prezzo Market': Math.round(priceInfo.eur || 0) };
+  });
 }
