@@ -102,36 +102,58 @@ export default function Dashboard() {
     <PageLayout title="Dashboard" username={user.username}>
 
       {/* === HERO SECTION === */}
-      <div className="animate-in" style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
-          {greeting}, {user.username}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-          {best && best.pnl_pct > 0
-            ? <><span style={{ color: 'var(--text-1)' }}>{best.symbol}</span> è il tuo asset migliore con <span style={{ color: 'var(--green)' }}>+{best.pnl_pct.toFixed(1)}%</span> di rendimento</>
-            : `${summary.n_purchases} acquisti nel tuo portfolio`}
-        </div>
-      </div>
+      {(() => {
+        const isUsd = displayCurrency === 'USD' && eurUsdRate;
+        const rate = isUsd ? eurUsdRate : 1;
+        const cSym = isUsd ? '$ ' : '€ ';
+        const locale = isUsd ? 'en-US' : 'it-IT';
+        return (
+          <>
+            <div className="animate-in hero-greeting">
+              <div>
+                <div className="hero-greeting__title">{greeting}, {user.username}</div>
+                <div className="hero-greeting__sub">
+                  {best && best.pnl_pct > 0
+                    ? <><span style={{ color: 'var(--text-1)' }}>{best.symbol}</span> è il tuo asset migliore con <span style={{ color: 'var(--green)' }}>+{best.pnl_pct.toFixed(1)}%</span> di rendimento</>
+                    : `${summary.n_purchases} acquisti nel tuo portfolio`}
+                </div>
+              </div>
+              <div className="currency-toggle" title={eurUsdRate ? `1 € = ${eurUsdRate.toFixed(4)} $` : 'Tasso non disponibile'}>
+                {['EUR', 'USD'].map(c => (
+                  <button
+                    key={c} type="button"
+                    className={`currency-toggle__btn ${displayCurrency === c ? 'active' : ''}`}
+                    onClick={() => setDisplayCurrency(c)}
+                    disabled={c === 'USD' && !eurUsdRate}
+                  >
+                    {c === 'EUR' ? '€ EUR' : '$ USD'}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      <div className="hero-stats animate-in-1">
-        <div className="hero-stat">
-          <div className="hero-stat__label"><span className="live-dot" />Valore Portfolio</div>
-          <AnimatedNumber value={summary.total_value} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-1)' }} />
-          {summary.spec_value > 0
-            ? <div className="hero-stat__sub">+ € {summary.spec_value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} speculativo</div>
-            : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
-        </div>
-        <div className="hero-stat">
-          <div className="hero-stat__label">Profitto / Perdita</div>
-          <AnimatedNumber value={Math.abs(summary.pnl)} prefix={summary.pnl >= 0 ? '+€ ' : '-€ '} className="hero-stat__value" style={{ color: pnlC }} />
-          <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(summary.pnl_pct)}</div>
-        </div>
-        <div className="hero-stat">
-          <div className="hero-stat__label">Totale Investito</div>
-          <AnimatedNumber value={summary.total_invested} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-2)' }} />
-          <div className="hero-stat__sub">{summary.n_purchases} acquisti totali</div>
-        </div>
-      </div>
+            <div className="hero-stats animate-in-1">
+              <div className="hero-stat">
+                <div className="hero-stat__label"><span className="live-dot" />Valore Portfolio</div>
+                <AnimatedNumber value={summary.total_value * rate} prefix={cSym} className="hero-stat__value" style={{ color: 'var(--text-1)' }} />
+                {summary.spec_value > 0
+                  ? <div className="hero-stat__sub">+ {cSym}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} speculativo</div>
+                  : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat__label">Profitto / Perdita</div>
+                <AnimatedNumber value={Math.abs(summary.pnl) * rate} prefix={summary.pnl >= 0 ? '+' + cSym : '-' + cSym} className="hero-stat__value" style={{ color: pnlC }} />
+                <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(summary.pnl_pct)}</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat__label">Totale Investito</div>
+                <AnimatedNumber value={summary.total_invested * rate} prefix={cSym} className="hero-stat__value" style={{ color: 'var(--text-2)' }} />
+                <div className="hero-stat__sub">{summary.n_purchases} acquisti totali</div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* === COMPACT ASSET STRIP (always visible) === */}
       <div className="animate-in-2">
@@ -140,18 +162,6 @@ export default function Dashboard() {
             Portfolio Principale · {mainAssets.length} asset
           </div>
           <div className="section-header__actions">
-            <div className="currency-toggle" title={eurUsdRate ? `1 € = ${eurUsdRate.toFixed(4)} $` : 'Tasso non disponibile'}>
-              {['EUR', 'USD'].map(c => (
-                <button
-                  key={c} type="button"
-                  className={`currency-toggle__btn ${displayCurrency === c ? 'active' : ''}`}
-                  onClick={() => setDisplayCurrency(c)}
-                  disabled={c === 'USD' && !eurUsdRate}
-                >
-                  {c === 'EUR' ? '€ EUR' : '$ USD'}
-                </button>
-              ))}
-            </div>
             <button className={`collapse-btn ${showDetails ? 'expanded' : ''}`} onClick={() => setShowDetails(!showDetails)}>
               {showDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
               <span className="collapse-btn__arrow">▼</span>
