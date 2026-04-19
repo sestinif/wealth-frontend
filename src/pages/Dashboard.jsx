@@ -281,17 +281,10 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included)
             <div style={{ fontSize: 11, color: pc, fontWeight: 500, fontFamily: 'var(--font-num)' }}>{formatPnL(d.pnl)}</div>
             {ch24 !== 0 && <div style={{ fontSize: 9, color: ch24Color, fontFamily: 'var(--font-num)' }}>{ch24 >= 0 ? '+' : ''}{ch24}% 24h</div>}
           </div>
-          <button
-            onClick={() => onToggle(asset.symbol, included)}
-            title={included ? 'Escludi dai totali' : 'Includi nei totali'}
-            style={{
-              width: 22, height: 22, padding: 0, border: '1px solid var(--border)',
-              borderRadius: 5, background: 'transparent', cursor: 'pointer',
-              color: included ? 'var(--accent-soft)' : 'var(--text-3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
-            }}>
-            {included ? '●' : '○'}
-          </button>
+          <label className="toggle" title={included ? 'Escluso dai totali' : 'Incluso nei totali'}>
+            <input type="checkbox" checked={included} onChange={() => onToggle(asset.symbol, included)} />
+            <span className="toggle__slider" />
+          </label>
         </div>
       </div>
 
