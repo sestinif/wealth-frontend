@@ -71,7 +71,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
 
           <div style={{ padding: 20 }}>
             <div className="search-tabs">
-              {[['crypto', 'Crypto & Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
+              {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
                 <button key={k} className={`btn btn--ghost btn--sm ${type === k ? 'active' : ''}`}
                   onClick={() => { setType(k); setResults([]); setQuery(''); }}>{l}</button>
               ))}
@@ -81,7 +81,11 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               ref={inputRef}
               type="text"
               className="form-input form-input--lg"
-              placeholder={type === 'crypto' ? 'Es. pepe, brett, wif, bonk, solana...' : 'Es. VUAA, SPY, AAPL...'}
+              placeholder={
+                type === 'crypto' ? 'Es. bitcoin, ethereum, solana...'
+                : type === 'dex' ? 'Es. brett, pepe, wif, bonk...'
+                : 'Es. VUAA, SPY, AAPL...'
+              }
               value={query}
               onChange={e => setQuery(e.target.value)}
               style={{ marginBottom: 12 }}
@@ -100,10 +104,14 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                     </div>
                   )}
                   <div className="search-result__info" style={{ minWidth: 0 }}>
-                    <div className="search-result__symbol">{r.symbol}</div>
+                    <div className="search-result__symbol">
+                      {r.symbol}
+                      {r.chain && <span style={{ fontSize: 9, marginLeft: 6, padding: '1px 5px', borderRadius: 3, background: 'rgba(167,139,250,0.15)', color: '#a78bfa', textTransform: 'uppercase' }}>{r.chain}</span>}
+                    </div>
                     <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.name}
-                      {r.coingecko_id && <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span>}
+                      {r.liquidity_usd ? <span style={{ opacity: 0.5, marginLeft: 4 }}>· Liq ${r.liquidity_usd >= 1e6 ? (r.liquidity_usd / 1e6).toFixed(1) + 'M' : (r.liquidity_usd / 1e3).toFixed(0) + 'K'}</span>
+                        : r.coingecko_id && type === 'crypto' ? <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span> : null}
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? '#eeedf2' : '#4a4660', fontWeight: 500, fontFamily: 'var(--font-num)', marginRight: 8, minWidth: 70, textAlign: 'right' }}>

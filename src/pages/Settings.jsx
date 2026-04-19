@@ -141,13 +141,17 @@ export default function Settings() {
 
         <h3 className="card__title">Aggiungi asset</h3>
         <div className="search-tabs">
-          {[['crypto', 'Crypto'], ['stock', 'Stock & ETF']].map(([k, l]) => (
+          {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
             <button key={k} className={`btn btn--ghost btn--sm ${searchType === k ? 'active' : ''}`}
               onClick={() => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }}>{l}</button>
           ))}
         </div>
         <FormInput
-          placeholder={searchType === 'crypto' ? 'Cerca crypto (ethereum, solana...)' : 'Cerca ETF/azione (SPY, AAPL...)'}
+          placeholder={
+            searchType === 'crypto' ? 'Cerca crypto (ethereum, solana...)'
+            : searchType === 'dex' ? 'Cerca meme coin (brett, pepe, wif...)'
+            : 'Cerca ETF/azione (SPY, AAPL...)'
+          }
           value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
         />
         {searching && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>Ricerca...</div>}
