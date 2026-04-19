@@ -91,16 +91,24 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
 
             <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {results.map(r => (
-                <div key={r.symbol + (r.coingecko_id || '')} className="search-result">
-                  <div className="search-result__info">
-                    <div className="search-result__symbol">{r.symbol}</div>
-                    <div className="search-result__name">{r.name}</div>
-                  </div>
-                  {(r.price_usd || r.price_eur) ? (
-                    <div style={{ fontSize: 12, color: '#eeedf2', fontWeight: 500, fontFamily: 'var(--font-num)', marginRight: 8 }}>
-                      {r.price_usd ? formatUSD(r.price_usd) : formatEUR(r.price_eur)}
+                <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="search-result">
+                  {r.thumb ? (
+                    <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#a78bfa', fontWeight: 600, flexShrink: 0 }}>
+                      {r.symbol?.slice(0, 2)}
                     </div>
-                  ) : null}
+                  )}
+                  <div className="search-result__info" style={{ minWidth: 0 }}>
+                    <div className="search-result__symbol">{r.symbol}</div>
+                    <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {r.name}
+                      {r.coingecko_id && <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span>}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? '#eeedf2' : '#4a4660', fontWeight: 500, fontFamily: 'var(--font-num)', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
+                    {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
+                  </div>
                   <button className="btn btn--primary btn--sm" disabled={adding === r.symbol} onClick={() => handleAdd(r)}>
                     {adding === r.symbol ? '...' : 'Aggiungi'}
                   </button>
