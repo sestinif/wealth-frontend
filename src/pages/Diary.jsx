@@ -28,6 +28,7 @@ export default function Diary() {
   const [filterAsset, setFilterAsset] = useState('ALL');
   const [qty, setQty] = useState('');
   const [lastEdited, setLastEdited] = useState('amount'); // 'amount' or 'qty'
+  const [priceCurrency, setPriceCurrency] = useState('EUR'); // 'EUR' or 'USD'
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showAddAsset, setShowAddAsset] = useState(false);
@@ -63,17 +64,20 @@ export default function Diary() {
     fetchData();
   }, []);
 
+  const hasUsdRate = prices[asset]?.eur && prices[asset]?.usd;
+
   useEffect(() => {
     if (useLivePrice && asset && prices[asset]) {
       const priceInfo = prices[asset];
-      setPriceEur(priceInfo.eur || '');
-      if (isCrypto) {
-        setPriceUsd(priceInfo.usd || '');
+      if (priceCurrency === 'USD' && priceInfo.usd) {
+        setPriceUsd(priceInfo.usd.toString());
+        if (priceInfo.eur) setPriceEur(priceInfo.eur.toString());
       } else {
-        setPriceUsd('');
+        setPriceEur((priceInfo.eur || '').toString());
+        setPriceUsd((priceInfo.usd || '').toString());
       }
     }
-  }, [asset, useLivePrice, prices, assets]);
+  }, [asset, useLivePrice, prices, priceCurrency]);
 
   const handleAmountChange = (v) => {
     setAmountEur(v);
@@ -105,6 +109,28 @@ export default function Diary() {
     }
   };
 
+  const handlePriceInputChange = (v) => {
+    // The user is entering the price in the selected currency
+    if (priceCurrency === 'USD') {
+      setPriceUsd(v);
+      const p = parseFloat(v);
+      if (p > 0 && hasUsdRate) {
+        const rate = prices[asset].eur / prices[asset].usd;
+        handlePriceEurChange((p * rate).toString());
+      }
+    } else {
+      handlePriceEurChange(v);
+      // Try to update USD from EUR if we have the rate
+      const p = parseFloat(v);
+      if (p > 0 && hasUsdRate) {
+        const rate = prices[asset].usd / prices[asset].eur;
+        setPriceUsd((p * rate).toString());
+      }
+    }
+  };
+
+  const currentPriceInput = priceCurrency === 'USD' ? priceUsd : priceEur;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!date || !asset || !amountEur || !priceEur) { setError('Completa tutti i campi'); return; }
@@ -119,7 +145,7 @@ export default function Diary() {
       await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd);
       const updatedPurchases = await api.getPurchases();
       setPurchases(updatedPurchases);
-      setAmountEur(''); setPriceEur(''); setQty(''); setNotes('');
+      setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes('');
       setDate(new Date().toISOString().split('T')[0]);
       setError('');
       toast(`Acquisto ${asset} aggiunto`, 'success');
@@ -180,27 +206,38 @@ export default function Diary() {
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowAddAsset(true)} title="Aggiungi nuovo asset" style={{ padding: '0 10px', fontSize: 16 }}>+</button>
               </div>
             </div>
-            {isCrypto ? (
-              <div className="form-group">
-                <label className="form-label">Prezzo {asset} (USD)</label>
-                <input
-                  type="number" step="any" className="form-input"
-                  value={priceUsd}
-                  onChange={e => {
-                    setPriceUsd(e.target.value);
-                    if (prices[asset]?.eur && prices[asset]?.usd && parseFloat(e.target.value) > 0) {
-                      const rate = prices[asset].eur / prices[asset].usd;
-                      const newPriceEur = (parseFloat(e.target.value) * rate).toFixed(8);
-                      handlePriceEurChange(newPriceEur);
-                    }
-                  }}
-                  placeholder="0.00" disabled={useLivePrice}
-                />
-                {priceEur && <div className="form-hint">≈ € {parseFloat(priceEur).toFixed(priceEur < 0.01 ? 8 : 2)}</div>}
-              </div>
-            ) : (
-              <FormInput label="Prezzo EUR" type="number" step="any" value={priceEur} onChange={e => handlePriceEurChange(e.target.value)} placeholder="0.00" disabled={useLivePrice} />
-            )}
+            <div className="form-group">
+              <label className="form-label">
+                Prezzo {asset}
+                <span style={{ float: 'right', display: 'inline-flex', gap: 2 }}>
+                  {['EUR', 'USD'].map(c => (
+                    <button
+                      key={c} type="button"
+                      onClick={() => setPriceCurrency(c)}
+                      disabled={c === 'USD' && !hasUsdRate}
+                      style={{
+                        padding: '1px 7px', fontSize: 10, fontWeight: 600,
+                        background: priceCurrency === c ? 'var(--accent)' : 'transparent',
+                        color: priceCurrency === c ? '#fff' : 'var(--text-3)',
+                        border: '1px solid ' + (priceCurrency === c ? 'var(--accent)' : 'var(--border)'),
+                        borderRadius: 4, cursor: (c === 'USD' && !hasUsdRate) ? 'not-allowed' : 'pointer',
+                        opacity: (c === 'USD' && !hasUsdRate) ? 0.3 : 1,
+                      }}>
+                      {c}
+                    </button>
+                  ))}
+                </span>
+              </label>
+              <input
+                type="number" step="any" className="form-input"
+                value={currentPriceInput}
+                onChange={e => handlePriceInputChange(e.target.value)}
+                placeholder="0.00" disabled={useLivePrice}
+              />
+              {priceCurrency === 'USD' && priceEur && (
+                <div className="form-hint">≈ € {parseFloat(priceEur).toLocaleString('it-IT', { minimumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 2, maximumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 4 })}</div>
+              )}
+            </div>
             <FormInput label="Importo EUR" type="number" step="any" value={amountEur} onChange={e => handleAmountChange(e.target.value)} placeholder="0.00" />
             <FormInput label={`Quantità ${asset || ''}`} type="number" step="any" value={qty} onChange={e => handleQtyChange(e.target.value)} placeholder="0.00" />
           </div>
