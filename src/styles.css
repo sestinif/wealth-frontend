@@ -399,6 +399,22 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .btn--full { width: 100%; }
 .btn--lg { padding: 11px 20px; font-size: 13px; border-radius: 10px; }
 
+/* ICON BUTTON (square, matches form-input height) */
+.icon-btn {
+  width: 38px; height: 38px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-2); cursor: pointer;
+  transition: all 120ms var(--ease); flex-shrink: 0;
+}
+.icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+  background: var(--accent-dim);
+}
+.icon-btn:active { transform: scale(0.96); }
+
 /* BADGE */
 .badge {
   padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700;
@@ -474,6 +490,21 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .chart-legend__item { display: flex; align-items: center; gap: 5px; }
 .chart-legend__dot { width: 6px; height: 6px; border-radius: 2px; }
 .chart-legend__text { color: var(--text-2); font-variant-numeric: tabular-nums; font-family: var(--font-num); }
+
+/* Pie / donut legend — compact 3-col grid */
+.pie-legend { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+.pie-legend__row {
+  display: grid;
+  grid-template-columns: 10px minmax(56px, auto) 1fr 54px;
+  align-items: center; gap: 10px;
+  padding: 5px 8px; border-radius: 6px;
+  font-size: 12px; transition: background 100ms;
+}
+.pie-legend__row:hover { background: rgba(255,255,255,0.025); }
+.pie-legend__dot { width: 7px; height: 7px; border-radius: 2px; }
+.pie-legend__name { color: var(--text-2); font-weight: 500; letter-spacing: 0.3px; }
+.pie-legend__value { color: var(--text-1); font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right; }
+.pie-legend__pct { color: var(--text-3); font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right; font-size: 11px; }
 
 /* MISC */
 .section-gap { margin-bottom: 10px; }

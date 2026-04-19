@@ -144,17 +144,13 @@ export default function Charts() {
                   <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v), 'Valore']} />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+              <div className="pie-legend">
                 {pieData.map(item => (
-                  <div key={item.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: 2, background: item.color }} />
-                      <span style={{ color: 'var(--text-2)' }}>{item.name}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                      <span style={{ color: 'var(--text-1)', fontFamily: 'var(--font-num)' }}>{formatEUR(item.value)}</span>
-                      <span style={{ color: 'var(--text-3)', fontFamily: 'var(--font-num)', width: 40, textAlign: 'right' }}>{item.pct}%</span>
-                    </div>
+                  <div key={item.name} className="pie-legend__row">
+                    <div className="pie-legend__dot" style={{ background: item.color }} />
+                    <span className="pie-legend__name">{item.name}</span>
+                    <span className="pie-legend__value">{formatEUR(item.value)}</span>
+                    <span className="pie-legend__pct">{item.pct}%</span>
                   </div>
                 ))}
               </div>
