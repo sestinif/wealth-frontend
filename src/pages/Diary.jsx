@@ -26,6 +26,8 @@ export default function Diary() {
   const [notes, setNotes] = useState('');
   const [useLivePrice, setUseLivePrice] = useState(true);
   const [filterAsset, setFilterAsset] = useState('ALL');
+  const [qty, setQty] = useState('');
+  const [lastEdited, setLastEdited] = useState('amount'); // 'amount' or 'qty'
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showAddAsset, setShowAddAsset] = useState(false);
@@ -73,7 +75,35 @@ export default function Diary() {
     }
   }, [asset, useLivePrice, prices, assets]);
 
-  const quantity = amountEur && priceEur ? (parseFloat(amountEur) / parseFloat(priceEur)).toFixed(8) : 0;
+  const handleAmountChange = (v) => {
+    setAmountEur(v);
+    setLastEdited('amount');
+    const p = parseFloat(priceEur);
+    const a = parseFloat(v);
+    if (p > 0 && a > 0) setQty((a / p).toFixed(8));
+    else if (!v) setQty('');
+  };
+  const handleQtyChange = (v) => {
+    setQty(v);
+    setLastEdited('qty');
+    const p = parseFloat(priceEur);
+    const q = parseFloat(v);
+    if (p > 0 && q > 0) setAmountEur((q * p).toFixed(2));
+    else if (!v) setAmountEur('');
+  };
+  const handlePriceEurChange = (v) => {
+    setPriceEur(v);
+    const p = parseFloat(v);
+    if (p > 0) {
+      if (lastEdited === 'amount') {
+        const a = parseFloat(amountEur);
+        if (a > 0) setQty((a / p).toFixed(8));
+      } else {
+        const q = parseFloat(qty);
+        if (q > 0) setAmountEur((q * p).toFixed(2));
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -89,7 +119,7 @@ export default function Diary() {
       await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd);
       const updatedPurchases = await api.getPurchases();
       setPurchases(updatedPurchases);
-      setAmountEur(''); setPriceEur(''); setNotes('');
+      setAmountEur(''); setPriceEur(''); setQty(''); setNotes('');
       setDate(new Date().toISOString().split('T')[0]);
       setError('');
       toast(`Acquisto ${asset} aggiunto`, 'success');
@@ -150,27 +180,33 @@ export default function Diary() {
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowAddAsset(true)} title="Aggiungi nuovo asset" style={{ padding: '0 10px', fontSize: 16 }}>+</button>
               </div>
             </div>
-            <FormInput label="Importo EUR" type="number" step="0.01" value={amountEur} onChange={e => setAmountEur(e.target.value)} placeholder="0.00" />
             {isCrypto ? (
               <div className="form-group">
-                <label className="form-label">Prezzo {asset} (USD $)</label>
+                <label className="form-label">Prezzo {asset} (USD)</label>
                 <input
-                  type="number" step="1" className="form-input"
+                  type="number" step="any" className="form-input"
                   value={priceUsd}
                   onChange={e => {
                     setPriceUsd(e.target.value);
                     if (prices[asset]?.eur && prices[asset]?.usd && parseFloat(e.target.value) > 0) {
                       const rate = prices[asset].eur / prices[asset].usd;
-                      setPriceEur((parseFloat(e.target.value) * rate).toFixed(2));
+                      const newPriceEur = (parseFloat(e.target.value) * rate).toFixed(8);
+                      handlePriceEurChange(newPriceEur);
                     }
                   }}
-                  placeholder="es. 85000" disabled={useLivePrice}
+                  placeholder="0.00" disabled={useLivePrice}
                 />
-                {priceEur && <div className="form-hint">≈ {formatEUR(priceEur, 0)}</div>}
+                {priceEur && <div className="form-hint">≈ € {parseFloat(priceEur).toFixed(priceEur < 0.01 ? 8 : 2)}</div>}
               </div>
             ) : (
-              <FormInput label="Prezzo EUR" type="number" step="0.01" value={priceEur} onChange={e => setPriceEur(e.target.value)} placeholder="0.00" disabled={useLivePrice} />
+              <FormInput label="Prezzo EUR" type="number" step="any" value={priceEur} onChange={e => handlePriceEurChange(e.target.value)} placeholder="0.00" disabled={useLivePrice} />
             )}
+            <FormInput label="Importo EUR" type="number" step="any" value={amountEur} onChange={e => handleAmountChange(e.target.value)} placeholder="0.00" />
+            <FormInput label={`Quantità ${asset || ''}`} type="number" step="any" value={qty} onChange={e => handleQtyChange(e.target.value)} placeholder="0.00" />
+          </div>
+
+          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
+            Compila <strong style={{ color: 'var(--text-2)' }}>Importo EUR</strong> o <strong style={{ color: 'var(--text-2)' }}>Quantità</strong> — l'altro si calcola automaticamente
           </div>
 
           <div className="form-row">
@@ -183,10 +219,9 @@ export default function Diary() {
           <FormInput label="Note" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Aggiungi una nota..." />
           <AlertMessage type="error" message={error} />
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div className="qty-preview">Quantità: <span className="qty-preview__value">{quantity}</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
             <button type="submit" className="btn btn--primary" disabled={submitting}>
-              {submitting ? 'Aggiunta in corso...' : 'Aggiungi'}
+              {submitting ? 'Aggiunta in corso...' : 'Aggiungi acquisto'}
             </button>
           </div>
         </form>
