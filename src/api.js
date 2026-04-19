@@ -172,6 +172,15 @@ export const api = {
     return handleResponse(response);
   },
 
+  updateAssetTracking: async (symbol, included) => {
+    const response = await fetch(`${BASE_URL}/assets/${symbol}/tracking`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ included })
+    });
+    return handleResponse(response);
+  },
+
   updateAssetColor: async (symbol, color) => {
     const response = await fetch(`${BASE_URL}/assets/${symbol}/color`, {
       method: 'PATCH',
