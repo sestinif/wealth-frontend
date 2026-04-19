@@ -4,6 +4,7 @@ import DataTable from '../components/DataTable';
 import FormInput from '../components/FormInput';
 import AssetBadge from '../components/AssetBadge';
 import AlertMessage from '../components/AlertMessage';
+import AddAssetModal from '../components/AddAssetModal';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatDate } from '../utils/format';
@@ -27,6 +28,16 @@ export default function Diary() {
   const [filterAsset, setFilterAsset] = useState('ALL');
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showAddAsset, setShowAddAsset] = useState(false);
+
+  const handleAssetAdded = async (newAsset) => {
+    const [updatedAssets, updatedPrices] = await Promise.all([api.getAssets(), api.getPrices()]);
+    setAssets(updatedAssets);
+    setPrices(updatedPrices);
+    setAsset(newAsset.symbol);
+    setShowAddAsset(false);
+    toast(`${newAsset.symbol} aggiunto · selezionato per l'acquisto`, 'success');
+  };
 
   const currentAsset = assets.find(a => a.symbol === asset);
   const isCrypto = currentAsset?.asset_type === 'crypto';
@@ -130,7 +141,15 @@ export default function Diary() {
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <FormInput label="Data" type="date" value={date} onChange={e => setDate(e.target.value)} />
-            <FormInput label="Asset" type="select" value={asset} onChange={e => setAsset(e.target.value)} options={assetOptions} />
+            <div className="form-group">
+              <label className="form-label">Asset</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)} style={{ flex: 1 }}>
+                  {assetOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowAddAsset(true)} title="Aggiungi nuovo asset" style={{ padding: '0 10px', fontSize: 16 }}>+</button>
+              </div>
+            </div>
             <FormInput label="Importo EUR" type="number" step="0.01" value={amountEur} onChange={e => setAmountEur(e.target.value)} placeholder="0.00" />
             {isCrypto ? (
               <div className="form-group">
@@ -186,6 +205,14 @@ export default function Diary() {
         </div>
         <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
       </div>
+
+      {showAddAsset && (
+        <AddAssetModal
+          existingAssets={assets}
+          onClose={() => setShowAddAsset(false)}
+          onAdded={handleAssetAdded}
+        />
+      )}
     </PageLayout>
   );
 }
