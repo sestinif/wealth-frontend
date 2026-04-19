@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/PageLayout';
-import KPICard from '../components/KPICard';
 import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
 import FormInput from '../components/FormInput';
+import AnimatedNumber from '../components/AnimatedNumber';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatPnL, formatPct, formatDate } from '../utils/format';
 
@@ -16,6 +16,7 @@ export default function Reports() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [report, setReport] = useState(null);
+  const [showTx, setShowTx] = useState(false);
 
   useEffect(() => {
     Promise.all([api.getMe(), api.getAssets()])
@@ -46,7 +47,10 @@ export default function Reports() {
   const yearOptions = Array.from({ length: new Date().getFullYear() - 2023 }, (_, i) => ({
     value: 2024 + i, label: String(2024 + i)
   }));
-  const monthOptions = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
+  const monthOptions = [
+    [1, 'Gennaio'], [2, 'Febbraio'], [3, 'Marzo'], [4, 'Aprile'], [5, 'Maggio'], [6, 'Giugno'],
+    [7, 'Luglio'], [8, 'Agosto'], [9, 'Settembre'], [10, 'Ottobre'], [11, 'Novembre'], [12, 'Dicembre']
+  ].map(([v, l]) => ({ value: v, label: l }));
 
   const assetColumns = [
     { key: 'asset', label: 'Asset', render: (v) => <AssetBadge asset={v} color={getColor(v)} /> },
@@ -64,43 +68,99 @@ export default function Reports() {
   ];
 
   const assetData = report ? Object.entries(report.by_asset).map(([asset, d]) => ({ asset, ...d })) : [];
+  const pnlC = report && report.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+
+  const periodLabel = tab === 'monthly'
+    ? `${monthOptions.find(m => m.value === month)?.label} ${year}`
+    : tab === 'annual' ? `Anno ${year}`
+    : 'Lifetime';
 
   return (
     <PageLayout title="Report" username={user.username} size="md">
-      <div className="tab-bar">
-        {[['monthly', 'Mensile'], ['annual', 'Annuale'], ['lifetime', 'Lifetime']].map(([key, label]) => (
+
+      {/* Header */}
+      <div className="animate-in" style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
+          Report {periodLabel}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+          Analisi periodica del tuo portfolio
+        </div>
+      </div>
+
+      {/* Tab + filters */}
+      <div className="tab-bar animate-in-1">
+        {[['lifetime', 'Lifetime'], ['annual', 'Annuale'], ['monthly', 'Mensile']].map(([key, label]) => (
           <button key={key} className={`btn btn--ghost ${tab === key ? 'active' : ''}`} onClick={() => setTab(key)}>
             {label}
           </button>
         ))}
+        {(tab === 'monthly' || tab === 'annual') && (
+          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+            <div style={{ width: 100 }}>
+              <select className="form-input" value={year} onChange={e => setYear(parseInt(e.target.value))} style={{ padding: '7px 12px' }}>
+                {yearOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+            {tab === 'monthly' && (
+              <div style={{ width: 130 }}>
+                <select className="form-input" value={month} onChange={e => setMonth(parseInt(e.target.value))} style={{ padding: '7px 12px' }}>
+                  {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {(tab === 'monthly' || tab === 'annual') && (
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-          <FormInput type="select" value={year} onChange={e => setYear(parseInt(e.target.value))} options={yearOptions} />
-          {tab === 'monthly' && (
-            <FormInput type="select" value={month} onChange={e => setMonth(parseInt(e.target.value))} options={monthOptions} />
-          )}
-        </div>
-      )}
 
       {report && (
         <>
-          <div className="kpi-grid">
-            <KPICard label="Investito" value={formatEUR(report.total_invested)} color={['#8B85A8', '#6B63B5']} interactive={false} />
-            <KPICard label="Valore Attuale" value={formatEUR(report.total_value)} color={['#8B5CF6', '#C026D3']} interactive={false} />
-            <KPICard label="P&L" value={formatPnL(report.pnl)} color={report.pnl >= 0 ? ['#00E676', '#00C853'] : ['#FF5252', '#D32F2F']} subtext={formatPct(report.pnl_pct)} interactive={false} />
+          {/* Hero stats for the period */}
+          <div className="hero-stats animate-in-2">
+            <div className="hero-stat">
+              <div className="hero-stat__label">Investito nel periodo</div>
+              <AnimatedNumber value={report.total_invested} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-2)' }} />
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat__label">Valore Attuale</div>
+              <AnimatedNumber value={report.total_value} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-1)' }} />
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat__label">Profitto / Perdita</div>
+              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+€ ' : '-€ '} className="hero-stat__value" style={{ color: pnlC }} />
+              <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(report.pnl_pct)}</div>
+            </div>
           </div>
 
-          <div className="card section-gap">
-            <h3 className="card__title">Breakdown per Asset</h3>
-            <DataTable columns={assetColumns} data={assetData} />
+          {/* Asset breakdown */}
+          <div className="animate-in-3" style={{ marginBottom: 16 }}>
+            <div className="section-header">
+              <div className="section-header__title">Breakdown per Asset</div>
+              <div className="section-header__meta">{assetData.length} asset</div>
+            </div>
+            <div className="card overflow-auto" style={{ padding: 0 }}>
+              <DataTable columns={assetColumns} data={assetData} />
+            </div>
           </div>
 
+          {/* Transactions (collapsible) */}
           {report.transactions && report.transactions.length > 0 && (
-            <div className="card overflow-auto">
-              <h3 className="card__title">Transazioni</h3>
-              <DataTable columns={txColumns} data={report.transactions} defaultSort={{ key: 'date', direction: 'desc' }} />
+            <div className="animate-in-4" style={{ marginBottom: 16 }}>
+              <div className="section-header">
+                <div className="section-header__title">Transazioni del periodo</div>
+                <div className="section-header__actions">
+                  <span className="section-header__meta">{report.transactions.length} acquisti</span>
+                  <button className={`collapse-btn ${showTx ? 'expanded' : ''}`} onClick={() => setShowTx(!showTx)}>
+                    {showTx ? 'Nascondi' : 'Mostra'}
+                    <span className="collapse-btn__arrow">▼</span>
+                  </button>
+                </div>
+              </div>
+              {showTx && (
+                <div className="card overflow-auto" style={{ padding: 0 }}>
+                  <DataTable columns={txColumns} data={report.transactions} defaultSort={{ key: 'date', direction: 'desc' }} />
+                </div>
+              )}
             </div>
           )}
         </>

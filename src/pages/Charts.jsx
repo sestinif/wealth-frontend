@@ -55,8 +55,18 @@ export default function Charts() {
   return (
     <PageLayout title="Grafici" username={user.username}>
 
+      {/* Header */}
+      <div className="animate-in" style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
+          Grafici & Analytics
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+          Andamento del tuo portfolio nel tempo
+        </div>
+      </div>
+
       {/* Portfolio Value — Full Width */}
-      <div className="card section-gap animate-in">
+      <div className="card section-gap animate-in-1">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div>
             <h3 className="card__title mb-0">Valore Portfolio</h3>
@@ -96,7 +106,7 @@ export default function Charts() {
       </div>
 
       {/* Allocation + Pie */}
-      <div className="grid-2col section-gap animate-in-1">
+      <div className="grid-2col section-gap animate-in-2">
         <div className="card">
           <h3 className="card__title">Allocazione nel tempo</h3>
           {allocData.length > 0 ? (
@@ -146,7 +156,7 @@ export default function Charts() {
       </div>
 
       {/* Monthly + DCA */}
-      <div className="grid-2col animate-in-2">
+      <div className="grid-2col animate-in-3">
         <div className="card">
           <h3 className="card__title">Investimenti mensili {new Date().getFullYear()}</h3>
           {monthlyData.length > 0 ? (

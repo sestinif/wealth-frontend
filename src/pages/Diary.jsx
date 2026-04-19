@@ -187,24 +187,39 @@ export default function Diary() {
     return <button className="btn btn--danger btn--sm" onClick={() => setDeleteConfirm(row.id)}>Elimina</button>;
   };
 
-  const assetOptions = assets.map(a => ({ value: a.symbol, label: `${a.symbol} — ${a.name}` }));
+  const assetOptions = assets.map(a => ({ value: a.symbol, label: a.symbol }));
+  const selectedAssetName = assets.find(a => a.symbol === asset)?.name || '';
   const filterButtons = ['ALL', ...assets.map(a => a.symbol)];
 
   return (
     <PageLayout title="Diario" username={user.username} size="md">
-      <div className="card section-gap">
-        <h2 className="card__title card__title--lg">Aggiungi Acquisto</h2>
+
+      {/* Header */}
+      <div className="animate-in" style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
+          Diario Acquisti
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+          {purchases.length} acquisti registrati
+        </div>
+      </div>
+
+      <div className="section-header animate-in-1">
+        <div className="section-header__title">Nuovo acquisto</div>
+      </div>
+      <div className="card section-gap animate-in-1">
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <FormInput label="Data" type="date" value={date} onChange={e => setDate(e.target.value)} />
             <div className="form-group">
               <label className="form-label">Asset</label>
               <div style={{ display: 'flex', gap: 6 }}>
-                <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)} style={{ flex: 1 }}>
+                <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)} style={{ flex: 1, fontWeight: 600 }}>
                   {assetOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowAddAsset(true)} title="Aggiungi nuovo asset" style={{ padding: '0 10px', fontSize: 16 }}>+</button>
               </div>
+              {selectedAssetName && <div className="form-hint" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedAssetName}</div>}
             </div>
             <div className="form-group">
               <label className="form-label">
@@ -264,18 +279,22 @@ export default function Diary() {
         </form>
       </div>
 
-      <div className="card overflow-auto">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 className="card__title mb-0">Acquisti</h2>
-          <div className="filter-bar">
-            {filterButtons.map(f => (
-              <button key={f} className={`btn btn--ghost btn--sm ${filterAsset === f ? 'active' : ''}`} onClick={() => setFilterAsset(f)}>
-                {f}
-              </button>
-            ))}
+      <div className="animate-in-2">
+        <div className="section-header">
+          <div className="section-header__title">Storico acquisti · {filteredPurchases.length}</div>
+          <div className="section-header__actions">
+            <div className="filter-bar">
+              {filterButtons.map(f => (
+                <button key={f} className={`btn btn--ghost btn--sm ${filterAsset === f ? 'active' : ''}`} onClick={() => setFilterAsset(f)}>
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
+        <div className="card overflow-auto" style={{ padding: 0 }}>
+          <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
+        </div>
       </div>
 
       {showAddAsset && (

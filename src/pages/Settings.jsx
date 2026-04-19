@@ -18,6 +18,8 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [tab, setTab] = useState('portfolio'); // portfolio | account
+
   const [assets, setAssets] = useState([]);
   const [prices, setPrices] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,7 +64,6 @@ export default function Settings() {
       const [updated, newPrices] = await Promise.all([api.getAssets(), api.getPrices()]);
       setAssets(updated); setPrices(newPrices);
       setSearchResults(prev => prev.filter(r => r.symbol !== result.symbol));
-      setAssetSuccess(`${result.symbol} aggiunto`);
       toast(`${result.symbol} aggiunto al portfolio`, 'success');
     } catch (err) { setAssetError(err.message); }
   };
@@ -72,7 +73,6 @@ export default function Settings() {
     try {
       await api.removeAsset(symbol);
       setAssets(prev => prev.filter(a => a.symbol !== symbol));
-      setAssetSuccess(`${symbol} rimosso`);
       toast(`${symbol} rimosso`, 'success');
     } catch (err) { setAssetError(err.message); }
   };
@@ -92,7 +92,9 @@ export default function Settings() {
     setSubmitting(true);
     try {
       await api.changePassword(oldPassword, newPassword);
-      setSuccess('Password cambiata'); setOldPassword(''); setNewPassword(''); setConfirmPassword('');
+      setSuccess('Password cambiata');
+      setOldPassword(''); setNewPassword(''); setConfirmPassword('');
+      toast('Password aggiornata', 'success');
     } catch (err) { setError(err.message); }
     finally { setSubmitting(false); }
   };
@@ -100,111 +102,154 @@ export default function Settings() {
   const getPrice = (asset) => {
     const p = prices[asset.symbol];
     if (!p) return '—';
-    return asset.asset_type === 'crypto' ? formatUSD(p.usd || p.eur || 0) : formatEUR(p.eur || 0);
+    const isCrypto = asset.asset_type === 'crypto' || asset.asset_type === 'dex_token';
+    return isCrypto ? formatUSD(p.usd || p.eur || 0) : formatEUR(p.eur || 0);
   };
 
   if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Errore</div></div>;
 
   return (
-    <PageLayout title="Impostazioni" username={user.username} size="sm">
-      {/* Account */}
-      <div className="card section-gap animate-in">
-        <h3 className="card__title">Account</h3>
-        <FormInput label="Username" value={user.username} disabled />
-        <FormInput label="Email" type="email" value={user.email} disabled />
-        <div className="info-text" style={{ marginTop: 8 }}>
-          Membro da {new Date(user.created_at).toLocaleDateString('it-IT')}
+    <PageLayout title="Impostazioni" username={user.username} size="md">
+
+      {/* Header */}
+      <div className="animate-in" style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
+          Impostazioni
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+          Gestisci portfolio e account
         </div>
       </div>
 
-      {/* Asset Config */}
-      <div className="card section-gap animate-in" style={{ animationDelay: '0.05s' }}>
-        <h3 className="card__title">Asset tracciati</h3>
-        <AlertMessage type="error" message={assetError} />
-        <AlertMessage type="success" message={assetSuccess} />
+      {/* Tabs */}
+      <div className="tab-bar animate-in-1">
+        {[['portfolio', 'Portfolio'], ['account', 'Account & Sicurezza']].map(([k, l]) => (
+          <button key={k} className={`btn btn--ghost ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
+            {l}
+          </button>
+        ))}
+      </div>
 
-        <div className="asset-list mb-16">
-          {assets.map(asset => (
-            <div key={asset.symbol} className="asset-row">
-              <AssetBadge asset={asset.symbol} color={asset.color} />
-              <div className="asset-row__info">
-                <div className="asset-row__name">{asset.name}</div>
-                <div className="asset-row__type">{asset.asset_type === 'crypto' ? 'Crypto' : 'Stock / ETF'}</div>
-              </div>
-              <div className="asset-row__price">{getPrice(asset)}</div>
-              <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} />
-              <button className="btn btn--danger btn--sm" onClick={() => handleRemoveAsset(asset.symbol)}>×</button>
-            </div>
-          ))}
-        </div>
+      {/* === PORTFOLIO TAB === */}
+      {tab === 'portfolio' && (
+        <div className="animate-in-2">
+          <AlertMessage type="error" message={assetError} />
+          <AlertMessage type="success" message={assetSuccess} />
 
-        <h3 className="card__title">Aggiungi asset</h3>
-        <div className="search-tabs">
-          {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
-            <button key={k} className={`btn btn--ghost btn--sm ${searchType === k ? 'active' : ''}`}
-              onClick={() => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }}>{l}</button>
-          ))}
-        </div>
-        <FormInput
-          placeholder={
-            searchType === 'crypto' ? 'Cerca crypto (ethereum, solana...)'
-            : searchType === 'dex' ? 'Cerca meme coin (brett, pepe, wif...)'
-            : 'Cerca ETF/azione (SPY, AAPL...)'
-          }
-          value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-        />
-        {searching && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>Ricerca...</div>}
-        {searchResults.length > 0 && (
-          <div className="asset-list" style={{ marginTop: 8 }}>
-            {searchResults.map(r => (
-              <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="search-result">
-                {r.thumb ? (
-                  <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
-                ) : (
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#a78bfa', fontWeight: 600, flexShrink: 0 }}>
-                    {r.symbol?.slice(0, 2)}
-                  </div>
-                )}
-                <div className="search-result__info" style={{ minWidth: 0 }}>
-                  <div className="search-result__symbol">{r.symbol}</div>
-                  <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {r.name}
-                    {r.coingecko_id && <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span>}
+          <div className="section-header">
+            <div className="section-header__title">Asset tracciati · {assets.length}</div>
+          </div>
+
+          <div className="asset-list mb-24">
+            {assets.map(asset => (
+              <div key={asset.symbol} className="asset-row">
+                <AssetBadge asset={asset.symbol} color={asset.color} />
+                <div className="asset-row__info">
+                  <div className="asset-row__name">{asset.name}</div>
+                  <div className="asset-row__type">
+                    {asset.asset_type === 'crypto' ? 'Crypto' : asset.asset_type === 'dex_token' ? 'DEX Token' : 'Stock / ETF'}
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
-                  {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
-                </div>
-                <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Aggiungi</button>
+                <div className="asset-row__price">{getPrice(asset)}</div>
+                <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Cambia colore" />
+                <button className="btn btn--danger btn--sm" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi">×</button>
               </div>
             ))}
           </div>
-        )}
-      </div>
 
-      {/* Password */}
-      <div className="card section-gap animate-in" style={{ animationDelay: '0.1s' }}>
-        <h3 className="card__title">Cambia password</h3>
-        <form onSubmit={handleChangePassword}>
-          <FormInput label="Password attuale" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
-          <FormInput label="Nuova password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-          <FormInput label="Conferma" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-          <AlertMessage type="error" message={error} />
-          <AlertMessage type="success" message={success} />
-          <button type="submit" className="btn btn--primary btn--full" disabled={submitting}>
-            {submitting ? 'Salvataggio...' : 'Salva'}
-          </button>
-        </form>
-      </div>
+          <div className="section-header">
+            <div className="section-header__title">Aggiungi nuovo asset</div>
+          </div>
 
-      {/* Info */}
-      <div className="card animate-in" style={{ animationDelay: '0.15s' }}>
-        <h3 className="card__title">App</h3>
-        <div className="info-text">
-          <span className="info-label">Wealth</span> v3.0 · Multi-Asset Investment Tracker
+          <div className="card">
+            <div className="search-tabs">
+              {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
+                <button key={k} className={`btn btn--ghost btn--sm ${searchType === k ? 'active' : ''}`}
+                  onClick={() => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }}>{l}</button>
+              ))}
+            </div>
+            <FormInput
+              placeholder={
+                searchType === 'crypto' ? 'Cerca crypto (ethereum, solana...)'
+                : searchType === 'dex' ? 'Cerca meme coin (brett, pepe, wif...)'
+                : 'Cerca ETF/azione (SPY, AAPL...)'
+              }
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searching && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>Ricerca...</div>}
+            {searchResults.length > 0 && (
+              <div className="asset-list" style={{ marginTop: 8 }}>
+                {searchResults.map(r => (
+                  <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="search-result">
+                    {r.thumb ? (
+                      <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#a78bfa', fontWeight: 600, flexShrink: 0 }}>
+                        {r.symbol?.slice(0, 2)}
+                      </div>
+                    )}
+                    <div className="search-result__info" style={{ minWidth: 0 }}>
+                      <div className="search-result__symbol">{r.symbol}</div>
+                      <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {r.name}
+                        {r.coingecko_id && <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span>}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
+                      {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
+                    </div>
+                    <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Aggiungi</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* === ACCOUNT TAB === */}
+      {tab === 'account' && (
+        <div className="animate-in-2">
+          <div className="section-header">
+            <div className="section-header__title">Account</div>
+          </div>
+          <div className="card" style={{ marginBottom: 20 }}>
+            <FormInput label="Username" value={user.username} disabled />
+            <FormInput label="Email" type="email" value={user.email} disabled />
+            <div className="info-text" style={{ marginTop: 4, fontSize: 11 }}>
+              Membro da {new Date(user.created_at).toLocaleDateString('it-IT')}
+            </div>
+          </div>
+
+          <div className="section-header">
+            <div className="section-header__title">Sicurezza · Cambia password</div>
+          </div>
+          <div className="card" style={{ marginBottom: 20 }}>
+            <form onSubmit={handleChangePassword}>
+              <FormInput label="Password attuale" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
+              <FormInput label="Nuova password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+              <FormInput label="Conferma" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+              <AlertMessage type="error" message={error} />
+              <AlertMessage type="success" message={success} />
+              <button type="submit" className="btn btn--primary btn--full" disabled={submitting}>
+                {submitting ? 'Salvataggio...' : 'Aggiorna password'}
+              </button>
+            </form>
+          </div>
+
+          <div className="section-header">
+            <div className="section-header__title">Informazioni app</div>
+          </div>
+          <div className="card">
+            <div className="info-text">
+              <div><span className="info-label">Wealth</span> · v3.0</div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>Multi-Asset Investment Tracker</div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </PageLayout>
   );
 }

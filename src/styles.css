@@ -392,8 +392,8 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 
 /* TAB / FILTER */
-.tab-bar { display: flex; gap: 4px; margin-bottom: 16px; }
-.filter-bar { display: flex; gap: 3px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.filter-bar { display: flex; gap: 3px; flex-wrap: wrap; }
 
 /* ============ AUTH ============ */
 .auth-wrapper {
