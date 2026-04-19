@@ -65,6 +65,15 @@ export default function Dashboard() {
   const mainAssets = assets.filter(a => summary.by_asset[a.symbol]?.include_in_totals !== false && summary.by_asset[a.symbol]);
   const specAssets = assets.filter(a => summary.by_asset[a.symbol]?.include_in_totals === false && summary.by_asset[a.symbol]);
 
+  // EUR→USD rate from any crypto that has both prices
+  const eurUsdRate = (() => {
+    for (const sym of Object.keys(prices)) {
+      const p = prices[sym];
+      if (p?.eur > 0 && p?.usd > 0) return p.usd / p.eur;
+    }
+    return null;
+  })();
+
   // Greeting
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Buongiorno' : hour < 18 ? 'Buon pomeriggio' : 'Buonasera';
@@ -148,6 +157,7 @@ export default function Dashboard() {
               const isCrypto = asset.asset_type === 'crypto' || asset.asset_type === 'dex_token';
               const priceMain = isCrypto ? formatPrice(pi.usd || pi.eur || 0, 'USD') : formatPrice(pi.eur || 0, 'EUR');
               const priceEur = isCrypto && pi.eur > 0 ? formatPrice(pi.eur, 'EUR') : null;
+              const priceUsdForStock = !isCrypto && pi.eur > 0 && eurUsdRate ? formatPrice(pi.eur * eurUsdRate, 'USD') : null;
               const included = d.include_in_totals !== false;
               const pc = d.pnl >= 0 ? 'var(--green)' : 'var(--red-soft)';
               const ch24 = mi.change_24h || 0;
@@ -160,6 +170,7 @@ export default function Dashboard() {
                   <div className="asset-strip__cell">
                     <div className="asset-strip__price-main">{priceMain}</div>
                     {priceEur && <div className="asset-strip__price-sub">≈ {priceEur}</div>}
+                    {priceUsdForStock && <div className="asset-strip__price-sub">≈ {priceUsdForStock}</div>}
                   </div>
                   <div className="asset-strip__cell asset-strip__cell--right">
                     <div className="asset-strip__primary" style={{ color: ch24Color }}>
@@ -192,7 +203,7 @@ export default function Dashboard() {
           <>
             {mainAssets.length > 0 && (
               <div style={{ display: 'grid', gap: 8, gridTemplateColumns: `repeat(${Math.min(mainAssets.length, 4)}, 1fr)`, marginBottom: 16 }}>
-                {mainAssets.map(asset => renderAssetCard(asset, summary, prices, marketInfo, handleToggleTracking, true))}
+                {mainAssets.map(asset => renderAssetCard(asset, summary, prices, marketInfo, handleToggleTracking, true, eurUsdRate))}
               </div>
             )}
             {specAssets.length > 0 && (
@@ -207,7 +218,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div style={{ display: 'grid', gap: 8, gridTemplateColumns: `repeat(${Math.min(specAssets.length, 4)}, 1fr)` }}>
-                  {specAssets.map(asset => renderAssetCard(asset, summary, prices, marketInfo, handleToggleTracking, false))}
+                  {specAssets.map(asset => renderAssetCard(asset, summary, prices, marketInfo, handleToggleTracking, false, eurUsdRate))}
                 </div>
               </>
             )}
@@ -358,13 +369,18 @@ export default function Dashboard() {
   );
 }
 
-function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included) {
+function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included, eurUsdRate) {
   const d = summary.by_asset[asset.symbol];
   if (!d) return null;
   const pi = prices[asset.symbol] || {};
   const mi = marketInfo[asset.symbol] || {};
   const isCrypto = asset.asset_type === 'crypto' || asset.asset_type === 'dex_token';
   const price = isCrypto ? formatPrice(pi.usd || pi.eur || 0, 'USD') : formatPrice(pi.eur || 0, 'EUR');
+  const secondaryPrice = isCrypto && pi.eur > 0 && pi.usd > 0
+    ? formatPrice(pi.eur, 'EUR')
+    : !isCrypto && pi.eur > 0 && eurUsdRate
+      ? formatPrice(pi.eur * eurUsdRate, 'USD')
+      : null;
   const pc = d.pnl >= 0 ? 'var(--green)' : 'var(--red)';
   const ch24 = mi.change_24h || 0;
   const ch24Color = ch24 >= 0 ? 'var(--green)' : 'var(--red-soft)';
@@ -387,8 +403,8 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included)
       <div style={{ marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-num)', letterSpacing: '-0.3px' }}>{price}</div>
-          {isCrypto && pi.eur > 0 && pi.usd > 0 && (
-            <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-num)' }}>≈ {formatPrice(pi.eur, 'EUR')}</span>
+          {secondaryPrice && (
+            <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-num)' }}>≈ {secondaryPrice}</span>
           )}
         </div>
         {(mi.ath_usd > 0 || mi.ath_eur > 0) && (
