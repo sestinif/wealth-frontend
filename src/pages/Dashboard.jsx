@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [showDetails, setShowDetails] = useState(false);
   const [showMarket, setShowMarket] = useState(false);
   const [showCharts, setShowCharts] = useState(false);
+  const [displayCurrency, setDisplayCurrency] = useState('EUR');
 
   const refresh = async () => {
     try {
@@ -116,9 +117,9 @@ export default function Dashboard() {
         <div className="hero-stat">
           <div className="hero-stat__label"><span className="live-dot" />Valore Portfolio</div>
           <AnimatedNumber value={summary.total_value} prefix="€ " className="hero-stat__value" style={{ color: 'var(--text-1)' }} />
-          {summary.spec_value > 0 && (
-            <div className="hero-stat__sub">+ € {summary.spec_value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} speculativo</div>
-          )}
+          {summary.spec_value > 0
+            ? <div className="hero-stat__sub">+ € {summary.spec_value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} speculativo</div>
+            : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
         </div>
         <div className="hero-stat">
           <div className="hero-stat__label">Profitto / Perdita</div>
@@ -139,6 +140,18 @@ export default function Dashboard() {
             Portfolio Principale · {mainAssets.length} asset
           </div>
           <div className="section-header__actions">
+            <div className="currency-toggle" title={eurUsdRate ? `1 € = ${eurUsdRate.toFixed(4)} $` : 'Tasso non disponibile'}>
+              {['EUR', 'USD'].map(c => (
+                <button
+                  key={c} type="button"
+                  className={`currency-toggle__btn ${displayCurrency === c ? 'active' : ''}`}
+                  onClick={() => setDisplayCurrency(c)}
+                  disabled={c === 'USD' && !eurUsdRate}
+                >
+                  {c === 'EUR' ? '€ EUR' : '$ USD'}
+                </button>
+              ))}
+            </div>
             <button className={`collapse-btn ${showDetails ? 'expanded' : ''}`} onClick={() => setShowDetails(!showDetails)}>
               {showDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
               <span className="collapse-btn__arrow">▼</span>
@@ -179,11 +192,19 @@ export default function Dashboard() {
                     <div className="asset-strip__secondary">24h</div>
                   </div>
                   <div className="asset-strip__cell asset-strip__cell--right">
-                    <div className="asset-strip__primary">{formatEUR(d.value)}</div>
+                    <div className="asset-strip__primary">
+                      {displayCurrency === 'USD' && eurUsdRate
+                        ? formatUSD(d.value * eurUsdRate, 2)
+                        : formatEUR(d.value)}
+                    </div>
                     <div className="asset-strip__secondary">{formatQty(d.qty, asset.decimals)} {asset.symbol}</div>
                   </div>
                   <div className="asset-strip__cell asset-strip__cell--right">
-                    <div className="asset-strip__primary" style={{ color: pc }}>{formatPnL(d.pnl)}</div>
+                    <div className="asset-strip__primary" style={{ color: pc }}>
+                      {displayCurrency === 'USD' && eurUsdRate
+                        ? (d.pnl >= 0 ? '+' : '') + formatUSD(d.pnl * eurUsdRate, 2)
+                        : formatPnL(d.pnl)}
+                    </div>
                     <div className="asset-strip__secondary" style={{ color: pc }}>
                       {d.invested > 0 ? ((d.value / d.invested - 1) * 100).toFixed(2) + '%' : '—'}
                     </div>
@@ -304,10 +325,13 @@ export default function Dashboard() {
           <>
             <div className="grid-2col section-gap">
               <div className="card">
-                <h3 className="card__title">Portfolio Principale — 30 giorni</h3>
+                <div className="card__head">
+                  <h3 className="card__title">Portfolio Principale — 30 giorni</h3>
+                  <span className="card__subtitle">Valore totale in EUR</span>
+                </div>
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={240}>
-                    <AreaChart data={chartData}>
+                    <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.3} />
@@ -315,8 +339,17 @@ export default function Dashboard() {
                         </linearGradient>
                       </defs>
                       <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#4a4660', fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis stroke="transparent" tick={{ fill: '#4a4660', fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={TOOLTIP_STYLE} />
+                      <YAxis
+                        stroke="transparent"
+                        tick={{ fill: '#4a4660', fontSize: 10 }}
+                        axisLine={false} tickLine={false}
+                        tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)}
+                      />
+                      <Tooltip
+                        contentStyle={TOOLTIP_STYLE}
+                        formatter={(v) => [formatEUR(v), 'Valore portfolio']}
+                        labelFormatter={(l) => formatDate(l)}
+                      />
                       <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={1.5} fill="url(#dg)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -324,7 +357,10 @@ export default function Dashboard() {
               </div>
 
               <div className="card">
-                <h3 className="card__title">Allocazione</h3>
+                <div className="card__head">
+                  <h3 className="card__title">Allocazione</h3>
+                  <span className="card__subtitle">Peso % sul valore totale</span>
+                </div>
                 {allocData.length > 0 ? (
                   <>
                     <ResponsiveContainer width="100%" height={200}>
@@ -351,7 +387,10 @@ export default function Dashboard() {
             </div>
 
             <div className="card overflow-auto">
-              <h3 className="card__title">Ultimi acquisti</h3>
+              <div className="card__head">
+                <h3 className="card__title">Ultimi acquisti</h3>
+                <span className="card__subtitle">Ultimi {recentPurchases.length} movimenti</span>
+              </div>
               <DataTable columns={recentColumns} data={recentPurchases} defaultSort={{ key: 'date', direction: 'desc' }} />
             </div>
           </>

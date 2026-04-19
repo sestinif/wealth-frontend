@@ -87,7 +87,7 @@ export default function Charts() {
         </div>
         {portfolioData.length > 0 ? (
           <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={portfolioData}>
+            <AreaChart data={portfolioData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={portfolioChange >= 0 ? '#22c55e' : '#ef4444'} stopOpacity={0.15} />
@@ -95,7 +95,8 @@ export default function Charts() {
                 </linearGradient>
               </defs>
               <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
-              <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
+              <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} domain={['auto', 'auto']}
+                tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
               <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#85819a', fontSize: 10 }} />
               <Area type="monotone" dataKey="value"
                 stroke={portfolioChange >= 0 ? '#22c55e' : '#ef4444'}
@@ -108,13 +109,17 @@ export default function Charts() {
       {/* Allocation + Pie */}
       <div className="grid-2col section-gap animate-in-2">
         <div className="card">
-          <h3 className="card__title">Allocazione nel tempo</h3>
+          <div className="card__head">
+            <h3 className="card__title">Allocazione nel tempo</h3>
+            <span className="card__subtitle">Valori in EUR · stacked</span>
+          </div>
           {allocData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={allocData}>
+              <AreaChart data={allocData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
-                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={TT} labelStyle={{ color: '#85819a', fontSize: 10 }} />
+                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
+                  tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
+                <Tooltip contentStyle={TT} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#85819a', fontSize: 10 }} />
                 {assets.map(a => (
                   <Area key={a.symbol} type="monotone" dataKey={a.symbol}
                     stackId="1" stroke={a.color} fill={a.color} fillOpacity={0.4} strokeWidth={0} />
@@ -125,7 +130,10 @@ export default function Charts() {
         </div>
 
         <div className="card">
-          <h3 className="card__title">Distribuzione attuale</h3>
+          <div className="card__head">
+            <h3 className="card__title">Distribuzione attuale</h3>
+            <span className="card__subtitle">Peso % in EUR</span>
+          </div>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={190}>
@@ -158,12 +166,16 @@ export default function Charts() {
       {/* Monthly + DCA */}
       <div className="grid-2col animate-in-3">
         <div className="card">
-          <h3 className="card__title">Investimenti mensili {new Date().getFullYear()}</h3>
+          <div className="card__head">
+            <h3 className="card__title">Investimenti mensili {new Date().getFullYear()}</h3>
+            <span className="card__subtitle">Investito vs valore · EUR</span>
+          </div>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={monthlyData} barGap={1}>
+              <BarChart data={monthlyData} barGap={1} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="month" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
-                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
+                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
+                  tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
                 <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#85819a', fontSize: 10 }} />
                 <Bar dataKey="invested" name="Investito" fill="#7c3aed" radius={[6, 6, 0, 0]} barSize={14} />
                 <Bar dataKey="value" name="Valore attuale" fill="#a78bfa" radius={[6, 6, 0, 0]} barSize={14} fillOpacity={0.5} />

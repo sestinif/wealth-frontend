@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getToken, setToken, removeToken, api } from './api.js';
 import { ToastProvider } from './components/Toast';
 import CommandPalette from './components/CommandPalette';
+import QuickBuyFAB from './components/QuickBuyFAB';
 import LoginPage from './pages/LoginPage';
 import SetupPage from './pages/SetupPage';
 import Dashboard from './pages/Dashboard';
@@ -73,6 +74,7 @@ export default function App() {
     <BrowserRouter>
       <ToastProvider>
         {isAuthenticated && <CommandPalette />}
+        {isAuthenticated && <QuickBuyFAB />}
         <Routes>
           <Route path="/setup" element={setupRequired ? <SetupPage onComplete={handleSetupComplete} /> : <Navigate to="/login" />} />
           <Route path="/login" element={!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />

@@ -26,7 +26,7 @@ export default function Sidebar({ username }) {
         <div className="sidebar__subtitle">INVESTMENT TRACKER</div>
         <div className="sidebar__status">
           <div className="sidebar__status-dot" />
-          {assets.length > 0 ? assets.map(a => a.symbol).join(' · ') : '...'}
+          {assets.length > 0 ? `${assets.length} ASSET TRACKED` : '...'}
         </div>
       </div>
 
