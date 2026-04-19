@@ -81,6 +81,19 @@ export const api = {
     return handleResponse(response);
   },
 
+  getPricesStatus: async () => {
+    const response = await fetch(`${BASE_URL}/prices/status`);
+    return handleResponse(response);
+  },
+
+  refreshPrices: async () => {
+    const response = await fetch(`${BASE_URL}/prices/refresh`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   getPurchases: async () => {
     const response = await fetch(`${BASE_URL}/purchases`, {
       headers: authHeaders()

@@ -15,13 +15,29 @@ export default function Dashboard() {
   const [assets, setAssets] = useState([]);
   const [marketInfo, setMarketInfo] = useState({});
   const [loading, setLoading] = useState(true);
+  const [cacheAge, setCacheAge] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const refresh = async () => {
     try {
-      const [d, u, a] = await Promise.all([api.getDashboard(), api.getMe(), api.getAssets()]);
+      const [d, u, a, s] = await Promise.all([api.getDashboard(), api.getMe(), api.getAssets(), api.getPricesStatus().catch(() => ({}))]);
       setData(d); setUser(u); setAssets(a);
+      setCacheAge(s?.cache_age_seconds);
       api.getMarketInfo().then(setMarketInfo).catch(() => {});
     } catch (err) {}
+  };
+
+  const forceRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await api.refreshPrices();
+      await refresh();
+      toast('Prezzi aggiornati', 'success');
+    } catch (err) {
+      toast('Errore: ' + err.message, 'error');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -253,8 +269,14 @@ export default function Dashboard() {
       </div>
 
       {/* Footer */}
-      <div style={{ textAlign: 'center', padding: '16px 0 8px', fontSize: 10, color: 'var(--text-3)' }}>
-        Aggiornato alle {new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })} · Refresh ogni 60s
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '16px 0 8px', fontSize: 10, color: 'var(--text-3)' }}>
+        <span>
+          Prezzi {cacheAge != null ? `aggiornati ${Math.round(cacheAge / 60)} min fa` : 'in caricamento'} ·
+          Refresh auto ogni 10 min
+        </span>
+        <button onClick={forceRefresh} disabled={refreshing} className="btn btn--ghost btn--sm" style={{ fontSize: 10, padding: '3px 10px' }}>
+          {refreshing ? 'Aggiornamento...' : '↻ Aggiorna ora'}
+        </button>
       </div>
     </PageLayout>
   );
@@ -288,13 +310,20 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included)
         </div>
       </div>
 
-      {/* Price */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
-        <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-num)', letterSpacing: '-0.3px' }}>{price}</div>
+      {/* Price — main + secondary currency */}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-num)', letterSpacing: '-0.3px' }}>{price}</div>
+          {isCrypto && pi.eur > 0 && pi.usd > 0 && (
+            <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-num)' }}>
+              ≈ {formatPrice(pi.eur, 'EUR')}
+            </span>
+          )}
+        </div>
         {(mi.ath_usd > 0 || mi.ath_eur > 0) && (
-          <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-num)', opacity: 0.5 }}>
+          <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'var(--font-num)', opacity: 0.5, marginTop: 2 }}>
             ATH {mi.ath_usd > 0 ? formatPrice(mi.ath_usd, 'USD') : formatPrice(mi.ath_eur, 'EUR')}
-          </span>
+          </div>
         )}
       </div>
 
