@@ -110,7 +110,7 @@ export default function Charts() {
               </defs>
               <CartesianGrid {...GRID} />
               <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
-              <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} domain={['auto', 'auto']}
+              <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
                 tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
               <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#85819a', fontSize: 10 }}
                 cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />

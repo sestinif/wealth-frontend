@@ -212,7 +212,7 @@ export default function Dashboard() {
               </defs>
               <CartesianGrid {...CHART_GRID} />
               <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
-              <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} width={48} domain={['auto', 'auto']}
+              <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
                 tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                 cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -283,7 +283,7 @@ export default function Dashboard() {
                     <div className="asset-strip__secondary">{formatQty(d.qty, asset.decimals)} {asset.symbol}</div>
                   </div>
                   <div className="asset-strip__cell asset-strip__cell--right">
-                    <div className="asset-strip__primary" style={{ color: pc }}>
+                    <div className="asset-strip__primary">
                       {displayCurrency === 'USD' && eurUsdRate
                         ? (d.pnl >= 0 ? '+' : '') + formatUSD(d.pnl * eurUsdRate, 2)
                         : formatPnL(d.pnl)}
@@ -417,16 +417,17 @@ export default function Dashboard() {
                     <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#8b86e0" stopOpacity={0.35} />
-                          <stop offset="100%" stopColor="#8b86e0" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#5cb98f" stopOpacity={0.22} />
+                          <stop offset="100%" stopColor="#5cb98f" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid {...CHART_GRID} />
-                      <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#4a4660', fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#56546a', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
                       <YAxis
                         stroke="transparent"
-                        tick={{ fill: '#4a4660', fontSize: 10 }}
-                        axisLine={false} tickLine={false}
+                        tick={{ fill: '#56546a', fontSize: 10 }}
+                        axisLine={false} tickLine={false} width={48}
+                        domain={[(min) => min * 0.985, (max) => max * 1.01]}
                         tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)}
                       />
                       <Tooltip
@@ -435,12 +436,12 @@ export default function Dashboard() {
                         formatter={(v) => [formatEUR(v), 'Valore portfolio']}
                         labelFormatter={(l) => formatDate(l)}
                       />
-                      <Area type="monotone" dataKey="value" stroke="#8b86e0" strokeWidth={2} strokeLinecap="round"
+                      <Area type="monotone" dataKey="value" stroke="#5cb98f" strokeWidth={2} strokeLinecap="round"
                         fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
                         dot={(p) => p.index === chartData.length - 1
-                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#8b86e0" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#8b86e0" stroke="#0a0b11" strokeWidth={2} /></g>
+                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#5cb98f" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#5cb98f" stroke="#0a0b11" strokeWidth={2} /></g>
                           : <g key={p.index} />}
-                        activeDot={{ r: 4, fill: '#bcb8ee', stroke: '#0a0b11', strokeWidth: 2 }} />
+                        activeDot={{ r: 4, fill: '#fff', stroke: '#0a0b11', strokeWidth: 2 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}

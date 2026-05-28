@@ -278,7 +278,7 @@ export default function Diary() {
           <AlertMessage type="error" message={error} />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-            <button type="submit" className="btn btn--primary" disabled={submitting}>
+            <button type="submit" className="btn btn--primary btn--lg" disabled={submitting}>
               {submitting ? 'Aggiunta in corso...' : 'Aggiungi acquisto'}
             </button>
           </div>

@@ -513,9 +513,10 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 /* ============ BUTTONS ============ */
 .btn {
   padding: 7px 14px; border: none; border-radius: var(--radius-sm);
-  font-size: 12px; font-weight: 500; cursor: pointer;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.7px;
   transition: all 120ms var(--ease); display: inline-flex;
-  align-items: center; justify-content: center; gap: 5px; white-space: nowrap;
+  align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
 }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0) scale(0.98); }
