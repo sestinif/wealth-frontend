@@ -462,7 +462,7 @@ export default function Dashboard() {
                       <ResponsiveContainer width="100%" height={200}>
                         <PieChart>
                           <Pie data={allocData} cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3} dataKey="value"
-                            stroke="#1b1b22" strokeWidth={2} animationDuration={800} animationEasing="ease-out">
+                            stroke="none" strokeWidth={0} animationDuration={800} animationEasing="ease-out">
                             {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
                           </Pie>
                           <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} formatter={(v) => formatEUR(v)} />

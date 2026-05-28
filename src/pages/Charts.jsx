@@ -161,7 +161,7 @@ export default function Charts() {
                 <ResponsiveContainer width="100%" height={190}>
                   <PieChart>
                     <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value"
-                      stroke="#1b1b22" strokeWidth={2} {...ANIM}>
+                      stroke="none" strokeWidth={0} {...ANIM}>
                       {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
                     <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} />
