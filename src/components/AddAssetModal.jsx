@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api.js';
 import FormInput from './FormInput';
+import Icon from './Icon';
+import EmptyState from './EmptyState';
 import { formatUSD, formatEUR } from '../utils/format';
 
 export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
@@ -66,7 +68,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               <div style={{ fontSize: 14, fontWeight: 600, color: '#eeedf2' }}>Aggiungi nuovo asset</div>
               <div style={{ fontSize: 11, color: '#85819a', marginTop: 2 }}>Cerca su CoinGecko o Yahoo Finance</div>
             </div>
-            <button onClick={onClose} className="btn btn--ghost btn--sm">✕</button>
+            <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Chiudi"><Icon name="x" size={14} /></button>
           </div>
 
           <div style={{ padding: 20 }}>
@@ -123,14 +125,10 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                 </div>
               ))}
               {!loading && query.length >= 2 && results.length === 0 && (
-                <div style={{ fontSize: 12, color: '#4a4660', textAlign: 'center', padding: 20 }}>
-                  Nessun risultato per "{query}"
-                </div>
+                <EmptyState compact icon="search" title="Nessun risultato" description={`Niente trovato per "${query}". Prova un altro nome o simbolo.`} />
               )}
               {!loading && query.length < 2 && (
-                <div style={{ fontSize: 12, color: '#4a4660', textAlign: 'center', padding: 20 }}>
-                  Digita almeno 2 caratteri
-                </div>
+                <EmptyState compact icon="search" title="Cerca un asset" description="Digita almeno 2 caratteri per iniziare la ricerca." />
               )}
             </div>
           </div>

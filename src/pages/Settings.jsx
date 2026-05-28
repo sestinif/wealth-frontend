@@ -3,6 +3,8 @@ import PageLayout from '../components/PageLayout';
 import FormInput from '../components/FormInput';
 import AlertMessage from '../components/AlertMessage';
 import AssetBadge from '../components/AssetBadge';
+import Icon from '../components/Icon';
+import { PageSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { formatEUR, formatUSD } from '../utils/format';
@@ -106,7 +108,7 @@ export default function Settings() {
     return isCrypto ? formatUSD(p.usd || p.eur || 0) : formatEUR(p.eur || 0);
   };
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (loading) return <PageLayout title="Impostazioni" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Errore</div></div>;
 
   return (
@@ -153,7 +155,7 @@ export default function Settings() {
                 </div>
                 <div className="asset-row__price">{getPrice(asset)}</div>
                 <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Cambia colore" />
-                <button className="btn btn--danger btn--sm" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi">×</button>
+                <button className="btn btn--danger btn--sm" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi" aria-label="Rimuovi"><Icon name="trash" size={13} /></button>
               </div>
             ))}
           </div>

@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import FormInput from '../components/FormInput';
 import AssetBadge from '../components/AssetBadge';
+import EmptyState from '../components/EmptyState';
+import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatUSD, formatPct } from '../utils/format';
 
 const TT = {
-  background: 'rgba(12,13,20,0.95)',
-  border: '1px solid rgba(255,255,255,0.06)',
+  background: 'rgba(14,15,23,0.96)',
+  backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: 10, padding: '8px 12px',
-  fontSize: 12, fontFamily: 'Space Grotesk, sans-serif',
-  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+  fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace",
+  fontVariantNumeric: 'tabular-nums',
+  boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
 };
-const AXIS = { fill: '#4a4660', fontSize: 10, fontFamily: 'Space Grotesk, sans-serif' };
-const GRID = { strokeDasharray: '3 3', stroke: 'rgba(255,255,255,0.03)' };
+const TT_ITEM = { color: '#f2f1f5', fontSize: 12 };
+const AXIS = { fill: '#56546a', fontSize: 10, fontFamily: "'Geist Mono', ui-monospace, monospace" };
+const GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };
+const ANIM = { animationDuration: 900, animationEasing: 'ease-out' };
+
+// Glowing dot on the most recent point — reads as "live", very premium.
+const lastDot = (len, color) => (p) =>
+  p.index === len - 1 && p.cx != null
+    ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={color} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={color} stroke="#0a0b11" strokeWidth={2} /></g>
+    : <g key={p.index} />;
 
 export default function Charts() {
   const [user, setUser] = useState(null);
@@ -36,7 +48,7 @@ export default function Charts() {
     fetchData();
   }, []);
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (loading) return <PageLayout title="Grafici" username=""><PageSkeleton rows={6} /></PageLayout>;
   if (!user || !dashboard) return <div className="loading-screen"><div className="loading-error">Errore</div></div>;
 
   const days = timeRange === '7d' ? 7 : timeRange === '14d' ? 14 : 30;
@@ -50,7 +62,7 @@ export default function Charts() {
   const firstVal = portfolioData[0]?.value || 0;
   const lastVal = portfolioData[portfolioData.length - 1]?.value || 0;
   const portfolioChange = firstVal > 0 ? ((lastVal - firstVal) / firstVal * 100) : 0;
-  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#7c3aed';
+  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#7c5cff';
 
   return (
     <PageLayout title="Grafici" username={user.username}>
@@ -90,20 +102,24 @@ export default function Charts() {
             <AreaChart data={portfolioData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={portfolioChange >= 0 ? '#22c55e' : '#ef4444'} stopOpacity={0.15} />
-                  <stop offset="100%" stopColor={portfolioChange >= 0 ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                  <stop offset="0%" stopColor={portfolioChange >= 0 ? '#2dd17f' : '#ff5a6e'} stopOpacity={0.18} />
+                  <stop offset="100%" stopColor={portfolioChange >= 0 ? '#2dd17f' : '#ff5a6e'} stopOpacity={0} />
                 </linearGradient>
               </defs>
+              <CartesianGrid {...GRID} />
               <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
               <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} domain={['auto', 'auto']}
                 tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
-              <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#85819a', fontSize: 10 }} />
-              <Area type="monotone" dataKey="value"
-                stroke={portfolioChange >= 0 ? '#22c55e' : '#ef4444'}
-                strokeWidth={2} fill="url(#pg)" dot={false} />
+              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#85819a', fontSize: 10 }}
+                cursor={{ stroke: 'rgba(124,92,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
+              <Area type="monotone" dataKey="value" {...ANIM}
+                stroke={portfolioChange >= 0 ? '#2dd17f' : '#ff5a6e'}
+                strokeWidth={2} strokeLinecap="round" fill="url(#pg)"
+                dot={lastDot(portfolioData.length, portfolioChange >= 0 ? '#2dd17f' : '#ff5a6e')}
+                activeDot={{ r: 4, fill: '#fff', stroke: '#0a0b11', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
-        ) : <div className="no-data">Nessun dato</div>}
+        ) : <EmptyState compact icon="chart" title="Nessun dato" description="Registra acquisti per costruire lo storico del portfolio." />}
       </div>
 
       {/* Allocation + Pie */}
@@ -116,17 +132,18 @@ export default function Charts() {
           {allocData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={allocData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid {...GRID} />
                 <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
                   tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
-                <Tooltip contentStyle={TT} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#85819a', fontSize: 10 }} />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#85819a', fontSize: 10 }} />
                 {assets.map(a => (
-                  <Area key={a.symbol} type="monotone" dataKey={a.symbol}
+                  <Area key={a.symbol} type="monotone" dataKey={a.symbol} {...ANIM}
                     stackId="1" stroke={a.color} fill={a.color} fillOpacity={0.4} strokeWidth={0} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
-          ) : <div className="no-data">Nessun dato</div>}
+          ) : <EmptyState compact icon="chart" title="Nessun dato" description="L'allocazione comparirà dopo i primi acquisti." />}
         </div>
 
         <div className="card">
@@ -138,10 +155,11 @@ export default function Charts() {
             <>
               <ResponsiveContainer width="100%" height={190}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value"
+                    stroke="#0a0b11" strokeWidth={2} {...ANIM}>
                     {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v), 'Valore']} />
+                  <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="pie-legend">
@@ -155,7 +173,7 @@ export default function Charts() {
                 ))}
               </div>
             </>
-          ) : <div className="no-data">Nessun dato</div>}
+          ) : <EmptyState compact icon="inbox" title="Nessun dato" description="Nessun asset con valore da distribuire." />}
         </div>
       </div>
 
@@ -169,15 +187,17 @@ export default function Charts() {
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={monthlyData} barGap={1} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid {...GRID} />
                 <XAxis dataKey="month" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
                   tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
-                <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#85819a', fontSize: 10 }} />
-                <Bar dataKey="invested" name="Investito" fill="#7c3aed" radius={[6, 6, 0, 0]} barSize={14} />
-                <Bar dataKey="value" name="Valore attuale" fill="#a78bfa" radius={[6, 6, 0, 0]} barSize={14} fillOpacity={0.5} />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#85819a', fontSize: 10 }}
+                  cursor={{ fill: 'rgba(124,92,255,0.06)' }} />
+                <Bar dataKey="invested" name="Investito" fill="#7c5cff" radius={[6, 6, 0, 0]} barSize={14} {...ANIM} />
+                <Bar dataKey="value" name="Valore attuale" fill="#b9a6ff" radius={[6, 6, 0, 0]} barSize={14} fillOpacity={0.5} {...ANIM} />
               </BarChart>
             </ResponsiveContainer>
-          ) : <div className="no-data">Nessun investimento</div>}
+          ) : <EmptyState compact icon="chart" title="Nessun investimento" description="Gli investimenti mensili dell'anno appariranno qui." />}
         </div>
 
         <div className="card">
@@ -198,14 +218,16 @@ export default function Charts() {
           {dcaData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={dcaData}>
+                <CartesianGrid {...GRID} />
                 <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
-                <Tooltip contentStyle={TT} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#85819a', fontSize: 10 }} />
-                <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#7c3aed" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="rgba(167,139,250,0.4)" strokeWidth={1.5} dot={false} strokeDasharray="6 3" />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#85819a', fontSize: 10 }} />
+                <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#7c5cff" strokeWidth={2} strokeLinecap="round" {...ANIM}
+                  dot={lastDot(dcaData.length, '#7c5cff')} activeDot={{ r: 4, fill: '#b9a6ff', stroke: '#0a0b11', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="rgba(167,139,250,0.4)" strokeWidth={1.5} dot={false} strokeDasharray="6 3" {...ANIM} />
               </LineChart>
             </ResponsiveContainer>
-          ) : <div className="no-data">Nessun acquisto {dcaAsset}</div>}
+          ) : <EmptyState compact icon="inbox" title={`Nessun acquisto ${dcaAsset}`} description="Seleziona un asset con acquisti registrati." />}
         </div>
       </div>
     </PageLayout>

@@ -4,6 +4,8 @@ import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
 import FormInput from '../components/FormInput';
 import AnimatedNumber from '../components/AnimatedNumber';
+import Icon from '../components/Icon';
+import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatPnL, formatPct, formatDate } from '../utils/format';
 
@@ -38,7 +40,7 @@ export default function Reports() {
     fetchReport();
   }, [tab, year, month]);
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (loading) return <PageLayout title="Report" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B5CF6';
@@ -154,7 +156,7 @@ export default function Reports() {
                   <span className="section-header__meta">{report.transactions.length} acquisti</span>
                   <button className={`collapse-btn ${showTx ? 'expanded' : ''}`} onClick={() => setShowTx(!showTx)}>
                     {showTx ? 'Nascondi' : 'Mostra'}
-                    <span className="collapse-btn__arrow">▼</span>
+                    <Icon name="chevron" size={13} className="collapse-btn__arrow" />
                   </button>
                 </div>
               </div>

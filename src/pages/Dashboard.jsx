@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
 import AnimatedNumber from '../components/AnimatedNumber';
+import Icon from '../components/Icon';
+import Sparkline from '../components/Sparkline';
+import EmptyState from '../components/EmptyState';
+import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
-import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE } from '../utils/format';
+import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID } from '../utils/format';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -55,7 +59,7 @@ export default function Dashboard() {
     } catch (err) { toast('Errore: ' + err.message, 'error'); }
   };
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (loading) return <PageLayout title="Dashboard" username=""><DashboardSkeleton /></PageLayout>;
   if (!data || !user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const { summary, prices, purchases } = data;
@@ -89,6 +93,22 @@ export default function Dashboard() {
     .filter(a => summary.by_asset[a.symbol]?.value > 0)
     .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value, color: a.color }));
 
+  // Hero sparkline series (30d): value, cumulative invested, derived P/L
+  const SPARK_GREEN = '#2dd17f', SPARK_RED = '#ff5a6e', SPARK_MUTE = '#56546a';
+  const valueSeries = chartData.map(d => d.value);
+  const investedSeries = (() => {
+    const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const dt = new Date(); dt.setDate(dt.getDate() - i);
+      const ds = dt.toISOString().split('T')[0];
+      days.push(sorted.filter(p => p.date <= ds).reduce((s, p) => s + (p.amount_eur || 0), 0));
+    }
+    return days;
+  })();
+  const pnlSeries = valueSeries.map((v, i) => v - (investedSeries[i] || 0));
+  const heroSparkColor = summary.pnl >= 0 ? SPARK_GREEN : SPARK_RED;
+
   const recentColumns = [
     { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
     { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={gc(v)} /> },
@@ -100,6 +120,8 @@ export default function Dashboard() {
 
   return (
     <PageLayout title="Dashboard" username={user.username}>
+
+      {refreshing && <div className="top-progress"><div className="top-progress__bar" /></div>}
 
       {/* === HERO SECTION === */}
       {(() => {
@@ -139,16 +161,19 @@ export default function Dashboard() {
                 {summary.spec_value > 0
                   ? <div className="hero-stat__sub">+ {cSym}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} speculativo</div>
                   : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
+                <Sparkline data={valueSeries} color={heroSparkColor} />
               </div>
               <div className="hero-stat">
                 <div className="hero-stat__label">Profitto / Perdita</div>
                 <AnimatedNumber value={Math.abs(summary.pnl) * rate} prefix={summary.pnl >= 0 ? '+' + cSym : '-' + cSym} className="hero-stat__value" style={{ color: pnlC }} />
                 <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(summary.pnl_pct)}</div>
+                <Sparkline data={pnlSeries} color={heroSparkColor} />
               </div>
               <div className="hero-stat">
                 <div className="hero-stat__label">Totale Investito</div>
                 <AnimatedNumber value={summary.total_invested * rate} prefix={cSym} className="hero-stat__value" style={{ color: 'var(--text-2)' }} />
                 <div className="hero-stat__sub">{summary.n_purchases} acquisti totali</div>
+                <Sparkline data={investedSeries} color={SPARK_MUTE} style={{ opacity: 0.5 }} />
               </div>
             </div>
           </>
@@ -164,7 +189,7 @@ export default function Dashboard() {
           <div className="section-header__actions">
             <button className={`collapse-btn ${showDetails ? 'expanded' : ''}`} onClick={() => setShowDetails(!showDetails)}>
               {showDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
-              <span className="collapse-btn__arrow">▼</span>
+              <Icon name="chevron" size={13} className="collapse-btn__arrow" />
             </button>
           </div>
         </div>
@@ -265,7 +290,7 @@ export default function Dashboard() {
           <div className="section-header__title">Panoramica Mercato</div>
           <button className={`collapse-btn ${showMarket ? 'expanded' : ''}`} onClick={() => setShowMarket(!showMarket)}>
             {showMarket ? 'Nascondi' : 'Mostra'}
-            <span className="collapse-btn__arrow">▼</span>
+            <Icon name="chevron" size={13} className="collapse-btn__arrow" />
           </button>
         </div>
         {showMarket && (
@@ -328,7 +353,7 @@ export default function Dashboard() {
           <div className="section-header__title">Grafici & Analytics</div>
           <button className={`collapse-btn ${showCharts ? 'expanded' : ''}`} onClick={() => setShowCharts(!showCharts)}>
             {showCharts ? 'Nascondi' : 'Mostra'}
-            <span className="collapse-btn__arrow">▼</span>
+            <Icon name="chevron" size={13} className="collapse-btn__arrow" />
           </button>
         </div>
         {showCharts && (
@@ -344,10 +369,11 @@ export default function Dashboard() {
                     <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#7c5cff" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="#7c5cff" stopOpacity={0} />
                         </linearGradient>
                       </defs>
+                      <CartesianGrid {...CHART_GRID} />
                       <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#4a4660', fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis
                         stroke="transparent"
@@ -356,14 +382,20 @@ export default function Dashboard() {
                         tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)}
                       />
                       <Tooltip
-                        contentStyle={TOOLTIP_STYLE}
+                        contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
+                        cursor={{ stroke: 'rgba(124,92,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
                         formatter={(v) => [formatEUR(v), 'Valore portfolio']}
                         labelFormatter={(l) => formatDate(l)}
                       />
-                      <Area type="monotone" dataKey="value" stroke="#7c3aed" strokeWidth={1.5} fill="url(#dg)" />
+                      <Area type="monotone" dataKey="value" stroke="#7c5cff" strokeWidth={2} strokeLinecap="round"
+                        fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
+                        dot={(p) => p.index === chartData.length - 1
+                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#7c5cff" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#7c5cff" stroke="#0a0b11" strokeWidth={2} /></g>
+                          : <g key={p.index} />}
+                        activeDot={{ r: 4, fill: '#b9a6ff', stroke: '#0a0b11', strokeWidth: 2 }} />
                     </AreaChart>
                   </ResponsiveContainer>
-                ) : <div className="no-data">Nessun dato</div>}
+                ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}
               </div>
 
               <div className="card">
@@ -375,10 +407,11 @@ export default function Dashboard() {
                   <>
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
-                        <Pie data={allocData} cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                        <Pie data={allocData} cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3} dataKey="value"
+                          stroke="#0a0b11" strokeWidth={2} animationDuration={800} animationEasing="ease-out">
                           {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
                         </Pie>
-                        <Tooltip contentStyle={TOOLTIP_STYLE} />
+                        <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} formatter={(v) => formatEUR(v)} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="chart-legend">
@@ -392,7 +425,7 @@ export default function Dashboard() {
                       ))}
                     </div>
                   </>
-                ) : <div className="no-data">Nessun asset</div>}
+                ) : <EmptyState compact icon="inbox" title="Nessun asset" description="Configura i tuoi asset dalle Impostazioni." />}
               </div>
             </div>
 
@@ -411,7 +444,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '20px 0 8px', fontSize: 10, color: 'var(--text-3)' }}>
         <span>Prezzi {cacheAge != null ? `aggiornati ${Math.round(cacheAge / 60)} min fa` : 'in caricamento'}</span>
         <button onClick={forceRefresh} disabled={refreshing} className="btn btn--ghost btn--sm" style={{ fontSize: 10, padding: '3px 10px' }}>
-          {refreshing ? 'Aggiornamento...' : '↻ Aggiorna ora'}
+          {refreshing ? 'Aggiornamento...' : <><Icon name="refresh" size={12} /> Aggiorna ora</>}
         </button>
       </div>
     </PageLayout>

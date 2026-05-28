@@ -46,7 +46,15 @@ export const sortByDate = (array, key = 'date', order = 'desc') => {
 };
 
 export const TOOLTIP_STYLE = {
-  background: 'rgba(13, 11, 33, 0.95)',
-  border: '1px solid rgba(139, 92, 246, 0.3)',
-  borderRadius: '8px',
+  background: 'rgba(14, 15, 23, 0.96)',
+  backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '10px',
+  padding: '8px 12px',
+  fontFamily: "'Geist Mono', ui-monospace, monospace",
+  fontVariantNumeric: 'tabular-nums',
+  boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
 };
+export const TOOLTIP_LABEL_STYLE = { color: '#85819a', fontSize: 10, marginBottom: 2 };
+export const TOOLTIP_ITEM_STYLE = { color: '#ededf0', fontSize: 12 };
+export const CHART_GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import EmptyState from './EmptyState';
 
 export default function DataTable({ columns, data, defaultSort, actions }) {
   const [sortKey, setSortKey] = useState(defaultSort?.key || null);
@@ -33,7 +34,7 @@ export default function DataTable({ columns, data, defaultSort, actions }) {
   }, [data, sortKey, sortDir]);
 
   if (!data || data.length === 0) {
-    return <div className="no-data">Nessun dato disponibile</div>;
+    return <EmptyState compact icon="inbox" title="Nessun dato" description="Non ci sono ancora movimenti da mostrare." />;
   }
 
   return (

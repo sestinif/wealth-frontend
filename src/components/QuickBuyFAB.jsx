@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
 import { useToast } from './Toast';
 import AssetBadge from './AssetBadge';
+import Icon from './Icon';
 import { formatPrice } from '../utils/format';
 
 export default function QuickBuyFAB() {
@@ -108,7 +109,7 @@ export default function QuickBuyFAB() {
                 <div className="fab-modal__eyebrow">Acquisto rapido</div>
                 <div className="fab-modal__title">Registra un nuovo acquisto</div>
               </div>
-              <button className="fab-modal__close" onClick={() => setOpen(false)} aria-label="Chiudi">×</button>
+              <button className="fab-modal__close" onClick={() => setOpen(false)} aria-label="Chiudi"><Icon name="x" size={16} /></button>
             </div>
 
             <form onSubmit={handleSubmit}>

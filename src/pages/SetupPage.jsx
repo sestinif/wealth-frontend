@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import AlertMessage from '../components/AlertMessage';
+import Icon from '../components/Icon';
 
 export default function SetupPage({ onComplete }) {
   const [username, setUsername] = useState('');
@@ -61,7 +62,7 @@ export default function SetupPage({ onComplete }) {
           <div className="req-list">
             {requirements.map((req, i) => (
               <div key={i} className={`req-item ${req.met ? 'req-item--met' : 'req-item--unmet'}`}>
-                {req.met ? '✓' : '○'} {req.text}
+                <Icon name={req.met ? 'check' : 'circle'} size={13} strokeWidth={req.met ? 2.5 : 2} /> {req.text}
               </div>
             ))}
           </div>

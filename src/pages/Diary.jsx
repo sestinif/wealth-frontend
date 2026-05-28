@@ -6,6 +6,7 @@ import AssetBadge from '../components/AssetBadge';
 import AlertMessage from '../components/AlertMessage';
 import AddAssetModal from '../components/AddAssetModal';
 import { useToast } from '../components/Toast';
+import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatDate } from '../utils/format';
 
@@ -162,7 +163,7 @@ export default function Diary() {
     } catch (err) { setError(err.message); }
   };
 
-  if (loading) return <div className="loading-screen"><div className="loading-logo">W</div><div className="loading-text">CARICAMENTO...</div></div>;
+  if (loading) return <PageLayout title="Diario" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const filteredPurchases = filterAsset === 'ALL' ? purchases : purchases.filter(p => p.asset === filterAsset);
