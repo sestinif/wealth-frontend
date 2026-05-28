@@ -195,6 +195,16 @@ button, input, textarea, select { font-family: inherit; }
 .topbar__title { font-size: 13px; font-weight: 600; color: var(--text-1); letter-spacing: 0.2px; }
 .topbar__right { display: flex; align-items: center; gap: 12px; }
 .topbar__username { font-size: 11px; color: var(--text-3); }
+.topbar__left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.topbar__menu {
+  display: none; width: 34px; height: 34px;
+  align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text-2); cursor: pointer; flex-shrink: 0;
+  transition: all 120ms var(--ease);
+}
+.topbar__menu:hover { color: var(--text-1); border-color: var(--border-hover); }
+.nav-backdrop { display: none; }
 
 /* ============ CARD ============ */
 .card {
@@ -946,6 +956,31 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 }
 
 /* ============ ACCESSIBILITY: reduced motion ============ */
+/* ============ RESPONSIVE / MOBILE ============ */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 260ms var(--ease);
+    box-shadow: var(--elev-3);
+  }
+  .sidebar--open { transform: translateX(0); }
+  .nav-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 95;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
+    animation: fadeIn 180ms var(--ease) both;
+  }
+  .page-content { margin-left: 0; }
+  .topbar { left: 0; padding: 0 14px; }
+  .topbar__menu { display: inline-flex; }
+  .topbar__username, .cmdk-hint { display: none; }
+  .page-inner { padding: 14px; }
+  .grid-2col { grid-template-columns: 1fr; }
+  /* dense data strip stays readable via horizontal scroll */
+  .asset-strip { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .asset-strip__row { min-width: 560px; }
+  .fab { bottom: 18px; right: 18px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

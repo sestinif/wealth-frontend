@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 
-export default function Sidebar({ username }) {
+export default function Sidebar({ username, open = false, onClose }) {
   const location = useLocation();
   const [assets, setAssets] = useState([]);
 
@@ -19,7 +19,7 @@ export default function Sidebar({ username }) {
   ];
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${open ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
         <div className="sidebar__logo">W</div>
         <div className="sidebar__title">WEALTH</div>
@@ -35,6 +35,7 @@ export default function Sidebar({ username }) {
           <Link
             key={item.path}
             to={item.path}
+            onClick={onClose}
             className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
           >
             <div className="nav-item__icon">{item.icon}</div>
