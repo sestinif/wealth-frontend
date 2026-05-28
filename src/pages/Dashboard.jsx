@@ -109,6 +109,13 @@ export default function Dashboard() {
   const pnlSeries = valueSeries.map((v, i) => v - (investedSeries[i] || 0));
   const heroSparkColor = summary.pnl >= 0 ? SPARK_GREEN : SPARK_RED;
 
+  // Hero portfolio chart (30d)
+  const pfFirst = valueSeries.find(v => v > 0) || valueSeries[0] || 0;
+  const pfLast = valueSeries[valueSeries.length - 1] || 0;
+  const pfChange = pfFirst > 0 ? ((pfLast - pfFirst) / pfFirst * 100) : 0;
+  const pfUp = pfChange >= 0;
+  const pfColor = pfUp ? '#2dd17f' : '#ff5a6e';
+
   const recentColumns = [
     { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
     { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={gc(v)} /> },
@@ -180,8 +187,48 @@ export default function Dashboard() {
         );
       })()}
 
+      {/* === HERO PORTFOLIO CHART (always visible) === */}
+      {chartData.length > 1 && (
+        <div className="card section-gap animate-in-2" style={{ marginBottom: 16 }}>
+          <div className="card__head" style={{ marginBottom: 6, alignItems: 'flex-start' }}>
+            <div>
+              <h3 className="card__title mb-0">Andamento Portfolio</h3>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 7 }}>
+                <span className="hnum hnum--light" style={{ fontFamily: 'var(--font-num)', fontSize: 21, fontWeight: 600, letterSpacing: '-0.02em' }}>{formatEUR(pfLast)}</span>
+                <span className="tnum" style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-num)', color: pfColor }}>
+                  {pfUp ? '+' : ''}{pfChange.toFixed(2)}% · 30g
+                </span>
+              </div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={210}>
+            <AreaChart data={chartData} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={pfColor} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={pfColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid {...CHART_GRID} />
+              <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Geist Mono, monospace' }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
+              <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Geist Mono, monospace' }} axisLine={false} tickLine={false} width={48} domain={['auto', 'auto']}
+                tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
+                cursor={{ stroke: 'rgba(124,92,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                formatter={(v) => [formatEUR(v), 'Valore']} labelFormatter={(l) => formatDate(l)} />
+              <Area type="monotone" dataKey="value" stroke={pfColor} strokeWidth={2} strokeLinecap="round"
+                fill="url(#hg)" animationDuration={900} animationEasing="ease-out"
+                dot={(p) => p.index === chartData.length - 1
+                  ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={pfColor} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={pfColor} stroke="#0a0b11" strokeWidth={2} /></g>
+                  : <g key={p.index} />}
+                activeDot={{ r: 4, fill: '#fff', stroke: '#0a0b11', strokeWidth: 2 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {/* === COMPACT ASSET STRIP (always visible) === */}
-      <div className="animate-in-2">
+      <div className="animate-in-3">
         <div className="section-header">
           <div className="section-header__title">
             Portfolio Principale · {mainAssets.length} asset

@@ -4,8 +4,8 @@
   "description": "Multi-asset investment portfolio tracker",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c0d14",
-  "theme_color": "#7c3aed",
+  "background_color": "#08090d",
+  "theme_color": "#7c5cff",
   "icons": [
     {
       "src": "/favicon.svg",
