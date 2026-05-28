@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
+import { getDisplayName } from '../utils/user';
 import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID } from '../utils/format';
 
 export default function Dashboard() {
@@ -63,7 +64,7 @@ export default function Dashboard() {
   if (!data || !user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const { summary, prices, purchases } = data;
-  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B5CF6';
+  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#7c5cff';
   const gd = (s) => assets.find(a => a.symbol === s)?.decimals || 2;
   const pnlC = summary.pnl >= 0 ? 'var(--green)' : 'var(--red)';
 
@@ -140,7 +141,7 @@ export default function Dashboard() {
           <>
             <div className="animate-in hero-greeting">
               <div>
-                <div className="hero-greeting__title">{greeting}, {user.username}</div>
+                <div className="hero-greeting__title">{greeting}, {getDisplayName(user.username)}</div>
                 <div className="hero-greeting__sub">
                   {best && best.pnl_pct > 0
                     ? <><span style={{ color: 'var(--text-1)' }}>{best.symbol}</span> è il tuo asset migliore con <span style={{ color: 'var(--green)' }}>+{best.pnl_pct.toFixed(1)}%</span> di rendimento</>

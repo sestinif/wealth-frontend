@@ -42,7 +42,7 @@ export default function QuickBuyFAB() {
   }, [open]);
 
   const currentAsset = assets.find(a => a.symbol === asset);
-  const getColor = (s) => assets.find(a => a.symbol === s)?.color || '#8B5CF6';
+  const getColor = (s) => assets.find(a => a.symbol === s)?.color || '#7c5cff';
 
   const handleAmount = (v) => {
     setAmountEur(v); setLastEdited('amount');

@@ -66,7 +66,7 @@ export default function CommandPalette() {
         <div style={{
           background: '#16171f', border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 14, overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,92,255,0.1)',
         }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
             <input
@@ -89,7 +89,7 @@ export default function CommandPalette() {
                 style={{
                   padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: i === selected ? 'rgba(124,58,237,0.1)' : 'transparent',
+                  background: i === selected ? 'rgba(124,92,255,0.1)' : 'transparent',
                   transition: 'background 60ms',
                 }}
                 onMouseEnter={() => setSelected(i)}

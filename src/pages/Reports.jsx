@@ -43,7 +43,7 @@ export default function Reports() {
   if (loading) return <PageLayout title="Report" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
-  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B5CF6';
+  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#7c5cff';
   const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
 
   const yearOptions = Array.from({ length: new Date().getFullYear() - 2023 }, (_, i) => ({

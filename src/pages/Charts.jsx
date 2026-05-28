@@ -230,7 +230,7 @@ export default function Charts() {
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#85819a', fontSize: 10 }} />
                 <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#7c5cff" strokeWidth={2} strokeLinecap="round" {...ANIM}
                   dot={lastDot(dcaData.length, '#7c5cff')} activeDot={{ r: 4, fill: '#b9a6ff', stroke: '#0a0b11', strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="rgba(167,139,250,0.4)" strokeWidth={1.5} dot={false} strokeDasharray="6 3" {...ANIM} />
+                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="rgba(185,166,255,0.4)" strokeWidth={1.5} dot={false} strokeDasharray="6 3" {...ANIM} />
               </LineChart>
             </ResponsiveContainer>
           ) : <EmptyState compact icon="inbox" title={`Nessun acquisto ${dcaAsset}`} description="Seleziona un asset con acquisti registrati." />}

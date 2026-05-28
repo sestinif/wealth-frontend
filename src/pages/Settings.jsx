@@ -7,6 +7,7 @@ import Icon from '../components/Icon';
 import { PageSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
+import { getDisplayName, setDisplayName as saveDisplayName } from '../utils/user';
 import { formatEUR, formatUSD } from '../utils/format';
 
 export default function Settings() {
@@ -21,6 +22,12 @@ export default function Settings() {
   const [submitting, setSubmitting] = useState(false);
 
   const [tab, setTab] = useState('portfolio'); // portfolio | account
+  const [nameInput, setNameInput] = useState(() => getDisplayName(''));
+
+  const handleSaveName = () => {
+    saveDisplayName(nameInput);
+    toast(nameInput.trim() ? `Perfetto, ti chiamerò ${nameInput.trim()}` : 'Nome ripristinato', 'success');
+  };
 
   const [assets, setAssets] = useState([]);
   const [prices, setPrices] = useState({});
@@ -187,7 +194,7 @@ export default function Settings() {
                     {r.thumb ? (
                       <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#a78bfa', fontWeight: 600, flexShrink: 0 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,92,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#b9a6ff', fontWeight: 600, flexShrink: 0 }}>
                         {r.symbol?.slice(0, 2)}
                       </div>
                     )}
@@ -217,6 +224,9 @@ export default function Settings() {
             <div className="section-header__title">Account</div>
           </div>
           <div className="card" style={{ marginBottom: 20 }}>
+            <FormInput label="Nome visualizzato" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
+            <div className="form-hint" style={{ marginBottom: 12 }}>Come vuoi essere salutato nella dashboard (es. Federico)</div>
+            <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 18 }}>Salva nome</button>
             <FormInput label="Username" value={user.username} disabled />
             <FormInput label="Email" type="email" value={user.email} disabled />
             <div className="info-text" style={{ marginTop: 4, fontSize: 11 }}>
