@@ -6,7 +6,7 @@ import AssetBadge from '../components/AssetBadge';
 import EmptyState from '../components/EmptyState';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatUSD, formatPct } from '../utils/format';
+import { formatEUR, formatUSD, formatPct, allocationSlices, rankedColors } from '../utils/format';
 
 const TT = {
   background: 'rgba(14,15,23,0.96)',
@@ -59,6 +59,8 @@ export default function Charts() {
   const monthlyData = buildMonthly(dashboard);
   const dcaData = buildDCA(dashboard, dcaAsset);
   const pieData = buildPie(dashboard, assets);
+  // value-ranked curated colours, shared by the stacked area & legends
+  const allocColor = rankedColors(assets, (a) => dashboard.summary?.by_asset?.[a.symbol]?.value);
 
   // Summary stats for charts
   const firstVal = portfolioData[0]?.value || 0;
@@ -141,7 +143,7 @@ export default function Charts() {
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#85819a', fontSize: 10 }} />
                 {assets.map(a => (
                   <Area key={a.symbol} type="monotone" dataKey={a.symbol} {...ANIM}
-                    stackId="1" stroke={a.color} fill={a.color} fillOpacity={0.55} strokeWidth={1.2} />
+                    stackId="1" stroke={allocColor[a.symbol]} fill={allocColor[a.symbol]} fillOpacity={0.55} strokeWidth={1.2} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
@@ -306,14 +308,9 @@ function buildDCA(d, asset) {
 
 function buildPie(d, assets) {
   if (!d?.summary?.by_asset) return [];
-  const total = d.summary.total_value || 1;
-  return assets
-    .filter(a => d.summary.by_asset[a.symbol]?.value > 0)
-    .map(a => ({
-      name: a.symbol,
-      value: d.summary.by_asset[a.symbol].value,
-      color: a.color,
-      pct: (d.summary.by_asset[a.symbol].value / total * 100).toFixed(1),
-    }))
-    .sort((a, b) => b.value - a.value);
+  return allocationSlices(
+    assets
+      .filter(a => d.summary.by_asset[a.symbol]?.value > 0)
+      .map(a => ({ name: a.symbol, value: d.summary.by_asset[a.symbol].value }))
+  );
 }

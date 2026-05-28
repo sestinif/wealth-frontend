@@ -11,7 +11,7 @@ import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName } from '../utils/user';
-import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID } from '../utils/format';
+import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID, allocationSlices } from '../utils/format';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -90,9 +90,11 @@ export default function Dashboard() {
 
   // Charts data
   const chartData = buildChartData(purchases, prices, assets, 'main');
-  const allocData = mainAssets
-    .filter(a => summary.by_asset[a.symbol]?.value > 0)
-    .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value, color: a.color }));
+  const allocData = allocationSlices(
+    mainAssets
+      .filter(a => summary.by_asset[a.symbol]?.value > 0)
+      .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value }))
+  );
 
   // Hero sparkline series (30d): value, cumulative invested, derived P/L
   const SPARK_GREEN = '#5cb98f', SPARK_RED = '#df8794', SPARK_MUTE = '#56546a';
