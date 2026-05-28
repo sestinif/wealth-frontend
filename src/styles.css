@@ -60,7 +60,7 @@ button, input, textarea, select { font-family: inherit; }
   --red: #ff5a6e;
   --red-soft: #ff8593;
   --red-bg: rgba(255,90,110,0.09);
-  --font-num: 'Geist Mono', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-num: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --sidebar-w: 216px;
   --topbar-h: 52px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -75,12 +75,13 @@ button, input, textarea, select { font-family: inherit; }
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
 }
 
-/* Tabular figures everywhere numbers live — no horizontal jitter on update.
-   Geist Mono is tabular by nature; Inter needs tnum turned on. */
+/* Tabular figures everywhere numbers live — proportional Inter digits that
+   still align in columns (the Linear/Mercury approach, not monospace). */
 .tnum, .data-table td, .hero-stat__value, .kpi-card__value,
-.asset-strip__primary, .asset-card__price {
+.asset-strip__primary, .asset-strip__price-main, .asset-strip__secondary,
+.asset-card__price, .num__affix {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
+  font-feature-settings: "tnum" 1, "cv05" 1, "ss01" 1;
 }
 
 ::-webkit-scrollbar { width: 3px; }
@@ -291,7 +292,7 @@ button, input, textarea, select { font-family: inherit; }
 }
 .hero-stat__value {
   font-family: var(--font-num);
-  font-size: 33px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05;
+  font-size: 34px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.05;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   height: 40px; display: flex; align-items: center;
 }

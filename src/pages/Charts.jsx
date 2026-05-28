@@ -13,12 +13,12 @@ const TT = {
   backdropFilter: 'blur(8px)',
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: 10, padding: '8px 12px',
-  fontSize: 12, fontFamily: "'Geist Mono', ui-monospace, monospace",
+  fontSize: 12, fontFamily: "'Inter', sans-serif",
   fontVariantNumeric: 'tabular-nums',
   boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
 };
 const TT_ITEM = { color: '#f2f1f5', fontSize: 12 };
-const AXIS = { fill: '#56546a', fontSize: 10, fontFamily: "'Geist Mono', ui-monospace, monospace" };
+const AXIS = { fill: '#56546a', fontSize: 10, fontFamily: "'Inter', sans-serif" };
 const GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };
 const ANIM = { animationDuration: 900, animationEasing: 'ease-out' };
 const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(v));

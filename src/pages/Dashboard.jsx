@@ -211,8 +211,8 @@ export default function Dashboard() {
                 </linearGradient>
               </defs>
               <CartesianGrid {...CHART_GRID} />
-              <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Geist Mono, monospace' }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
-              <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Geist Mono, monospace' }} axisLine={false} tickLine={false} width={48} domain={['auto', 'auto']}
+              <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
+              <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} width={48} domain={['auto', 'auto']}
                 tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                 cursor={{ stroke: 'rgba(124,92,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
