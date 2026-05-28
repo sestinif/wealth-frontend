@@ -153,15 +153,21 @@ export default function Charts() {
           </div>
           {pieData.length > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height={190}>
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value"
-                    stroke="#0a0b11" strokeWidth={2} {...ANIM}>
-                    {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="donut-wrap">
+                <ResponsiveContainer width="100%" height={190}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value"
+                      stroke="#0a0b11" strokeWidth={2} {...ANIM}>
+                      {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="donut-center">
+                  <div className="donut-center__val">{formatEUR(dashboard.summary.total_value)}</div>
+                  <div className="donut-center__lbl">Totale</div>
+                </div>
+              </div>
               <div className="pie-legend">
                 {pieData.map(item => (
                   <div key={item.name} className="pie-legend__row">

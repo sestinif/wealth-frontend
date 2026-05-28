@@ -53,6 +53,25 @@ export default function App() {
     checkSetup();
   }, []);
 
+  // Cursor spotlight: track the pointer over cards/hero so a soft radial
+  // light can follow it (purely cosmetic, desktop-only effect).
+  useEffect(() => {
+    let raf = 0;
+    const onMove = (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const el = e.target.closest?.('.card, .hero-stats, .asset-card');
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        el.style.setProperty('--my', `${e.clientY - r.top}px`);
+      });
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+
   const handleLogin = (token, username) => { setToken(token); setIsAuthenticated(true); };
   const handleSetupComplete = () => { setSetupRequired(false); };
 

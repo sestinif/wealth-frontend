@@ -208,12 +208,25 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ============ CARD ============ */
 .card {
+  position: relative;
   background: var(--bg-card-grad);
   border: 1px solid var(--border);
   border-radius: var(--radius); padding: 20px;
   box-shadow: var(--highlight), var(--elev-2);
   transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease), transform 200ms var(--ease);
 }
+
+/* ============ CURSOR SPOTLIGHT — the elite "how'd they do that" detail ============
+   A soft radial light tracks the cursor (--mx/--my set in JS) on hover. */
+.card::after, .hero-stats::after, .asset-card::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; opacity: 0; transition: opacity 320ms var(--ease);
+  background: radial-gradient(480px circle at var(--mx, 50%) var(--my, 50%), rgba(124,92,255,0.10), transparent 56%);
+  z-index: 0;
+}
+.card:hover::after, .hero-stats:hover::after, .asset-card:hover::after { opacity: 1; }
+/* keep content above the spotlight glow */
+.card > *, .hero-stats > *, .asset-card > * { position: relative; z-index: 1; }
 .card + .card { margin-top: 10px; }
 .card--interactive { cursor: pointer; }
 .card--interactive:hover {
@@ -252,10 +265,16 @@ button, input, textarea, select { font-family: inherit; }
 /* Golden-hour ambient: cool purple light from top-left, warm sunset from
    bottom-right — the dashboard carries the mood without a literal photo. */
 .hero-stats::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
+  content: ''; position: absolute; inset: -18%; pointer-events: none;
   background:
     radial-gradient(ellipse 50% 120% at 0% -10%, rgba(124,92,255,0.16) 0%, transparent 50%),
     radial-gradient(ellipse 55% 130% at 100% 120%, rgba(255,150,95,0.11) 0%, transparent 55%);
+  animation: auroraDrift 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes auroraDrift {
+  0%   { transform: translate3d(-1.5%, -1%, 0) scale(1.04); }
+  100% { transform: translate3d(2%, 1.5%, 0) scale(1.12); }
 }
 .hero-stat {
   padding: 22px 26px 24px;
@@ -658,6 +677,22 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .chart-legend__item { display: flex; align-items: center; gap: 5px; }
 .chart-legend__dot { width: 6px; height: 6px; border-radius: 2px; }
 .chart-legend__text { color: var(--text-2); font-variant-numeric: tabular-nums; font-family: var(--font-num); }
+
+/* Donut center total */
+.donut-wrap { position: relative; }
+.donut-center {
+  position: absolute; top: 50%; left: 0; right: 0;
+  transform: translateY(-50%); text-align: center; pointer-events: none;
+}
+.donut-center__val {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 14px; font-weight: 600; color: var(--text-1);
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+.donut-center__lbl {
+  font-size: 9px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 1px; margin-top: 3px;
+}
 
 /* Pie / donut legend — compact 3-col grid */
 .pie-legend { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
