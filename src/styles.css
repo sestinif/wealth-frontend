@@ -266,12 +266,12 @@ button, input, textarea, select { font-family: inherit; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   height: 40px; display: flex; align-items: center;
 }
-/* De-emphasised currency symbol — sits just above the digit baseline,
-   sized to roughly the cap-height so it reads as part of the number. */
-.num__sym {
-  font-size: 0.58em; font-weight: 500; opacity: 0.5;
-  margin-right: 0.16em; letter-spacing: 0;
-  position: relative; top: -0.06em;
+/* Sign + currency rendered as one compact affix (e.g. "+€"), sized below
+   the digits and lightly dimmed — balanced, reads as part of the number. */
+.num__affix {
+  font-size: 0.6em; font-weight: 600; opacity: 0.55;
+  margin-right: 0.08em; letter-spacing: -0.01em;
+  position: relative; top: -0.02em;
 }
 /* Tick flash on value change (Bloomberg/Binance style) */
 @keyframes tickUp {

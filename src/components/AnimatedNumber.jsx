@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 
-// Render the currency symbol smaller & dimmed (.num__sym) while keeping
-// sign and digits at full weight — a classic premium fintech detail.
-const renderPrefix = (p) =>
-  [...p].map((ch, i) =>
-    ch === '€' || ch === '$'
-      ? <span key={i} className="num__sym">{ch}</span>
-      : ch
-  );
+// Render sign + currency symbol as ONE compact, lightly-dimmed affix
+// (e.g. "+€"), sized below the digits — the digits stay the hero.
+const renderPrefix = (p) => {
+  const affix = (p || '').replace(/\s+/g, '');
+  return affix ? <span className="num__affix">{affix}</span> : null;
+};
 
 export default function AnimatedNumber({ value, prefix = '', suffix = '', duration = 800, decimals = 2, className = '', style = {} }) {
   const [display, setDisplay] = useState(0);
@@ -53,6 +51,7 @@ export default function AnimatedNumber({ value, prefix = '', suffix = '', durati
   const formatted = display.toLocaleString('it-IT', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    useGrouping: 'always',
   });
 
   return (

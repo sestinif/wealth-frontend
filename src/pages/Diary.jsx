@@ -256,7 +256,7 @@ export default function Diary() {
                 placeholder="0.00" disabled={useLivePrice}
               />
               {priceCurrency === 'USD' && priceEur && (
-                <div className="form-hint">≈ € {parseFloat(priceEur).toLocaleString('it-IT', { minimumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 2, maximumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 4 })}</div>
+                <div className="form-hint">≈ € {parseFloat(priceEur).toLocaleString('it-IT', { minimumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 2, maximumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 4, useGrouping: 'always' })}</div>
               )}
             </div>
             <FormInput label="Importo EUR" type="number" step="any" value={amountEur} onChange={e => handleAmountChange(e.target.value)} placeholder="0.00" />

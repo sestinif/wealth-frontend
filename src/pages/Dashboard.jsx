@@ -159,7 +159,7 @@ export default function Dashboard() {
                 <div className="hero-stat__label"><span className="live-dot" />Valore Portfolio</div>
                 <AnimatedNumber value={summary.total_value * rate} prefix={cSym} className="hero-stat__value" style={{ color: 'var(--text-1)' }} />
                 {summary.spec_value > 0
-                  ? <div className="hero-stat__sub">+ {cSym}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} speculativo</div>
+                  ? <div className="hero-stat__sub">+ {cSym}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' })} speculativo</div>
                   : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
                 <Sparkline data={valueSeries} color={heroSparkColor} />
               </div>
