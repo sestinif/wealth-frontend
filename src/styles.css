@@ -322,15 +322,11 @@ button, input, textarea, select { font-family: inherit; }
 .hero-stat__sub--placeholder { visibility: hidden; }
 /* Dimensional numbers: a subtle top-lit gradient instead of flat fill —
    reads as carved/polished, kills the "flat digital" feel. */
-.hnum {
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.25);
-}
-.hnum--light { background-image: linear-gradient(180deg, #f6f5fa 0%, #bcbac8 100%); }
-.hnum--green { background-image: linear-gradient(180deg, #7fcca8 0%, #4ea780 100%); }
-.hnum--red   { background-image: linear-gradient(180deg, #e7a0aa 0%, #cf7180 100%); }
-.hnum--muted { background-image: linear-gradient(180deg, #aeacbd 0%, #6f6d80 100%); }
+.hnum { text-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+.hnum--light { color: var(--text-1); }
+.hnum--muted { color: var(--text-2); }
+.hnum--green { color: var(--green); }
+.hnum--red   { color: var(--red); }
 
 /* Sparkline filling the lower part of each hero cell — adds craft & info */
 .hero-stat > * { position: relative; z-index: 1; }

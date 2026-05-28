@@ -131,7 +131,7 @@ export default function Reports() {
             </div>
             <div className="hero-stat">
               <div className="hero-stat__label">Profitto / Perdita</div>
-              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+€ ' : '-€ '} className={`hero-stat__value hnum ${report.pnl >= 0 ? 'hnum--green' : 'hnum--red'}`} />
+              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+€ ' : '-€ '} className="hero-stat__value hnum hnum--light" />
               <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(report.pnl_pct)}</div>
             </div>
           </div>
