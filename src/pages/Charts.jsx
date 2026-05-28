@@ -83,7 +83,7 @@ export default function Charts() {
           <div>
             <h3 className="card__title mb-0">Valore Portfolio</h3>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
-              <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--text-1)', fontFamily: 'var(--font-num)' }}>
+              <span className="hnum hnum--light" style={{ fontSize: 22, fontWeight: 600, fontFamily: 'var(--font-num)', letterSpacing: '-0.02em' }}>
                 {formatEUR(lastVal)}
               </span>
               <span style={{ fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-num)', color: portfolioChange >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
