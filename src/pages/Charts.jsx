@@ -27,7 +27,7 @@ const LEGEND = { fontSize: 11, paddingTop: 8, fontFamily: "'Inter', sans-serif" 
 // Glowing dot on the most recent point — reads as "live", very premium.
 const lastDot = (len, color) => (p) =>
   p.index === len - 1 && p.cx != null
-    ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={color} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={color} stroke="#0a0b11" strokeWidth={2} /></g>
+    ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={color} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={color} stroke="#1b1b22" strokeWidth={2} /></g>
     : <g key={p.index} />;
 
 export default function Charts() {
@@ -120,7 +120,7 @@ export default function Charts() {
                 stroke={portfolioChange >= 0 ? '#5cb98f' : '#df8794'}
                 strokeWidth={2} strokeLinecap="round" fill="url(#pg)"
                 dot={lastDot(portfolioData.length, portfolioChange >= 0 ? '#5cb98f' : '#df8794')}
-                activeDot={{ r: 4, fill: '#fff', stroke: '#0a0b11', strokeWidth: 2 }} />
+                activeDot={{ r: 4, fill: '#fff', stroke: '#1b1b22', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
         ) : <EmptyState compact icon="chart" title="Nessun dato" description="Registra acquisti per costruire lo storico del portfolio." />}
@@ -161,7 +161,7 @@ export default function Charts() {
                 <ResponsiveContainer width="100%" height={190}>
                   <PieChart>
                     <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value"
-                      stroke="#0a0b11" strokeWidth={2} {...ANIM}>
+                      stroke="#1b1b22" strokeWidth={2} {...ANIM}>
                       {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
                     <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} />
@@ -242,7 +242,7 @@ export default function Charts() {
                 <Legend wrapperStyle={LEGEND} iconType="plainline" iconSize={16} />
                 <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="#8b8a98" strokeWidth={1.5} dot={false} strokeDasharray="5 4" {...ANIM} />
                 <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#8b86e0" strokeWidth={2.5} strokeLinecap="round" {...ANIM}
-                  dot={lastDot(dcaData.length, '#8b86e0')} activeDot={{ r: 4, fill: '#bcb8ee', stroke: '#0a0b11', strokeWidth: 2 }} />
+                  dot={lastDot(dcaData.length, '#8b86e0')} activeDot={{ r: 4, fill: '#bcb8ee', stroke: '#1b1b22', strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : <EmptyState compact icon="inbox" title={`Nessun acquisto ${dcaAsset}`} description="Seleziona un asset con acquisti registrati." />}

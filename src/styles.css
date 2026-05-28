@@ -57,8 +57,8 @@ body::after {
   --border-focus: rgba(139,134,224,0.5);
   /* Inner top highlight — the "lit from above" premium surface trick */
   --highlight: inset 0 1px 0 rgba(255,255,255,0.05);
-  /* Beveled edge: lit on top, shadowed on the bottom — gives real thickness */
-  --edge: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.22);
+  /* Lit top edge only — subtle, no heavy bottom line */
+  --edge: inset 0 1px 0 rgba(255,255,255,0.055);
   /* Recessed well — for inputs/fields that should read as "pressed in" */
   --inset: inset 0 1px 2px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(0,0,0,0.12);
   --accent: #8b86e0;        /* muted periwinkle-lavender, not neon */
@@ -584,7 +584,9 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .alert--success { color: var(--green-soft); background: var(--green-bg); border: 1px solid rgba(92,185,143,0.08); }
 
 /* GRID */
-.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: stretch; }
+.grid-2col > .card { height: 100%; display: flex; flex-direction: column; }
+.grid-2col > .card > .card__head { flex: 0 0 auto; }
 
 /* TAB / FILTER */
 .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }

@@ -222,9 +222,9 @@ export default function Dashboard() {
               <Area type="monotone" dataKey="value" stroke={pfColor} strokeWidth={2} strokeLinecap="round"
                 fill="url(#hg)" animationDuration={900} animationEasing="ease-out"
                 dot={(p) => p.index === chartData.length - 1
-                  ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={pfColor} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={pfColor} stroke="#0a0b11" strokeWidth={2} /></g>
+                  ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={pfColor} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={pfColor} stroke="#1b1b22" strokeWidth={2} /></g>
                   : <g key={p.index} />}
-                activeDot={{ r: 4, fill: '#fff', stroke: '#0a0b11', strokeWidth: 2 }} />
+                activeDot={{ r: 4, fill: '#fff', stroke: '#1b1b22', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -441,9 +441,9 @@ export default function Dashboard() {
                       <Area type="monotone" dataKey="value" stroke="#5cb98f" strokeWidth={2} strokeLinecap="round"
                         fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
                         dot={(p) => p.index === chartData.length - 1
-                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#5cb98f" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#5cb98f" stroke="#0a0b11" strokeWidth={2} /></g>
+                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#5cb98f" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#5cb98f" stroke="#1b1b22" strokeWidth={2} /></g>
                           : <g key={p.index} />}
-                        activeDot={{ r: 4, fill: '#fff', stroke: '#0a0b11', strokeWidth: 2 }} />
+                        activeDot={{ r: 4, fill: '#fff', stroke: '#1b1b22', strokeWidth: 2 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}
@@ -460,7 +460,7 @@ export default function Dashboard() {
                       <ResponsiveContainer width="100%" height={200}>
                         <PieChart>
                           <Pie data={allocData} cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3} dataKey="value"
-                            stroke="#0a0b11" strokeWidth={2} animationDuration={800} animationEasing="ease-out">
+                            stroke="#1b1b22" strokeWidth={2} animationDuration={800} animationEasing="ease-out">
                             {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
                           </Pie>
                           <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} formatter={(v) => formatEUR(v)} />
