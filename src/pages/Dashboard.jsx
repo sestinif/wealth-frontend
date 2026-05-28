@@ -138,6 +138,8 @@ export default function Dashboard() {
         const isUsd = displayCurrency === 'USD' && eurUsdRate;
         const rate = isUsd ? eurUsdRate : 1;
         const cSym = isUsd ? '$ ' : '€ ';
+        const symPre = isUsd ? '$' : '';   // USD symbol before
+        const symSuf = isUsd ? '' : '€';   // EUR symbol after (IT convention)
         const locale = isUsd ? 'en-US' : 'it-IT';
         return (
           <>
@@ -167,21 +169,21 @@ export default function Dashboard() {
             <div className="hero-stats animate-in-1">
               <div className="hero-stat">
                 <div className="hero-stat__label"><span className="live-dot" />Valore Portfolio</div>
-                <AnimatedNumber value={summary.total_value * rate} prefix={cSym} className="hero-stat__value hnum hnum--light" />
+                <AnimatedNumber value={summary.total_value * rate} prefix={symPre} suffix={symSuf} className="hero-stat__value hnum hnum--light" />
                 {summary.spec_value > 0
-                  ? <div className="hero-stat__sub">+ {cSym}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' })} speculativo</div>
+                  ? <div className="hero-stat__sub">+ {isUsd ? '$ ' : ''}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' })}{isUsd ? '' : ' €'} speculativo</div>
                   : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
                 <Sparkline data={valueSeries} color={heroSparkColor} />
               </div>
               <div className="hero-stat">
                 <div className="hero-stat__label">Profitto / Perdita</div>
-                <AnimatedNumber value={Math.abs(summary.pnl) * rate} prefix={summary.pnl >= 0 ? '+' + cSym : '-' + cSym} className="hero-stat__value hnum hnum--light" />
+                <AnimatedNumber value={Math.abs(summary.pnl) * rate} prefix={(summary.pnl >= 0 ? '+' : '-') + symPre} suffix={symSuf} className="hero-stat__value hnum hnum--light" />
                 <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(summary.pnl_pct)}</div>
                 <Sparkline data={pnlSeries} color={heroSparkColor} />
               </div>
               <div className="hero-stat">
                 <div className="hero-stat__label">Totale Investito</div>
-                <AnimatedNumber value={summary.total_invested * rate} prefix={cSym} className="hero-stat__value hnum hnum--muted" />
+                <AnimatedNumber value={summary.total_invested * rate} prefix={symPre} suffix={symSuf} className="hero-stat__value hnum hnum--muted" />
                 <div className="hero-stat__sub">{summary.n_purchases} acquisti totali</div>
                 <Sparkline data={investedSeries} color={SPARK_MUTE} style={{ opacity: 0.5 }} />
               </div>

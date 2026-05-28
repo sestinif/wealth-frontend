@@ -319,6 +319,7 @@ body::after {
   margin-right: 0.08em; letter-spacing: -0.01em;
   position: relative; top: -0.02em;
 }
+.num__affix--suf { margin-right: 0; margin-left: 0.16em; }
 /* Tick flash on value change (Bloomberg/Binance style) */
 @keyframes tickUp {
   0% { color: var(--green); text-shadow: 0 0 12px rgba(92,185,143,0.5); }

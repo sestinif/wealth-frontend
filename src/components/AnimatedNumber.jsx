@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 
-// Render sign + currency symbol as ONE compact, lightly-dimmed affix
-// (e.g. "+€"), sized below the digits — the digits stay the hero.
+// Sign + currency symbol as one compact, lightly-dimmed affix (e.g. "+€"),
+// sized below the digits — the digits stay the hero. Works before or after.
 const renderPrefix = (p) => {
   const affix = (p || '').replace(/\s+/g, '');
   return affix ? <span className="num__affix">{affix}</span> : null;
+};
+const renderSuffix = (s) => {
+  const affix = (s || '').replace(/\s+/g, '');
+  return affix ? <span className="num__affix num__affix--suf">{affix}</span> : null;
 };
 
 export default function AnimatedNumber({ value, prefix = '', suffix = '', duration = 800, decimals = 2, className = '', style = {} }) {
@@ -59,7 +63,7 @@ export default function AnimatedNumber({ value, prefix = '', suffix = '', durati
       className={`${className} ${flash}`.trim()}
       style={{ fontVariantNumeric: 'tabular-nums', ...style }}
     >
-      {renderPrefix(prefix)}{formatted}{suffix}
+      {renderPrefix(prefix)}{formatted}{renderSuffix(suffix)}
     </span>
   );
 }

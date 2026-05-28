@@ -121,17 +121,17 @@ export default function Reports() {
           <div className="hero-stats animate-in-2">
             <div className="hero-stat">
               <div className="hero-stat__label">Investito nel periodo</div>
-              <AnimatedNumber value={report.total_invested} prefix="€ " className="hero-stat__value hnum hnum--muted" />
+              <AnimatedNumber value={report.total_invested} suffix="€" className="hero-stat__value hnum hnum--muted" />
               <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>
             </div>
             <div className="hero-stat">
               <div className="hero-stat__label">Valore Attuale</div>
-              <AnimatedNumber value={report.total_value} prefix="€ " className="hero-stat__value hnum hnum--light" />
+              <AnimatedNumber value={report.total_value} suffix="€" className="hero-stat__value hnum hnum--light" />
               <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>
             </div>
             <div className="hero-stat">
               <div className="hero-stat__label">Profitto / Perdita</div>
-              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+€ ' : '-€ '} className="hero-stat__value hnum hnum--light" />
+              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+' : '-'} suffix="€" className="hero-stat__value hnum hnum--light" />
               <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(report.pnl_pct)}</div>
             </div>
           </div>
