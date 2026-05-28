@@ -194,7 +194,7 @@ export default function Settings() {
                     {r.thumb ? (
                       <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,92,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#b9a6ff', fontWeight: 600, flexShrink: 0 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(139,134,224,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#bcb8ee', fontWeight: 600, flexShrink: 0 }}>
                         {r.symbol?.slice(0, 2)}
                       </div>
                     )}

@@ -101,14 +101,14 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                   {r.thumb ? (
                     <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(124,92,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#b9a6ff', fontWeight: 600, flexShrink: 0 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(139,134,224,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#bcb8ee', fontWeight: 600, flexShrink: 0 }}>
                       {r.symbol?.slice(0, 2)}
                     </div>
                   )}
                   <div className="search-result__info" style={{ minWidth: 0 }}>
                     <div className="search-result__symbol">
                       {r.symbol}
-                      {r.chain && <span style={{ fontSize: 9, marginLeft: 6, padding: '1px 5px', borderRadius: 3, background: 'rgba(185,166,255,0.15)', color: '#b9a6ff', textTransform: 'uppercase' }}>{r.chain}</span>}
+                      {r.chain && <span style={{ fontSize: 9, marginLeft: 6, padding: '1px 5px', borderRadius: 3, background: 'rgba(185,166,255,0.15)', color: '#bcb8ee', textTransform: 'uppercase' }}>{r.chain}</span>}
                     </div>
                     <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.name}

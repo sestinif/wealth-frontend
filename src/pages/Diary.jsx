@@ -46,7 +46,7 @@ export default function Diary() {
   const currentAsset = assets.find(a => a.symbol === asset);
   const isCrypto = currentAsset?.asset_type === 'crypto';
   const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
-  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#7c5cff';
+  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8b86e0';
 
   useEffect(() => {
     const fetchData = async () => {

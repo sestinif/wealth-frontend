@@ -22,7 +22,7 @@ function smoothPath(pts) {
 
 // Smooth area sparkline. Edges are softened by a horizontal mask (set in CSS)
 // so it never collides with adjacent cell borders.
-export default function Sparkline({ data = [], color = '#2dd17f', className = 'hero-stat__spark', style }) {
+export default function Sparkline({ data = [], color = '#5cb98f', className = 'hero-stat__spark', style }) {
   const gid = useId();
   const pts = (data || []).filter(v => typeof v === 'number' && isFinite(v));
   if (pts.length < 2) return null;

@@ -64,7 +64,7 @@ export default function Dashboard() {
   if (!data || !user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
 
   const { summary, prices, purchases } = data;
-  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#7c5cff';
+  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8b86e0';
   const gd = (s) => assets.find(a => a.symbol === s)?.decimals || 2;
   const pnlC = summary.pnl >= 0 ? 'var(--green)' : 'var(--red)';
 
@@ -95,7 +95,7 @@ export default function Dashboard() {
     .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value, color: a.color }));
 
   // Hero sparkline series (30d): value, cumulative invested, derived P/L
-  const SPARK_GREEN = '#2dd17f', SPARK_RED = '#ff5a6e', SPARK_MUTE = '#56546a';
+  const SPARK_GREEN = '#5cb98f', SPARK_RED = '#df8794', SPARK_MUTE = '#56546a';
   const valueSeries = chartData.map(d => d.value);
   const investedSeries = (() => {
     const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -115,7 +115,7 @@ export default function Dashboard() {
   const pfLast = valueSeries[valueSeries.length - 1] || 0;
   const pfChange = pfFirst > 0 ? ((pfLast - pfFirst) / pfFirst * 100) : 0;
   const pfUp = pfChange >= 0;
-  const pfColor = pfUp ? '#2dd17f' : '#ff5a6e';
+  const pfColor = pfUp ? '#5cb98f' : '#df8794';
 
   const recentColumns = [
     { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
@@ -215,7 +215,7 @@ export default function Dashboard() {
               <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} width={48} domain={['auto', 'auto']}
                 tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                cursor={{ stroke: 'rgba(124,92,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
                 formatter={(v) => [formatEUR(v), 'Valore']} labelFormatter={(l) => formatDate(l)} />
               <Area type="monotone" dataKey="value" stroke={pfColor} strokeWidth={2} strokeLinecap="round"
                 fill="url(#hg)" animationDuration={900} animationEasing="ease-out"
@@ -417,8 +417,8 @@ export default function Dashboard() {
                     <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#7c5cff" stopOpacity={0.35} />
-                          <stop offset="100%" stopColor="#7c5cff" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#8b86e0" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="#8b86e0" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid {...CHART_GRID} />
@@ -431,16 +431,16 @@ export default function Dashboard() {
                       />
                       <Tooltip
                         contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                        cursor={{ stroke: 'rgba(124,92,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                        cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
                         formatter={(v) => [formatEUR(v), 'Valore portfolio']}
                         labelFormatter={(l) => formatDate(l)}
                       />
-                      <Area type="monotone" dataKey="value" stroke="#7c5cff" strokeWidth={2} strokeLinecap="round"
+                      <Area type="monotone" dataKey="value" stroke="#8b86e0" strokeWidth={2} strokeLinecap="round"
                         fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
                         dot={(p) => p.index === chartData.length - 1
-                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#7c5cff" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#7c5cff" stroke="#0a0b11" strokeWidth={2} /></g>
+                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#8b86e0" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#8b86e0" stroke="#0a0b11" strokeWidth={2} /></g>
                           : <g key={p.index} />}
-                        activeDot={{ r: 4, fill: '#b9a6ff', stroke: '#0a0b11', strokeWidth: 2 }} />
+                        activeDot={{ r: 4, fill: '#bcb8ee', stroke: '#0a0b11', strokeWidth: 2 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}
