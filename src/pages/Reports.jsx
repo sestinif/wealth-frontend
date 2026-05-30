@@ -137,7 +137,7 @@ export default function Reports() {
           </div>
 
           {/* Asset breakdown */}
-          <div className="animate-in-3" style={{ marginBottom: 16 }}>
+          <div className="animate-in-3" style={{ marginBottom: 24 }}>
             <div className="section-header">
               <div className="section-header__title">Breakdown per Asset</div>
               <div className="section-header__meta">{assetData.length} asset</div>
@@ -149,7 +149,7 @@ export default function Reports() {
 
           {/* Transactions (collapsible) */}
           {report.transactions && report.transactions.length > 0 && (
-            <div className="animate-in-4" style={{ marginBottom: 16 }}>
+            <div className="animate-in-4" style={{ marginBottom: 24 }}>
               <div className="section-header">
                 <div className="section-header__title">Transazioni del periodo</div>
                 <div className="section-header__actions">

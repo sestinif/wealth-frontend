@@ -194,7 +194,7 @@ export default function Dashboard() {
 
       {/* === HERO PORTFOLIO CHART (always visible) === */}
       {chartData.length > 1 && (
-        <div className="card section-gap animate-in-2" style={{ marginBottom: 16 }}>
+        <div className="card section-gap animate-in-2" style={{ marginBottom: 24 }}>
           <div className="card__head" style={{ marginBottom: 6, alignItems: 'flex-start' }}>
             <div>
               <h3 className="card__title mb-0">Andamento Portfolio</h3>
@@ -337,7 +337,7 @@ export default function Dashboard() {
       <div className="divider-subtle" />
 
       {/* === MARKET OVERVIEW (collapsed by default) === */}
-      <div className="animate-in-3" style={{ marginBottom: 16 }}>
+      <div className="animate-in-3" style={{ marginBottom: 24 }}>
         <div className="section-header">
           <div className="section-header__title">Panoramica Mercato</div>
           <button className={`collapse-btn ${showMarket ? 'expanded' : ''}`} onClick={() => setShowMarket(!showMarket)}>
@@ -400,7 +400,7 @@ export default function Dashboard() {
       </div>
 
       {/* === CHARTS (collapsed by default) === */}
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 24 }}>
         <div className="section-header">
           <div className="section-header__title">Grafici & Analytics</div>
           <button className={`collapse-btn ${showCharts ? 'expanded' : ''}`} onClick={() => setShowCharts(!showCharts)}>
