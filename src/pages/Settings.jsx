@@ -156,12 +156,6 @@ export default function Settings() {
             {assets.map(asset => (
               <div key={asset.symbol} className="asset-row">
                 <AssetBadge asset={asset.symbol} color={asset.color} />
-                <div className="asset-row__info">
-                  <div className="asset-row__name">{asset.name}</div>
-                  <div className="asset-row__type">
-                    {asset.asset_type === 'crypto' ? 'Crypto' : asset.asset_type === 'dex_token' ? 'DEX Token' : 'Stock / ETF'}
-                  </div>
-                </div>
                 <div className="asset-row__price">{getPrice(asset)}</div>
                 <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Cambia colore" />
                 <button className="asset-row__remove" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi" aria-label="Rimuovi"><Icon name="trash" size={14} /></button>
