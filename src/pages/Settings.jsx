@@ -112,7 +112,9 @@ export default function Settings() {
     const p = prices[asset.symbol];
     if (!p) return '—';
     const isCrypto = asset.asset_type === 'crypto' || asset.asset_type === 'dex_token';
-    return isCrypto ? formatUSD(p.usd || p.eur || 0) : formatEUR(p.eur || 0);
+    const val = isCrypto ? (p.usd || p.eur || 0) : (p.eur || 0);
+    if (!val || val < 0.000001) return '—';
+    return isCrypto ? formatUSD(val) : formatEUR(val);
   };
 
   if (loading) return <PageLayout title="Impostazioni" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;
@@ -162,7 +164,7 @@ export default function Settings() {
                 </div>
                 <div className="asset-row__price">{getPrice(asset)}</div>
                 <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Cambia colore" />
-                <button className="btn btn--danger btn--sm" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi" aria-label="Rimuovi"><Icon name="trash" size={13} /></button>
+                <button className="asset-row__remove" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi" aria-label="Rimuovi"><Icon name="trash" size={14} /></button>
               </div>
             ))}
           </div>
