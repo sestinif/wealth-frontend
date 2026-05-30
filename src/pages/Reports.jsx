@@ -81,7 +81,7 @@ export default function Reports() {
     <PageLayout title="Report" username={user.username} size="md">
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 18 }}>
+      <div className="animate-in" style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
           Report {periodLabel}
         </div>

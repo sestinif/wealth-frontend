@@ -10,7 +10,7 @@ export function Skel({ w = '100%', h = 12, r = 6, style = {} }) {
 export function DashboardSkeleton() {
   return (
     <>
-      <div className="hero-greeting" style={{ marginBottom: 18 }}>
+      <div className="hero-greeting" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
           <Skel w={220} h={22} />
           <Skel w={300} h={12} />
@@ -53,7 +53,7 @@ export function DashboardSkeleton() {
 export function PageSkeleton({ rows = 5 }) {
   return (
     <>
-      <div className="hero-greeting" style={{ marginBottom: 18 }}>
+      <div className="hero-greeting" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
           <Skel w={200} h={20} />
           <Skel w={260} h={12} />

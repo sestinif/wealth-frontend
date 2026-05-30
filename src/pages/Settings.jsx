@@ -122,7 +122,7 @@ export default function Settings() {
     <PageLayout title="Impostazioni" username={user.username} size="md">
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 18 }}>
+      <div className="animate-in" style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
           Impostazioni
         </div>
@@ -226,7 +226,7 @@ export default function Settings() {
           <div className="card" style={{ marginBottom: 20 }}>
             <FormInput label="Nome visualizzato" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
             <div className="form-hint" style={{ marginBottom: 12 }}>Come vuoi essere salutato nella dashboard (es. Federico)</div>
-            <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 18 }}>Salva nome</button>
+            <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 20 }}>Salva nome</button>
             <FormInput label="Username" value={user.username} disabled />
             <FormInput label="Email" type="email" value={user.email} disabled />
             <div className="info-text" style={{ marginTop: 4, fontSize: 11 }}>

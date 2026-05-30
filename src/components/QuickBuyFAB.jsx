@@ -194,7 +194,7 @@ export default function QuickBuyFAB() {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 18 }}>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
                 <button type="button" className="btn btn--ghost" onClick={() => setOpen(false)}>Annulla</button>
                 <button type="submit" className="btn btn--primary" disabled={submitting}>
                   {submitting ? 'Aggiunta...' : 'Registra acquisto'}

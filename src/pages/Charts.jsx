@@ -72,7 +72,7 @@ export default function Charts() {
     <PageLayout title="Grafici" username={user.username}>
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 18 }}>
+      <div className="animate-in" style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
           Grafici & Analytics
         </div>
@@ -211,7 +211,7 @@ export default function Charts() {
         </div>
 
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div>
               <h3 className="card__title mb-0">DCA vs Market Price</h3>
               {dcaData.length > 0 && (
