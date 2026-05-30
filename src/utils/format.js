@@ -59,6 +59,9 @@ export const TOOLTIP_LABEL_STYLE = { color: '#85819a', fontSize: 10, marginBotto
 export const TOOLTIP_ITEM_STYLE = { color: '#ededf0', fontSize: 12 };
 export const CHART_GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };
 
+// Y-axis €-compact: 1 decimal so a tight range doesn't produce duplicate ticks
+export const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(v));
+
 // Curated categorical palette for charts — all muted at a similar saturation
 // so slices never clash, regardless of the per-asset brand colors. Largest
 // holding gets the first colour. Sub-threshold holdings collapse into "Altri".

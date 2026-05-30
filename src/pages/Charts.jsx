@@ -134,7 +134,7 @@ export default function Charts() {
             <span className="card__subtitle">Valori in EUR · stacked</span>
           </div>
           {allocData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={allocData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid {...GRID} />
                 <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />

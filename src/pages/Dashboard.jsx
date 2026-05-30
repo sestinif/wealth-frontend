@@ -11,7 +11,7 @@ import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName } from '../utils/user';
-import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID, allocationSlices } from '../utils/format';
+import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID, allocationSlices, yEur } from '../utils/format';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -217,7 +217,7 @@ export default function Dashboard() {
               <CartesianGrid {...CHART_GRID} />
               <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
               <YAxis stroke="transparent" tick={{ fill: '#56546a', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
+                tickFormatter={yEur} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                 cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
                 formatter={(v) => [formatEUR(v), 'Valore']} labelFormatter={(l) => formatDate(l)} />
@@ -417,7 +417,7 @@ export default function Dashboard() {
                   <span className="card__subtitle">Valore totale in EUR</span>
                 </div>
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={240}>
+                  <ResponsiveContainer width="100%" height={260}>
                     <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
@@ -432,7 +432,7 @@ export default function Dashboard() {
                         tick={{ fill: '#56546a', fontSize: 10 }}
                         axisLine={false} tickLine={false} width={48}
                         domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                        tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)}
+                        tickFormatter={yEur}
                       />
                       <Tooltip
                         contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}

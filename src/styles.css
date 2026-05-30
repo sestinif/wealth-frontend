@@ -585,7 +585,7 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .alert--success { color: var(--green-soft); background: var(--green-bg); border: 1px solid rgba(92,185,143,0.08); }
 
 /* GRID */
-.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: stretch; }
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; align-items: stretch; }
 .grid-2col > .card { height: 100%; display: flex; flex-direction: column; }
 .grid-2col > .card > .card__head { flex: 0 0 auto; }
 
