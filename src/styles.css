@@ -748,8 +748,8 @@ textarea.form-input { min-height: 64px; resize: vertical; }
   overflow: hidden;
 }
 .asset-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px; background: transparent;
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px; background: transparent;
   border: none; border-radius: 0;
   border-bottom: 1px solid rgba(255,255,255,0.04);
   transition: background 120ms var(--ease);
@@ -757,6 +757,8 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 }
 .asset-row:last-child { border-bottom: none; }
 .asset-row:hover { background: rgba(255,255,255,0.025); }
+/* fixed-width badge column so every asset name starts at the same X */
+.asset-row > .asset-badge { min-width: 110px; flex-shrink: 0; }
 .asset-row__info { flex: 1; min-width: 0; }
 .asset-row__name { font-size: 13px; color: var(--text-1); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .asset-row__type { font-size: 11px; color: var(--text-3); margin-top: 2px; }
