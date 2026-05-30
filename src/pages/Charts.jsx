@@ -158,9 +158,9 @@ export default function Charts() {
           {pieData.length > 0 ? (
             <>
               <div className="donut-wrap">
-                <ResponsiveContainer width="100%" height={190}>
+                <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value"
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={66} outerRadius={108} paddingAngle={5} cornerRadius={6} dataKey="value"
                       stroke="none" strokeWidth={0} {...ANIM}>
                       {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>

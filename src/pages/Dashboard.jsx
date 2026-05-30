@@ -459,9 +459,9 @@ export default function Dashboard() {
                 {allocData.length > 0 ? (
                   <>
                     <div className="donut-wrap">
-                      <ResponsiveContainer width="100%" height={200}>
+                      <ResponsiveContainer width="100%" height={260}>
                         <PieChart>
-                          <Pie data={allocData} cx="50%" cy="50%" innerRadius={48} outerRadius={80} paddingAngle={3} dataKey="value"
+                          <Pie data={allocData} cx="50%" cy="50%" innerRadius={68} outerRadius={110} paddingAngle={5} cornerRadius={6} dataKey="value"
                             stroke="none" strokeWidth={0} animationDuration={800} animationEasing="ease-out">
                             {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
                           </Pie>
