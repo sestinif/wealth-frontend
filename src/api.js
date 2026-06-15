@@ -77,12 +77,16 @@ export const api = {
   },
 
   getPrices: async () => {
-    const response = await fetch(`${BASE_URL}/prices`);
+    const response = await fetch(`${BASE_URL}/prices`, {
+      headers: authHeaders()
+    });
     return handleResponse(response);
   },
 
   getPricesStatus: async () => {
-    const response = await fetch(`${BASE_URL}/prices/status`);
+    const response = await fetch(`${BASE_URL}/prices/status`, {
+      headers: authHeaders()
+    });
     return handleResponse(response);
   },
 
@@ -113,14 +117,17 @@ export const api = {
     return handleResponse(response);
   },
 
-  updatePurchase: async (id, date, asset, amountEur, priceEur, notes = '') => {
+  updatePurchase: async (id, date, asset, amountEur, priceEur, notes = '', priceUsd = null) => {
+    const body = { date, asset, amount_eur: amountEur, price_eur: priceEur, notes };
+    // Only send price_usd when the caller has it, so editing never zeroes a stored value
+    if (priceUsd !== null && priceUsd !== undefined) body.price_usd = priceUsd;
     const response = await fetch(`${BASE_URL}/purchases/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, notes })
+      body: JSON.stringify(body)
     });
     return handleResponse(response);
   },
@@ -164,7 +171,9 @@ export const api = {
   // --- Asset Management ---
 
   getAssets: async () => {
-    const response = await fetch(`${BASE_URL}/assets`);
+    const response = await fetch(`${BASE_URL}/assets`, {
+      headers: authHeaders()
+    });
     return handleResponse(response);
   },
 
