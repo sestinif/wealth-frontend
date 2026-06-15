@@ -1,7 +1,7 @@
 export const formatEUR = (value, decimals = 2) =>
   `${Number(value).toLocaleString('it-IT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })} €`;
 
-export const formatUSD = (value, decimals = 0) =>
+export const formatUSD = (value, decimals = 2) =>
   `$ ${Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })}`;
 
 export const formatQty = (value, decimals = 2) => {

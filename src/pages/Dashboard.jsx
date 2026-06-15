@@ -310,7 +310,7 @@ export default function Dashboard() {
           // DETAILED VIEW — cards with all info
           <>
             {mainAssets.length > 0 && (
-              <div style={{ display: 'grid', gap: 8, gridTemplateColumns: `repeat(${Math.min(mainAssets.length, 4)}, 1fr)`, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', marginBottom: 16 }}>
                 {mainAssets.map(asset => renderAssetCard(asset, summary, prices, marketInfo, handleToggleTracking, true, eurUsdRate))}
               </div>
             )}
@@ -325,7 +325,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                 </div>
-                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: `repeat(${Math.min(specAssets.length, 4)}, 1fr)` }}>
+                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
                   {specAssets.map(asset => renderAssetCard(asset, summary, prices, marketInfo, handleToggleTracking, false, eurUsdRate))}
                 </div>
               </>

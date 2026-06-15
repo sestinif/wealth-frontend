@@ -489,6 +489,18 @@ body::after {
   box-shadow: var(--inset), 0 0 0 3px rgba(139,134,224,0.12);
 }
 .form-input:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Keyboard focus ring for interactive controls that lacked a visible one —
+   box-shadow ring on the --green accent, consistent with the input focus style */
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.nav-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--green-bg), 0 0 0 1px var(--green);
+}
+.toggle input:focus-visible + .toggle__slider {
+  box-shadow: 0 0 0 3px var(--green-bg), 0 0 0 1px var(--green);
+}
 .form-input--lg { padding: 12px 16px; font-size: 16px; border-radius: 10px; }
 .form-input--upper { text-transform: uppercase; letter-spacing: 0.5px; }
 .form-input--lower { text-transform: lowercase; }

@@ -6,7 +6,7 @@ import AssetBadge from '../components/AssetBadge';
 import EmptyState from '../components/EmptyState';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatUSD, formatPct, allocationSlices, rankedColors } from '../utils/format';
+import { formatEUR, formatUSD, formatPct, allocationSlices, rankedColors, yEur } from '../utils/format';
 
 const TT = {
   background: 'rgba(14,15,23,0.96)',
@@ -21,7 +21,6 @@ const TT_ITEM = { color: '#f2f1f5', fontSize: 12 };
 const AXIS = { fill: '#56546a', fontSize: 10, fontFamily: "'Inter', sans-serif" };
 const GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };
 const ANIM = { animationDuration: 900, animationEasing: 'ease-out' };
-const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(v));
 const LEGEND = { fontSize: 11, paddingTop: 8, fontFamily: "'Inter', sans-serif" };
 
 // Glowing dot on the most recent point — reads as "live", very premium.
@@ -111,9 +110,9 @@ export default function Charts() {
                 </linearGradient>
               </defs>
               <CartesianGrid {...GRID} />
-              <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
+              <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
               <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
+                tickFormatter={yEur} />
               <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#85819a', fontSize: 10 }}
                 cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
               <Area type="monotone" dataKey="value" {...ANIM}
@@ -137,9 +136,9 @@ export default function Charts() {
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={allocData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid {...GRID} />
-                <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
-                  tickFormatter={v => '€' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v)} />
+                  tickFormatter={yEur} />
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#85819a', fontSize: 10 }} />
                 {assets.map(a => (
                   <Area key={a.symbol} type="monotone" dataKey={a.symbol} {...ANIM}
@@ -198,7 +197,7 @@ export default function Charts() {
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={monthlyData} barGap={5} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid {...GRID} />
-                <XAxis dataKey="month" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
+                <XAxis dataKey="month" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} tickFormatter={yEur} />
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#85819a', fontSize: 10 }}
                   cursor={{ fill: 'rgba(139,134,224,0.06)' }} />
@@ -235,7 +234,7 @@ export default function Charts() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid {...GRID} />
-                <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} />
+                <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={52}
                   tickFormatter={yEur} domain={[(min) => min * 0.985, (max) => max * 1.015]} />
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#85819a', fontSize: 10 }} />
