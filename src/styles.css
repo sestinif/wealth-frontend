@@ -473,7 +473,7 @@ body::after {
   background: rgba(255,255,255,0.06); overflow: hidden;
 }
 .alloc-bar__fill {
-  height: 100%; border-radius: 999px;
+  display: block; height: 100%; border-radius: 999px;
   transition: width 600ms var(--ease);
 }
 .alloc-bar__pct {
