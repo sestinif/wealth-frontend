@@ -31,15 +31,15 @@ export default function LoginPage({ onLogin }) {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <input
-              type="text" className="form-input form-input--lg form-input--upper"
-              placeholder="USERNAME" value={username}
+              type="text" className="form-input form-input--lg"
+              placeholder="Username" value={username}
               onChange={e => setUsername(e.target.value)}
             />
           </div>
           <div className="form-group">
             <input
               type="password" className="form-input form-input--lg"
-              placeholder="PASSWORD" value={password}
+              placeholder="Password" value={password}
               onChange={e => setPassword(e.target.value)}
             />
           </div>

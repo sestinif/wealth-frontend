@@ -46,18 +46,18 @@ export const sortByDate = (array, key = 'date', order = 'desc') => {
 };
 
 export const TOOLTIP_STYLE = {
-  background: 'rgba(14, 15, 23, 0.96)',
+  background: '#1C1C22',
   backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.10)',
   borderRadius: '10px',
   padding: '8px 12px',
   fontFamily: "'Inter', sans-serif",
   fontVariantNumeric: 'tabular-nums',
   boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
 };
-export const TOOLTIP_LABEL_STYLE = { color: '#85819a', fontSize: 10, marginBottom: 2 };
-export const TOOLTIP_ITEM_STYLE = { color: '#ededf0', fontSize: 12 };
-export const CHART_GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };
+export const TOOLTIP_LABEL_STYLE = { color: '#7A7880', fontSize: 10, marginBottom: 2 };
+export const TOOLTIP_ITEM_STYLE = { color: '#C9C7C3', fontSize: 12 };
+export const CHART_GRID = { stroke: 'rgba(255,255,255,0.06)', strokeDasharray: '2 4', vertical: false };
 
 // Y-axis €-compact: 1 decimal so a tight range doesn't produce duplicate ticks
 export const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(v));
@@ -65,8 +65,8 @@ export const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).
 // Curated categorical palette for charts — all muted at a similar saturation
 // so slices never clash, regardless of the per-asset brand colors. Largest
 // holding gets the first colour. Sub-threshold holdings collapse into "Altri".
-export const CHART_COLORS = ['#7e87d8', '#54b793', '#e0a46f', '#5ab1c4', '#d586a0', '#c2a86a', '#86b56e', '#a085d4'];
-export const CHART_OTHER = '#56546a';
+export const CHART_COLORS = ['#8B7BFF', '#34D399', '#FBBF24', '#FB7185', '#60A5FA', '#C88AE6', '#5EEAD4', '#F59E0B'];
+export const CHART_OTHER = '#7A7880';
 
 // value-ranked { symbol -> palette colour } map (consistent across donut/stacked)
 export const rankedColors = (assets, valueOf) => {

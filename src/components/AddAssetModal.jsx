@@ -66,7 +66,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
           <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#eeedf2' }}>Aggiungi nuovo asset</div>
-              <div style={{ fontSize: 11, color: '#85819a', marginTop: 2 }}>Cerca su CoinGecko o Yahoo Finance</div>
+              <div style={{ fontSize: 11, color: '#7A7880', marginTop: 2 }}>Cerca su CoinGecko o Yahoo Finance</div>
             </div>
             <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Chiudi"><Icon name="x" size={14} /></button>
           </div>
@@ -93,7 +93,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               style={{ marginBottom: 12 }}
             />
 
-            {loading && <div style={{ fontSize: 11, color: '#85819a', textAlign: 'center', padding: 12 }}>Ricerca in corso...</div>}
+            {loading && <div style={{ fontSize: 11, color: '#7A7880', textAlign: 'center', padding: 12 }}>Ricerca in corso...</div>}
 
             <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {results.map(r => (
@@ -101,14 +101,14 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                   {r.thumb ? (
                     <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(139,134,224,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#bcb8ee', fontWeight: 600, flexShrink: 0 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(139,123,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#B3A8FF', fontWeight: 600, flexShrink: 0 }}>
                       {r.symbol?.slice(0, 2)}
                     </div>
                   )}
                   <div className="search-result__info" style={{ minWidth: 0 }}>
                     <div className="search-result__symbol">
                       {r.symbol}
-                      {r.chain && <span style={{ fontSize: 9, marginLeft: 6, padding: '1px 5px', borderRadius: 3, background: 'rgba(185,166,255,0.15)', color: '#bcb8ee', textTransform: 'uppercase' }}>{r.chain}</span>}
+                      {r.chain && <span style={{ fontSize: 9, marginLeft: 6, padding: '1px 5px', borderRadius: 3, background: 'rgba(139,123,255,0.15)', color: '#B3A8FF', textTransform: 'uppercase' }}>{r.chain}</span>}
                     </div>
                     <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.name}

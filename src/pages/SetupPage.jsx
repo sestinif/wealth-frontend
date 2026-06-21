@@ -47,16 +47,16 @@ export default function SetupPage({ onComplete }) {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <input type="text" className="form-input form-input--lg form-input--upper" placeholder="USERNAME" value={username} onChange={e => setUsername(e.target.value)} />
+            <input type="text" className="form-input form-input--lg" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
           </div>
           <div className="form-group">
-            <input type="email" className="form-input form-input--lg form-input--lower" placeholder="EMAIL" value={email} onChange={e => setEmail(e.target.value)} />
+            <input type="email" className="form-input form-input--lg form-input--lower" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div className="form-group">
-            <input type="password" className="form-input form-input--lg" placeholder="PASSWORD" value={password} onChange={e => setPassword(e.target.value)} />
+            <input type="password" className="form-input form-input--lg" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
           <div className="form-group">
-            <input type="password" className="form-input form-input--lg" placeholder="CONFERMA PASSWORD" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <input type="password" className="form-input form-input--lg" placeholder="Conferma password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
           </div>
 
           <div className="req-list">

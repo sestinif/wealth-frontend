@@ -9,24 +9,24 @@ import { api } from '../api.js';
 import { formatEUR, formatUSD, formatPct, allocationSlices, rankedColors, yEur } from '../utils/format';
 
 const TT = {
-  background: 'rgba(14,15,23,0.96)',
+  background: '#1C1C22',
   backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.10)',
   borderRadius: 10, padding: '8px 12px',
   fontSize: 12, fontFamily: "'Inter', sans-serif",
   fontVariantNumeric: 'tabular-nums',
   boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
 };
-const TT_ITEM = { color: '#f2f1f5', fontSize: 12 };
-const AXIS = { fill: '#56546a', fontSize: 10, fontFamily: "'Inter', sans-serif" };
-const GRID = { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '2 4', vertical: false };
+const TT_ITEM = { color: '#C9C7C3', fontSize: 12 };
+const AXIS = { fill: '#7A7880', fontSize: 10, fontFamily: "'Inter', sans-serif" };
+const GRID = { stroke: 'rgba(255,255,255,0.06)', strokeDasharray: '2 4', vertical: false };
 const ANIM = { animationDuration: 900, animationEasing: 'ease-out' };
 const LEGEND = { fontSize: 11, paddingTop: 8, fontFamily: "'Inter', sans-serif" };
 
 // Glowing dot on the most recent point — reads as "live", very premium.
 const lastDot = (len, color) => (p) =>
   p.index === len - 1 && p.cx != null
-    ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={color} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={color} stroke="#1b1b22" strokeWidth={2} /></g>
+    ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={color} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={color} stroke="#15151A" strokeWidth={2} /></g>
     : <g key={p.index} />;
 
 export default function Charts() {
@@ -65,7 +65,7 @@ export default function Charts() {
   const firstVal = portfolioData[0]?.value || 0;
   const lastVal = portfolioData[portfolioData.length - 1]?.value || 0;
   const portfolioChange = firstVal > 0 ? ((lastVal - firstVal) / firstVal * 100) : 0;
-  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8b86e0';
+  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
 
   return (
     <PageLayout title="Grafici" username={user.username}>
@@ -105,21 +105,21 @@ export default function Charts() {
             <AreaChart data={portfolioData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={portfolioChange >= 0 ? '#5cb98f' : '#df8794'} stopOpacity={0.18} />
-                  <stop offset="100%" stopColor={portfolioChange >= 0 ? '#5cb98f' : '#df8794'} stopOpacity={0} />
+                  <stop offset="0%" stopColor={portfolioChange >= 0 ? '#34D399' : '#FB7185'} stopOpacity={0.18} />
+                  <stop offset="100%" stopColor={portfolioChange >= 0 ? '#34D399' : '#FB7185'} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid {...GRID} />
               <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
               <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
                 tickFormatter={yEur} />
-              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#85819a', fontSize: 10 }}
-                cursor={{ stroke: 'rgba(139,134,224,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
+              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#7A7880', fontSize: 10 }}
+                cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
               <Area type="monotone" dataKey="value" {...ANIM}
-                stroke={portfolioChange >= 0 ? '#5cb98f' : '#df8794'}
+                stroke={portfolioChange >= 0 ? '#34D399' : '#FB7185'}
                 strokeWidth={2} strokeLinecap="round" fill="url(#pg)"
-                dot={lastDot(portfolioData.length, portfolioChange >= 0 ? '#5cb98f' : '#df8794')}
-                activeDot={{ r: 4, fill: '#fff', stroke: '#1b1b22', strokeWidth: 2 }} />
+                dot={lastDot(portfolioData.length, portfolioChange >= 0 ? '#34D399' : '#FB7185')}
+                activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
         ) : <EmptyState compact icon="chart" title="Nessun dato" description="Registra acquisti per costruire lo storico del portfolio." />}
@@ -139,7 +139,7 @@ export default function Charts() {
                 <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
                   tickFormatter={yEur} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#85819a', fontSize: 10 }} />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
                 {assets.map(a => (
                   <Area key={a.symbol} type="monotone" dataKey={a.symbol} {...ANIM}
                     stackId="1" stroke={allocColor[a.symbol]} fill={allocColor[a.symbol]} fillOpacity={0.55} strokeWidth={1.2} />
@@ -199,11 +199,11 @@ export default function Charts() {
                 <CartesianGrid {...GRID} />
                 <XAxis dataKey="month" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} tickFormatter={yEur} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#85819a', fontSize: 10 }}
-                  cursor={{ fill: 'rgba(139,134,224,0.06)' }} />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#7A7880', fontSize: 10 }}
+                  cursor={{ fill: 'rgba(139,123,255,0.06)' }} />
                 <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={8} />
-                <Bar dataKey="invested" name="Investito" fill="#8b86e0" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
-                <Bar dataKey="value" name="Valore attuale" fill="#5cb98f" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
+                <Bar dataKey="invested" name="Investito" fill="#8B7BFF" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
+                <Bar dataKey="value" name="Valore attuale" fill="#34D399" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
               </BarChart>
             </ResponsiveContainer>
           ) : <EmptyState compact icon="chart" title="Nessun investimento" description="Gli investimenti mensili dell'anno appariranno qui." />}
@@ -229,19 +229,19 @@ export default function Charts() {
               <LineChart data={dcaData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="dcaFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b86e0" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="#8b86e0" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.18} />
+                    <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid {...GRID} />
                 <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={52}
                   tickFormatter={yEur} domain={[(min) => min * 0.985, (max) => max * 1.015]} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#85819a', fontSize: 10 }} />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
                 <Legend wrapperStyle={LEGEND} iconType="plainline" iconSize={16} />
-                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="#8b8a98" strokeWidth={1.5} dot={false} strokeDasharray="5 4" {...ANIM} />
-                <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#8b86e0" strokeWidth={2.5} strokeLinecap="round" {...ANIM}
-                  dot={lastDot(dcaData.length, '#8b86e0')} activeDot={{ r: 4, fill: '#bcb8ee', stroke: '#1b1b22', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="#7A7880" strokeWidth={1.5} dot={false} strokeDasharray="5 4" {...ANIM} />
+                <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#8B7BFF" strokeWidth={2.5} strokeLinecap="round" {...ANIM}
+                  dot={lastDot(dcaData.length, '#8B7BFF')} activeDot={{ r: 4, fill: '#B3A8FF', stroke: '#15151A', strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : <EmptyState compact icon="inbox" title={`Nessun acquisto ${dcaAsset}`} description="Seleziona un asset con acquisti registrati." />}

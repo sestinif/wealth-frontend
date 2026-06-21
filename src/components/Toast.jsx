@@ -34,7 +34,7 @@ export function ToastProvider({ children }) {
               fontSize: 12,
               fontWeight: 500,
               color: '#fff',
-              background: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'rgba(139,134,224,0.9)',
+              background: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'rgba(139,123,255,0.9)',
               backdropFilter: 'blur(12px)',
               boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
               animation: toast.exiting ? 'toastOut 0.3s ease forwards' : 'toastIn 0.3s ease both',

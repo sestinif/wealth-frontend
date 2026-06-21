@@ -66,7 +66,7 @@ export default function CommandPalette() {
         <div style={{
           background: '#16171f', border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 14, overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,134,224,0.1)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,123,255,0.1)',
         }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
             <input
@@ -77,7 +77,7 @@ export default function CommandPalette() {
               placeholder="Cerca o naviga..."
               style={{
                 width: '100%', background: 'none', border: 'none', outline: 'none',
-                color: '#ededf0', fontSize: 14, fontFamily: 'inherit',
+                color: '#F4F3F1', fontSize: 14, fontFamily: 'inherit',
               }}
             />
           </div>
@@ -89,12 +89,12 @@ export default function CommandPalette() {
                 style={{
                   padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: i === selected ? 'rgba(139,134,224,0.1)' : 'transparent',
+                  background: i === selected ? 'rgba(139,123,255,0.1)' : 'transparent',
                   transition: 'background 60ms',
                 }}
                 onMouseEnter={() => setSelected(i)}
               >
-                <span style={{ fontSize: 13, color: i === selected ? '#ededf0' : '#85819a', fontWeight: i === selected ? 500 : 400 }}>
+                <span style={{ fontSize: 13, color: i === selected ? '#F4F3F1' : '#7A7880', fontWeight: i === selected ? 500 : 400 }}>
                   {cmd.label}
                 </span>
                 <span style={{ fontSize: 10, color: '#4a4660', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
