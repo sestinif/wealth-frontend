@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
 import AnimatedNumber from '../components/AnimatedNumber';
 import Icon from '../components/Icon';
-import Sparkline from '../components/Sparkline';
 import EmptyState from '../components/EmptyState';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
@@ -66,7 +65,6 @@ export default function Dashboard() {
   const { summary, prices, purchases } = data;
   const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
   const gd = (s) => assets.find(a => a.symbol === s)?.decimals || 2;
-  const pnlC = summary.pnl >= 0 ? 'var(--green)' : 'var(--red)';
 
   const mainAssets = assets.filter(a => summary.by_asset[a.symbol]?.include_in_totals !== false && summary.by_asset[a.symbol]);
   const specAssets = assets.filter(a => summary.by_asset[a.symbol]?.include_in_totals === false && summary.by_asset[a.symbol]);
@@ -96,28 +94,12 @@ export default function Dashboard() {
       .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value }))
   );
 
-  // Hero sparkline series (30d): value, cumulative invested, derived P/L
-  const SPARK_GREEN = '#34D399', SPARK_RED = '#FB7185', SPARK_MUTE = '#7A7880';
+  // Hero portfolio trend (30d) — derived from the real time-series
   const valueSeries = chartData.map(d => d.value);
-  const investedSeries = (() => {
-    const sorted = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const days = [];
-    for (let i = 29; i >= 0; i--) {
-      const dt = new Date(); dt.setDate(dt.getDate() - i);
-      const ds = dt.toISOString().split('T')[0];
-      days.push(sorted.filter(p => p.date <= ds).reduce((s, p) => s + (p.amount_eur || 0), 0));
-    }
-    return days;
-  })();
-  const pnlSeries = valueSeries.map((v, i) => v - (investedSeries[i] || 0));
-  const heroSparkColor = summary.pnl >= 0 ? SPARK_GREEN : SPARK_RED;
-
-  // Hero portfolio chart (30d)
   const pfFirst = valueSeries.find(v => v > 0) || valueSeries[0] || 0;
   const pfLast = valueSeries[valueSeries.length - 1] || 0;
   const pfChange = pfFirst > 0 ? ((pfLast - pfFirst) / pfFirst * 100) : 0;
   const pfUp = pfChange >= 0;
-  const pfColor = pfUp ? '#34D399' : '#FB7185';
 
   const recentColumns = [
     { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
@@ -133,16 +115,32 @@ export default function Dashboard() {
 
       {refreshing && <div className="top-progress"><div className="top-progress__bar" /></div>}
 
-      {/* === HERO SECTION === */}
+      {/* === HERO + TREND + KPI + ALLOCATION/ASSETS (clean mockup layout) === */}
       {(() => {
         const isUsd = displayCurrency === 'USD' && eurUsdRate;
         const rate = isUsd ? eurUsdRate : 1;
-        const cSym = isUsd ? '$ ' : '€ ';
         const symPre = isUsd ? '$' : '';   // USD symbol before
         const symSuf = isUsd ? '' : '€';   // EUR symbol after (IT convention)
-        const locale = isUsd ? 'en-US' : 'it-IT';
+        const money = (v) => isUsd ? formatUSD(v * rate) : formatEUR(v);
+
+        // Real 30d delta from the portfolio time-series (same source as the chart)
+        const deltaAbs = pfLast - pfFirst;
+        const deltaStr = (deltaAbs >= 0 ? '+' : '-') + money(Math.abs(deltaAbs));
+
+        // Top allocation slices (real data, already sorted desc with palette colors)
+        const topAlloc = allocData.slice(0, 6);
+        // Color lookup by symbol from the allocation palette (consistent dots)
+        const allocColor = Object.fromEntries(allocData.map(s => [s.name, s.color]));
+
+        // Top assets by value (real data) — reuse allocation colors for dots
+        const topAssets = mainAssets
+          .filter(a => summary.by_asset[a.symbol]?.value > 0)
+          .sort((a, b) => summary.by_asset[b.symbol].value - summary.by_asset[a.symbol].value)
+          .slice(0, 6);
+
         return (
           <>
+            {/* greeting + currency toggle (kept) */}
             <div className="animate-in hero-greeting">
               <div>
                 <div className="hero-greeting__title">{greeting}, {getDisplayName(user.username)}</div>
@@ -166,71 +164,117 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="hero-stats animate-in-1">
-              <div className="hero-stat">
-                <div className="hero-stat__label"><span className="live-dot" />Valore Portfolio</div>
-                <AnimatedNumber value={summary.total_value * rate} prefix={symPre} suffix={symSuf} className="hero-stat__value hnum hnum--light" />
-                {summary.spec_value > 0
-                  ? <div className="hero-stat__sub">+ {isUsd ? '$ ' : ''}{(summary.spec_value * rate).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' })}{isUsd ? '' : ' €'} speculativo</div>
-                  : <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>}
-                <Sparkline data={valueSeries} color={heroSparkColor} />
+            {/* 1. HERO BLOCK — patrimonio netto */}
+            <div className="dash-hero animate-in-1">
+              <div className="dash-hero__top">
+                <div>
+                  <div className="dash-hero__label"><span className="live-dot" />Patrimonio netto</div>
+                  <AnimatedNumber value={summary.total_value * rate} prefix={symPre} suffix={symSuf} className="dash-hero__value" />
+                  <div className="dash-hero__meta">
+                    <span className={`dash-pill ${pfUp ? 'dash-pill--up' : 'dash-pill--down'}`}>
+                      {pfUp ? '+' : ''}{pfChange.toFixed(1).replace('.', ',')}%
+                    </span>
+                    {chartData.length > 1 && (
+                      <span className="dash-hero__delta">{deltaStr} · 30g</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="hero-stat">
-                <div className="hero-stat__label">Profitto / Perdita</div>
-                <AnimatedNumber value={Math.abs(summary.pnl) * rate} prefix={(summary.pnl >= 0 ? '+' : '-') + symPre} suffix={symSuf} className="hero-stat__value hnum hnum--light" />
-                <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(summary.pnl_pct)}</div>
-                <Sparkline data={pnlSeries} color={heroSparkColor} />
+            </div>
+
+            {/* 2. TREND AREA CHART — clean sparkline hero */}
+            {chartData.length > 1 && (
+              <div className="dash-trend animate-in-2">
+                <ResponsiveContainer width="100%" height={150}>
+                  <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.10} />
+                        <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
+                      cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                      formatter={(v) => [formatEUR(v), 'Valore']} labelFormatter={(l) => formatDate(l)} />
+                    <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
+                      fill="url(#hg)" dot={false} activeDot={{ r: 4, fill: '#8B7BFF', stroke: '#15151A', strokeWidth: 2 }}
+                      animationDuration={900} animationEasing="ease-out" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-              <div className="hero-stat">
-                <div className="hero-stat__label">Totale Investito</div>
-                <AnimatedNumber value={summary.total_invested * rate} prefix={symPre} suffix={symSuf} className="hero-stat__value hnum hnum--muted" />
-                <div className="hero-stat__sub">{summary.n_purchases} acquisti totali</div>
-                <Sparkline data={investedSeries} color={SPARK_MUTE} style={{ opacity: 0.5 }} />
+            )}
+
+            {/* 3. KPI ROW — investito / guadagno / asset */}
+            <div className="dash-kpis animate-in-2">
+              <div className="dash-kpi">
+                <div className="dash-kpi__label">Investito</div>
+                <div className="dash-kpi__value dash-kpi__value--1">{money(summary.total_invested)}</div>
+              </div>
+              <div className="dash-kpi">
+                <div className="dash-kpi__label">Guadagno</div>
+                <div className={`dash-kpi__value ${summary.pnl >= 0 ? 'dash-kpi__value--green' : 'dash-kpi__value--red'}`}>
+                  {summary.pnl >= 0 ? '+' : '-'}{money(Math.abs(summary.pnl))}
+                </div>
+              </div>
+              <div className="dash-kpi">
+                <div className="dash-kpi__label">Asset</div>
+                <div className="dash-kpi__value dash-kpi__value--1">{mainAssets.length}</div>
+              </div>
+            </div>
+
+            {/* 4. TWO-COLUMN — allocazione (labeled bars) + asset principali */}
+            <div className="dash-split animate-in-3">
+              {/* Left: allocation bars */}
+              <div className="dash-panel">
+                <div className="dash-panel__title">Allocazione</div>
+                {topAlloc.length > 0 ? (
+                  <div className="alloc-bars">
+                    {topAlloc.map(slice => (
+                      <div key={slice.name} className="alloc-bar">
+                        <span className="alloc-bar__label">{slice.name}</span>
+                        <span className="alloc-bar__track">
+                          <span className="alloc-bar__fill" style={{ width: `${slice.pct}%`, background: slice.color }} />
+                        </span>
+                        <span className="alloc-bar__pct">{Number(slice.pct).toFixed(1).replace('.', ',')}%</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState compact icon="inbox" title="Nessun asset" description="Configura i tuoi asset dalle Impostazioni." />
+                )}
+              </div>
+
+              {/* Right: top assets list */}
+              <div className="dash-panel">
+                <div className="dash-panel__title">Asset principali</div>
+                {topAssets.length > 0 ? (
+                  <div className="dash-assets">
+                    {topAssets.map(asset => {
+                      const d = summary.by_asset[asset.symbol];
+                      const pnlPct = d.invested > 0 ? (d.value / d.invested - 1) * 100 : 0;
+                      const up = pnlPct >= 0;
+                      return (
+                        <div key={asset.symbol} className="dash-asset">
+                          <span className="dash-asset__dot" style={{ background: allocColor[asset.symbol] || asset.color }} />
+                          <span className="dash-asset__name">{asset.symbol}</span>
+                          <span className="dash-asset__value">{money(d.value)}</span>
+                          <span className={`dash-asset__delta ${up ? 'dash-asset__delta--up' : 'dash-asset__delta--down'}`}>
+                            {up ? '+' : ''}{pnlPct.toFixed(1).replace('.', ',')}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState compact icon="inbox" title="Nessun asset"
+                    description="Aggiungi un acquisto con il pulsante + in basso a destra per iniziare." />
+                )}
               </div>
             </div>
           </>
         );
       })()}
-
-      {/* === HERO PORTFOLIO CHART (always visible) === */}
-      {chartData.length > 1 && (
-        <div className="card section-gap animate-in-2" style={{ marginBottom: 24 }}>
-          <div className="card__head" style={{ marginBottom: 6, alignItems: 'flex-start' }}>
-            <div>
-              <h3 className="card__title mb-0">Andamento Portfolio</h3>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 7 }}>
-                <span className="hnum hnum--light" style={{ fontFamily: 'var(--font-num)', fontSize: 21, fontWeight: 600, letterSpacing: '-0.02em' }}>{formatEUR(pfLast)}</span>
-                <span className="tnum" style={{ fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-num)', color: pfColor }}>
-                  {pfUp ? '+' : ''}{pfChange.toFixed(2)}% · 30g
-                </span>
-              </div>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={210}>
-            <AreaChart data={chartData} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={pfColor} stopOpacity={0.22} />
-                  <stop offset="100%" stopColor={pfColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid {...CHART_GRID} />
-              <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#7A7880', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
-              <YAxis stroke="transparent" tick={{ fill: '#7A7880', fontSize: 10, fontFamily: 'Inter, sans-serif' }} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                tickFormatter={yEur} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                formatter={(v) => [formatEUR(v), 'Valore']} labelFormatter={(l) => formatDate(l)} />
-              <Area type="monotone" dataKey="value" stroke={pfColor} strokeWidth={2} strokeLinecap="round"
-                fill="url(#hg)" animationDuration={900} animationEasing="ease-out"
-                dot={(p) => p.index === chartData.length - 1
-                  ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={pfColor} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={pfColor} stroke="#15151A" strokeWidth={2} /></g>
-                  : <g key={p.index} />}
-                activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
 
       {/* === COMPACT ASSET STRIP (always visible) === */}
       <div className="animate-in-3">
@@ -410,82 +454,44 @@ export default function Dashboard() {
         </div>
         {showCharts && (
           <>
-            <div className="grid-2col section-gap">
-              <div className="card">
-                <div className="card__head">
-                  <h3 className="card__title">Portfolio Principale — 30 giorni</h3>
-                  <span className="card__subtitle">Valore totale in EUR</span>
-                </div>
-                {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#34D399" stopOpacity={0.22} />
-                          <stop offset="100%" stopColor="#34D399" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid {...CHART_GRID} />
-                      <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#7A7880', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
-                      <YAxis
-                        stroke="transparent"
-                        tick={{ fill: '#7A7880', fontSize: 10 }}
-                        axisLine={false} tickLine={false} width={48}
-                        domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                        tickFormatter={yEur}
-                      />
-                      <Tooltip
-                        contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                        cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                        formatter={(v) => [formatEUR(v), 'Valore portfolio']}
-                        labelFormatter={(l) => formatDate(l)}
-                      />
-                      <Area type="monotone" dataKey="value" stroke="#34D399" strokeWidth={2} strokeLinecap="round"
-                        fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
-                        dot={(p) => p.index === chartData.length - 1
-                          ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#34D399" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#34D399" stroke="#15151A" strokeWidth={2} /></g>
-                          : <g key={p.index} />}
-                        activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}
+            <div className="card section-gap">
+              <div className="card__head">
+                <h3 className="card__title">Portfolio Principale — 30 giorni</h3>
+                <span className="card__subtitle">Valore totale in EUR</span>
               </div>
-
-              <div className="card">
-                <div className="card__head">
-                  <h3 className="card__title">Allocazione</h3>
-                  <span className="card__subtitle">Peso % sul valore totale</span>
-                </div>
-                {allocData.length > 0 ? (
-                  <>
-                    <div className="donut-wrap">
-                      <ResponsiveContainer width="100%" height={260}>
-                        <PieChart>
-                          <Pie data={allocData} cx="50%" cy="50%" innerRadius={68} outerRadius={110} paddingAngle={5} cornerRadius={6} dataKey="value"
-                            stroke="none" strokeWidth={0} animationDuration={800} animationEasing="ease-out">
-                            {allocData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                          </Pie>
-                          <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} formatter={(v) => formatEUR(v)} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div className="donut-center">
-                        <div className="donut-center__val">{formatEUR(summary.total_value)}</div>
-                        <div className="donut-center__lbl">Totale</div>
-                      </div>
-                    </div>
-                    <div className="chart-legend">
-                      {allocData.map(item => (
-                        <div key={item.name} className="chart-legend__item">
-                          <div className="chart-legend__dot" style={{ background: item.color }} />
-                          <span className="chart-legend__text">
-                            {item.name} {summary.total_value > 0 ? (item.value / summary.total_value * 100).toFixed(1) : '0'}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : <EmptyState compact icon="inbox" title="Nessun asset" description="Configura i tuoi asset dalle Impostazioni." />}
-              </div>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.22} />
+                        <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid {...CHART_GRID} />
+                    <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#7A7880', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
+                    <YAxis
+                      stroke="transparent"
+                      tick={{ fill: '#7A7880', fontSize: 10 }}
+                      axisLine={false} tickLine={false} width={48}
+                      domain={[(min) => min * 0.985, (max) => max * 1.01]}
+                      tickFormatter={yEur}
+                    />
+                    <Tooltip
+                      contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
+                      cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                      formatter={(v) => [formatEUR(v), 'Valore portfolio']}
+                      labelFormatter={(l) => formatDate(l)}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
+                      fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
+                      dot={(p) => p.index === chartData.length - 1
+                        ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#8B7BFF" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#8B7BFF" stroke="#15151A" strokeWidth={2} /></g>
+                        : <g key={p.index} />}
+                      activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}
             </div>
 
             <div className="card overflow-auto">

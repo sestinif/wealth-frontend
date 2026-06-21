@@ -367,6 +367,150 @@ body::after {
   .hero-stat__value { font-size: 26px; }
 }
 
+/* ================================================================
+   DASHBOARD REDESIGN — clean "Framer/Figma" mockup layout
+   Flat surfaces, generous whitespace, sparkline-hero chart.
+   ================================================================ */
+
+/* --- 1. HERO BLOCK (flush, no card) --- */
+.dash-hero {
+  margin-bottom: 8px;
+}
+.dash-hero__top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.dash-hero__label {
+  font-size: 12px; color: var(--text-2); font-weight: 400;
+  letter-spacing: 0.2px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.dash-hero__value {
+  font-family: var(--font-num);
+  font-size: 32px; font-weight: 500; color: var(--text-1);
+  letter-spacing: -0.03em; line-height: 1.1;
+  white-space: nowrap;
+}
+.dash-hero__meta {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 12px; flex-wrap: wrap;
+}
+.dash-pill {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  letter-spacing: 0.1px;
+}
+.dash-pill--up { color: var(--green); background: var(--green-bg); }
+.dash-pill--down { color: var(--red); background: var(--red-bg); }
+.dash-hero__delta {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 12px; color: var(--text-2); font-weight: 400;
+}
+
+/* --- 2. TREND AREA CHART (sparkline-hero look) --- */
+.dash-trend {
+  margin-top: 16px; margin-bottom: 24px;
+}
+
+/* --- 3. KPI ROW (3 flat surfaces) --- */
+.dash-kpis {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin-bottom: 24px;
+}
+.dash-kpi {
+  background: var(--bg-elev);
+  border: 0.5px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+}
+.dash-kpi__label {
+  font-size: 12px; color: var(--text-2); font-weight: 400;
+  letter-spacing: 0.1px; margin-bottom: 6px;
+}
+.dash-kpi__value {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 19px; font-weight: 500; letter-spacing: -0.02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-kpi__value--1 { color: var(--text-1); }
+.dash-kpi__value--green { color: var(--green); }
+.dash-kpi__value--red { color: var(--red); }
+@media (max-width: 640px) {
+  .dash-kpis { grid-template-columns: 1fr; }
+}
+
+/* --- 4. TWO-COLUMN SECTION (allocation + assets) --- */
+.dash-split {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; margin-bottom: 24px; align-items: start;
+}
+@media (max-width: 640px) {
+  .dash-split { grid-template-columns: 1fr; }
+}
+.dash-panel {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.dash-panel__title {
+  font-size: 12px; color: var(--text-2); font-weight: 500;
+  letter-spacing: 0.2px; margin-bottom: 16px;
+}
+
+/* Labeled horizontal allocation bars */
+.alloc-bars { display: flex; flex-direction: column; gap: 14px; }
+.alloc-bar {
+  display: grid; grid-template-columns: 56px 1fr 44px;
+  align-items: center; gap: 12px;
+}
+.alloc-bar__label {
+  font-size: 12px; color: var(--text-1); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.alloc-bar__track {
+  height: 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.06); overflow: hidden;
+}
+.alloc-bar__fill {
+  height: 100%; border-radius: 999px;
+  transition: width 600ms var(--ease);
+}
+.alloc-bar__pct {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 12px; color: var(--text-2); text-align: right;
+}
+
+/* Clean asset list */
+.dash-assets { display: flex; flex-direction: column; }
+.dash-asset {
+  display: grid; grid-template-columns: 10px 1fr auto auto;
+  align-items: center; gap: 12px;
+  padding: 11px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+.dash-asset:first-child { padding-top: 0; }
+.dash-asset:last-child { border-bottom: none; padding-bottom: 0; }
+.dash-asset__dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.dash-asset__name {
+  font-size: 13px; color: var(--text-1); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-asset__value {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 13px; color: var(--text-2); text-align: right;
+  white-space: nowrap;
+}
+.dash-asset__delta {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 12px; font-weight: 500; text-align: right;
+  min-width: 64px; white-space: nowrap;
+}
+.dash-asset__delta--up { color: var(--green); }
+.dash-asset__delta--down { color: var(--red); }
+
 /* ============ SECTION HEADER ============ */
 .section-header {
   display: flex; justify-content: space-between; align-items: baseline;
