@@ -196,19 +196,15 @@ export default function Diary() {
     <PageLayout title="Diario" username={user.username} size="md">
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
-          Diario Acquisti
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-          {purchases.length} acquisti registrati
-        </div>
+      <div className="page-head animate-in">
+        <div className="page-head__title">Diario Acquisti</div>
+        <div className="page-head__sub">{purchases.length} acquisti registrati</div>
       </div>
 
       <div className="section-header animate-in-1">
         <div className="section-header__title">Nuovo acquisto</div>
       </div>
-      <div className="card section-gap animate-in-1">
+      <div className="panel section-gap animate-in-1">
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <FormInput label="Data" type="date" value={date} onChange={e => setDate(e.target.value)} />
@@ -230,20 +226,14 @@ export default function Diary() {
             <div className="form-group">
               <label className="form-label">
                 Prezzo {asset}
-                <span style={{ float: 'right', display: 'inline-flex', gap: 2 }}>
+                <span className="mini-toggle" style={{ float: 'right' }}>
                   {['EUR', 'USD'].map(c => (
                     <button
                       key={c} type="button"
+                      className={`mini-toggle__btn ${priceCurrency === c ? 'active' : ''}`}
                       onClick={() => setPriceCurrency(c)}
                       disabled={c === 'USD' && !hasUsdRate}
-                      style={{
-                        padding: '1px 7px', fontSize: 10, fontWeight: 600,
-                        background: priceCurrency === c ? 'var(--accent)' : 'transparent',
-                        color: priceCurrency === c ? '#fff' : 'var(--text-3)',
-                        border: '1px solid ' + (priceCurrency === c ? 'var(--accent)' : 'var(--border)'),
-                        borderRadius: 4, cursor: (c === 'USD' && !hasUsdRate) ? 'not-allowed' : 'pointer',
-                        opacity: (c === 'USD' && !hasUsdRate) ? 0.3 : 1,
-                      }}>
+                    >
                       {c}
                     </button>
                   ))}
@@ -298,7 +288,7 @@ export default function Diary() {
             </div>
           </div>
         </div>
-        <div className="card overflow-auto" style={{ padding: 0 }}>
+        <div className="panel panel--flush overflow-auto">
           <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
         </div>
       </div>

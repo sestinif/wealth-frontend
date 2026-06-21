@@ -124,13 +124,9 @@ export default function Settings() {
     <PageLayout title="Impostazioni" username={user.username} size="md">
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
-          Impostazioni
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-          Gestisci portfolio e account
-        </div>
+      <div className="page-head animate-in">
+        <div className="page-head__title">Impostazioni</div>
+        <div className="page-head__sub">Gestisci portfolio e account</div>
       </div>
 
       {/* Tabs */}
@@ -167,7 +163,7 @@ export default function Settings() {
             <div className="section-header__title">Aggiungi nuovo asset</div>
           </div>
 
-          <div className="card">
+          <div className="panel">
             <div className="search-tabs">
               {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
                 <button key={k} className={`btn btn--ghost btn--sm ${searchType === k ? 'active' : ''}`}
@@ -219,7 +215,7 @@ export default function Settings() {
           <div className="section-header">
             <div className="section-header__title">Account</div>
           </div>
-          <div className="card" style={{ marginBottom: 20 }}>
+          <div className="panel" style={{ marginBottom: 20 }}>
             <FormInput label="Nome visualizzato" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
             <div className="form-hint" style={{ marginBottom: 12 }}>Come vuoi essere salutato nella dashboard (es. Federico)</div>
             <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 20 }}>Salva nome</button>
@@ -233,7 +229,7 @@ export default function Settings() {
           <div className="section-header">
             <div className="section-header__title">Sicurezza · Cambia password</div>
           </div>
-          <div className="card" style={{ marginBottom: 20 }}>
+          <div className="panel" style={{ marginBottom: 20 }}>
             <form onSubmit={handleChangePassword}>
               <FormInput label="Password attuale" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
               <FormInput label="Nuova password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
@@ -249,7 +245,7 @@ export default function Settings() {
           <div className="section-header">
             <div className="section-header__title">Sicurezza · Sessioni</div>
           </div>
-          <div className="card" style={{ marginBottom: 20 }}>
+          <div className="panel" style={{ marginBottom: 20 }}>
             <div className="info-text" style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-2)' }}>
               Disconnette questo e tutti gli altri dispositivi. Dovrai accedere di nuovo.
             </div>
@@ -261,7 +257,7 @@ export default function Settings() {
           <div className="section-header">
             <div className="section-header__title">Informazioni app</div>
           </div>
-          <div className="card">
+          <div className="panel">
             <div className="info-text">
               <div><span className="info-label">Wealth</span> · v3.0</div>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>Multi-Asset Investment Tracker</div>

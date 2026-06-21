@@ -64,11 +64,11 @@ export default function CommandPalette() {
         animation: 'fadeUp 0.2s cubic-bezier(0.16,1,0.3,1)',
       }}>
         <div style={{
-          background: '#16171f', border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
           borderRadius: 14, overflow: 'hidden',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,123,255,0.1)',
         }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
             <input
               ref={inputRef}
               value={query}
@@ -77,7 +77,7 @@ export default function CommandPalette() {
               placeholder="Cerca o naviga..."
               style={{
                 width: '100%', background: 'none', border: 'none', outline: 'none',
-                color: '#F4F3F1', fontSize: 14, fontFamily: 'inherit',
+                color: 'var(--text-1)', fontSize: 14, fontFamily: 'inherit',
               }}
             />
           </div>
@@ -89,29 +89,29 @@ export default function CommandPalette() {
                 style={{
                   padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: i === selected ? 'rgba(139,123,255,0.1)' : 'transparent',
+                  background: i === selected ? 'var(--accent-dim)' : 'transparent',
                   transition: 'background 60ms',
                 }}
                 onMouseEnter={() => setSelected(i)}
               >
-                <span style={{ fontSize: 13, color: i === selected ? '#F4F3F1' : '#7A7880', fontWeight: i === selected ? 500 : 400 }}>
+                <span style={{ fontSize: 13, color: i === selected ? 'var(--text-1)' : 'var(--text-2)', fontWeight: i === selected ? 500 : 400 }}>
                   {cmd.label}
                 </span>
-                <span style={{ fontSize: 10, color: '#4a4660', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
+                <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
                   {cmd.keys}
                 </span>
               </div>
             ))}
             {filtered.length === 0 && (
-              <div style={{ padding: '16px 12px', fontSize: 12, color: '#4a4660', textAlign: 'center' }}>
+              <div style={{ padding: '16px 12px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
                 Nessun risultato
               </div>
             )}
           </div>
-          <div style={{ padding: '8px 16px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <span style={{ fontSize: 10, color: '#4a4660' }}>↑↓ naviga</span>
-            <span style={{ fontSize: 10, color: '#4a4660' }}>↵ seleziona</span>
-            <span style={{ fontSize: 10, color: '#4a4660' }}>esc chiudi</span>
+          <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↑↓ naviga</span>
+            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↵ seleziona</span>
+            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>esc chiudi</span>
           </div>
         </div>
       </div>

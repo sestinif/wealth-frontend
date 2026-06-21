@@ -23,7 +23,7 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="auth-wrapper">
-      <div className="card auth-card">
+      <div className="auth-card">
         <div className="auth-logo">W</div>
         <h1 className="auth-title">WEALTH</h1>
         <p className="auth-subtitle">INVESTMENT TRACKER</p>

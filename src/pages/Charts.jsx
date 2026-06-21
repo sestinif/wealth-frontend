@@ -71,25 +71,19 @@ export default function Charts() {
     <PageLayout title="Grafici" username={user.username}>
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
-          Grafici & Analytics
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-          Andamento del tuo portfolio nel tempo
-        </div>
+      <div className="page-head animate-in">
+        <div className="page-head__title">Grafici & Analytics</div>
+        <div className="page-head__sub">Andamento del tuo portfolio nel tempo</div>
       </div>
 
       {/* Portfolio Value — Full Width */}
-      <div className="card section-gap animate-in-1">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+      <div className="panel section-gap animate-in-1">
+        <div className="panel__head">
           <div>
-            <h3 className="card__title mb-0">Valore Portfolio</h3>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
-              <span className="hnum hnum--light" style={{ fontSize: 22, fontWeight: 600, fontFamily: 'var(--font-num)', letterSpacing: '-0.02em' }}>
-                {formatEUR(lastVal)}
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-num)', color: portfolioChange >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
+            <h3 className="panel__title">Valore Portfolio</h3>
+            <div className="panel__metric">
+              <span className="panel__metric-value">{formatEUR(lastVal)}</span>
+              <span className={`panel__metric-delta ${portfolioChange >= 0 ? 'panel__metric-delta--up' : 'panel__metric-delta--down'}`}>
                 {portfolioChange >= 0 ? '+' : ''}{portfolioChange.toFixed(2)}% ({days}g)
               </span>
             </div>
@@ -105,8 +99,8 @@ export default function Charts() {
             <AreaChart data={portfolioData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={portfolioChange >= 0 ? '#34D399' : '#FB7185'} stopOpacity={0.18} />
-                  <stop offset="100%" stopColor={portfolioChange >= 0 ? '#34D399' : '#FB7185'} stopOpacity={0} />
+                  <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.18} />
+                  <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid {...GRID} />
@@ -116,9 +110,9 @@ export default function Charts() {
               <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#7A7880', fontSize: 10 }}
                 cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
               <Area type="monotone" dataKey="value" {...ANIM}
-                stroke={portfolioChange >= 0 ? '#34D399' : '#FB7185'}
+                stroke="#8B7BFF"
                 strokeWidth={2} strokeLinecap="round" fill="url(#pg)"
-                dot={lastDot(portfolioData.length, portfolioChange >= 0 ? '#34D399' : '#FB7185')}
+                dot={lastDot(portfolioData.length, '#8B7BFF')}
                 activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
@@ -127,10 +121,10 @@ export default function Charts() {
 
       {/* Allocation + Pie */}
       <div className="grid-2col section-gap animate-in-2">
-        <div className="card">
-          <div className="card__head">
-            <h3 className="card__title">Allocazione nel tempo</h3>
-            <span className="card__subtitle">Valori in EUR · stacked</span>
+        <div className="panel">
+          <div className="panel__head">
+            <h3 className="panel__title">Allocazione nel tempo</h3>
+            <span className="panel__sub">Valori in EUR · stacked</span>
           </div>
           {allocData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -149,10 +143,10 @@ export default function Charts() {
           ) : <EmptyState compact icon="chart" title="Nessun dato" description="L'allocazione comparirà dopo i primi acquisti." />}
         </div>
 
-        <div className="card">
-          <div className="card__head">
-            <h3 className="card__title">Distribuzione attuale</h3>
-            <span className="card__subtitle">Peso % in EUR</span>
+        <div className="panel">
+          <div className="panel__head">
+            <h3 className="panel__title">Distribuzione attuale</h3>
+            <span className="panel__sub">Peso % in EUR</span>
           </div>
           {pieData.length > 0 ? (
             <>
@@ -188,10 +182,10 @@ export default function Charts() {
 
       {/* Monthly + DCA */}
       <div className="grid-2col animate-in-3">
-        <div className="card">
-          <div className="card__head">
-            <h3 className="card__title">Investimenti mensili {new Date().getFullYear()}</h3>
-            <span className="card__subtitle">Investito vs valore · EUR</span>
+        <div className="panel">
+          <div className="panel__head">
+            <h3 className="panel__title">Investimenti mensili {new Date().getFullYear()}</h3>
+            <span className="panel__sub">Investito vs valore · EUR</span>
           </div>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
@@ -209,12 +203,12 @@ export default function Charts() {
           ) : <EmptyState compact icon="chart" title="Nessun investimento" description="Gli investimenti mensili dell'anno appariranno qui." />}
         </div>
 
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="panel">
+          <div className="panel__head" style={{ alignItems: 'center' }}>
             <div>
-              <h3 className="card__title mb-0">DCA vs Market Price</h3>
+              <h3 className="panel__title">DCA vs Market Price</h3>
               {dcaData.length > 0 && (
-                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>
+                <div className="panel__sub" style={{ marginTop: 4 }}>
                   {dcaData.length} acquisti · Media: {formatEUR(dcaData[dcaData.length - 1]?.dca || 0)}
                 </div>
               )}

@@ -81,13 +81,9 @@ export default function Reports() {
     <PageLayout title="Report" username={user.username} size="md">
 
       {/* Header */}
-      <div className="animate-in" style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-1)', marginBottom: 4, letterSpacing: '-0.3px' }}>
-          Report {periodLabel}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-          Analisi periodica del tuo portfolio
-        </div>
+      <div className="page-head animate-in">
+        <div className="page-head__title">Report {periodLabel}</div>
+        <div className="page-head__sub">Analisi periodica del tuo portfolio</div>
       </div>
 
       {/* Tab + filters */}
@@ -117,22 +113,22 @@ export default function Reports() {
 
       {report && (
         <>
-          {/* Hero stats for the period */}
-          <div className="hero-stats animate-in-2">
-            <div className="hero-stat">
-              <div className="hero-stat__label">Investito nel periodo</div>
-              <AnimatedNumber value={report.total_invested} suffix="€" className="hero-stat__value hnum hnum--muted" />
-              <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>
+          {/* Stat band for the period */}
+          <div className="stat-band animate-in-2">
+            <div className="stat-cell">
+              <div className="stat-cell__label">Investito nel periodo</div>
+              <AnimatedNumber value={report.total_invested} suffix="€" className="stat-cell__value stat-cell__value--muted" />
+              <div className="stat-cell__sub">&nbsp;</div>
             </div>
-            <div className="hero-stat">
-              <div className="hero-stat__label">Valore Attuale</div>
-              <AnimatedNumber value={report.total_value} suffix="€" className="hero-stat__value hnum hnum--light" />
-              <div className="hero-stat__sub hero-stat__sub--placeholder">·</div>
+            <div className="stat-cell">
+              <div className="stat-cell__label">Valore attuale</div>
+              <AnimatedNumber value={report.total_value} suffix="€" className="stat-cell__value" />
+              <div className="stat-cell__sub">&nbsp;</div>
             </div>
-            <div className="hero-stat">
-              <div className="hero-stat__label">Profitto / Perdita</div>
-              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+' : '-'} suffix="€" className="hero-stat__value hnum hnum--light" />
-              <div className="hero-stat__sub" style={{ color: pnlC, opacity: 0.9 }}>{formatPct(report.pnl_pct)}</div>
+            <div className="stat-cell">
+              <div className="stat-cell__label">Profitto / Perdita</div>
+              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+' : '-'} suffix="€" className={`stat-cell__value ${report.pnl >= 0 ? 'stat-cell__value--green' : 'stat-cell__value--red'}`} />
+              <div className="stat-cell__sub" style={{ color: pnlC }}>{formatPct(report.pnl_pct)}</div>
             </div>
           </div>
 
@@ -142,7 +138,7 @@ export default function Reports() {
               <div className="section-header__title">Breakdown per Asset</div>
               <div className="section-header__meta">{assetData.length} asset</div>
             </div>
-            <div className="card overflow-auto" style={{ padding: 0 }}>
+            <div className="panel panel--flush overflow-auto">
               <DataTable columns={assetColumns} data={assetData} />
             </div>
           </div>
@@ -161,7 +157,7 @@ export default function Reports() {
                 </div>
               </div>
               {showTx && (
-                <div className="card overflow-auto" style={{ padding: 0 }}>
+                <div className="panel panel--flush overflow-auto">
                   <DataTable columns={txColumns} data={report.transactions} defaultSort={{ key: 'date', direction: 'desc' }} />
                 </div>
               )}

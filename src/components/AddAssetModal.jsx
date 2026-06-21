@@ -59,14 +59,14 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
         animation: 'fadeUp 0.25s cubic-bezier(0.16,1,0.3,1)',
       }}>
         <div style={{
-          background: '#11121c', border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
           borderRadius: 14, overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,123,255,0.1)',
         }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#eeedf2' }}>Aggiungi nuovo asset</div>
-              <div style={{ fontSize: 11, color: '#7A7880', marginTop: 2 }}>Cerca su CoinGecko o Yahoo Finance</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Aggiungi nuovo asset</div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>Cerca su CoinGecko o Yahoo Finance</div>
             </div>
             <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Chiudi"><Icon name="x" size={14} /></button>
           </div>
@@ -93,7 +93,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               style={{ marginBottom: 12 }}
             />
 
-            {loading && <div style={{ fontSize: 11, color: '#7A7880', textAlign: 'center', padding: 12 }}>Ricerca in corso...</div>}
+            {loading && <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center', padding: 12 }}>Ricerca in corso...</div>}
 
             <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {results.map(r => (
@@ -116,7 +116,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                         : r.coingecko_id && type === 'crypto' ? <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span> : null}
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? '#eeedf2' : '#4a4660', fontWeight: 500, fontFamily: 'var(--font-num)', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
+                  <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 500, fontFamily: 'var(--font-num)', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
                     {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
                   </div>
                   <button className="btn btn--primary btn--sm" disabled={adding === r.symbol} onClick={() => handleAdd(r)}>
