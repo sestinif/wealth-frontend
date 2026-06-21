@@ -76,6 +76,20 @@ export const api = {
     return handleResponse(response);
   },
 
+  // Revoke every existing session server-side (bumps token_version), then clear the
+  // local token and bounce to login like a normal logout.
+  logoutAll: async () => {
+    try {
+      await fetch(`${BASE_URL}/auth/logout-all`, {
+        method: 'POST',
+        headers: authHeaders()
+      });
+    } finally {
+      removeToken();
+      window.location.href = '/login';
+    }
+  },
+
   getPrices: async () => {
     const response = await fetch(`${BASE_URL}/prices`, {
       headers: authHeaders()

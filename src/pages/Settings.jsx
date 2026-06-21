@@ -247,6 +247,18 @@ export default function Settings() {
           </div>
 
           <div className="section-header">
+            <div className="section-header__title">Sicurezza · Sessioni</div>
+          </div>
+          <div className="card" style={{ marginBottom: 20 }}>
+            <div className="info-text" style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-2)' }}>
+              Disconnette questo e tutti gli altri dispositivi. Dovrai accedere di nuovo.
+            </div>
+            <button className="btn btn--danger btn--sm" onClick={() => api.logoutAll()}>
+              Disconnetti tutti i dispositivi
+            </button>
+          </div>
+
+          <div className="section-header">
             <div className="section-header__title">Informazioni app</div>
           </div>
           <div className="card">
