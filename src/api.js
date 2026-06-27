@@ -119,14 +119,14 @@ export const api = {
     return handleResponse(response);
   },
 
-  addPurchase: async (date, asset, amountEur, priceEur, notes = '', priceUsd = 0) => {
+  addPurchase: async (date, asset, amountEur, priceEur, notes = '', priceUsd = 0, fundedFrom = null, fundedAmount = 0) => {
     const response = await fetch(`${BASE_URL}/purchases`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, price_usd: priceUsd, notes })
+      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, price_usd: priceUsd, notes, funded_from: fundedFrom, funded_amount: fundedAmount })
     });
     return handleResponse(response);
   },

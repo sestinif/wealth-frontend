@@ -211,23 +211,31 @@ export default function Diary() {
     setSubmitting(true);
     try {
       const usd = isCrypto ? parseFloat(priceUsd) || 0 : 0;
-      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd);
-      const updatedPurchases = await api.getPurchases();
-      setPurchases(updatedPurchases);
 
-      // Funded from a broker? Deduct the invested amount from its dry powder so it stays in sync.
+      // Resolve dry-powder funding BEFORE saving, so the link + exact deducted amount
+      // (in the broker's currency) are stored on the purchase and can be restored on delete.
+      let fundFrom = null, fundDeducted = 0, fundPos = null, fundNewBal = 0, fundCur = 'EUR';
       if (fundedFrom) {
-        const pos = cashPositions.find(p => p.id === fundedFrom);
-        if (pos) {
-          const cur = (pos.currency || 'EUR').toUpperCase();
-          const deduction = cur === 'USD' && eurUsdRate ? parsedAmount * eurUsdRate : parsedAmount;
-          const newAmount = Math.max(0, (Number(pos.amount_eur) || 0) - deduction);
-          try {
-            await api.updateCashPosition(pos.id, pos.label, Number(newAmount.toFixed(2)), cur);
-            setCashPositions(await api.getCashPositions());
-            toast(`${formatEUR(parsedAmount)} deployed from ${pos.label}`, 'success');
-          } catch (e) { /* purchase already saved; dry powder sync is best-effort */ }
+        fundPos = cashPositions.find(p => p.id === fundedFrom) || null;
+        if (fundPos) {
+          fundCur = (fundPos.currency || 'EUR').toUpperCase();
+          const deduction = fundCur === 'USD' && eurUsdRate ? parsedAmount * eurUsdRate : parsedAmount;
+          const oldBal = Number(fundPos.amount_eur) || 0;
+          fundNewBal = Math.max(0, oldBal - deduction);
+          fundDeducted = Number((oldBal - fundNewBal).toFixed(2));
+          fundFrom = fundPos.id;
         }
+      }
+
+      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd, fundFrom, fundDeducted);
+      setPurchases(await api.getPurchases());
+
+      if (fundPos) {
+        try {
+          await api.updateCashPosition(fundPos.id, fundPos.label, Number(fundNewBal.toFixed(2)), fundCur);
+          setCashPositions(await api.getCashPositions());
+          toast(`${formatEUR(parsedAmount)} deployed from ${fundPos.label}`, 'success');
+        } catch (e) { /* purchase already saved; dry powder sync is best-effort */ }
       }
 
       setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes(''); setFundedFrom('');
@@ -240,10 +248,25 @@ export default function Diary() {
 
   const handleDelete = async (id) => {
     try {
+      const p = purchases.find(x => x.id === id);
       await api.deletePurchase(id);
-      setPurchases(prev => prev.filter(p => p.id !== id));
+      setPurchases(prev => prev.filter(x => x.id !== id));
       setDeleteConfirm(null);
-      toast('Purchase deleted', 'success');
+      // Restore dry powder if this purchase was funded from a broker (reverses the deduction).
+      if (p && p.funded_from && p.funded_amount) {
+        const pos = cashPositions.find(x => x.id === p.funded_from);
+        if (pos) {
+          const cur = (pos.currency || 'EUR').toUpperCase();
+          const restored = (Number(pos.amount_eur) || 0) + Number(p.funded_amount);
+          try {
+            await api.updateCashPosition(pos.id, pos.label, Number(restored.toFixed(2)), cur);
+            setCashPositions(await api.getCashPositions());
+            toast(`Restored to ${pos.label}`, 'success');
+          } catch (e) { /* best-effort */ }
+        }
+      } else {
+        toast('Purchase deleted', 'success');
+      }
     } catch (err) { setError(err.message); }
   };
 
@@ -451,7 +474,10 @@ export default function Diary() {
             [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date)).map(p => (
               <div key={p.id} className="tx-row">
                 <AssetBadge asset={p.asset} color={getColor(p.asset)} />
-                <span className="tx-row__date">{formatDate(p.date)}</span>
+                <span className="tx-row__date">
+                  {formatDate(p.date)}
+                  {(() => { const l = cashPositions.find(x => x.id === p.funded_from)?.label; return l ? ` · from ${l}` : ''; })()}
+                </span>
                 <div className="tx-row__right">
                   <div className="tx-row__amount">{formatEUR(p.amount_eur)}</div>
                   <div className="tx-row__detail">{formatQty(p.quantity, getDecimals(p.asset))} {p.asset} @ {formatEUR(p.price_eur)}</div>
