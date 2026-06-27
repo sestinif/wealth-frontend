@@ -506,6 +506,43 @@ body::after {
 .dry-row__actions { display: flex; gap: 6px; flex-shrink: 0; }
 .dry-form { border-top: 0.5px solid var(--border); padding-top: 16px; margin-top: 8px; }
 
+/* === DIARY redesign === */
+.diary-top {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-bottom: 24px; align-items: start;
+}
+@media (max-width: 760px) { .diary-top { grid-template-columns: 1fr; } }
+.diary-card__head {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; color: var(--text-1); font-weight: 500;
+  margin-bottom: 18px;
+}
+.diary-card__dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; }
+.diary-card__total {
+  margin-left: auto; font-family: var(--font-num);
+  font-variant-numeric: tabular-nums; font-size: 14px;
+}
+/* Transaction history rows */
+.tx-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 18px;
+}
+.tx-row + .tx-row { border-top: 0.5px solid var(--border); }
+.tx-row__date {
+  font-size: 11px; color: var(--text-3);
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+}
+.tx-row__right { margin-left: auto; text-align: right; }
+.tx-row__amount {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 14px; color: var(--text-1); font-weight: 500;
+}
+.tx-row__detail {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-size: 11px; color: var(--text-3); margin-top: 2px;
+}
+.tx-row__actions { flex-shrink: 0; }
+
 /* --- 2. TREND AREA CHART (sparkline-hero look) --- */
 .dash-trend {
   margin-top: 16px; margin-bottom: 24px;

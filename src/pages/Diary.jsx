@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/PageLayout';
-import DataTable from '../components/DataTable';
 import FormInput from '../components/FormInput';
 import AssetBadge from '../components/AssetBadge';
 import AlertMessage from '../components/AlertMessage';
@@ -246,26 +245,6 @@ export default function Diary() {
 
   const filteredPurchases = filterAsset === 'ALL' ? purchases : purchases.filter(p => p.asset === filterAsset);
 
-  const columns = [
-    { key: 'date', label: 'Date', sortable: true, render: v => formatDate(v) },
-    { key: 'asset', label: 'Asset', sortable: true, render: v => <AssetBadge asset={v} color={getColor(v)} /> },
-    { key: 'amount_eur', label: 'Amount', align: 'right', sortable: true, render: v => formatEUR(v) },
-    { key: 'quantity', label: 'Quantity', align: 'right', muted: true, sortable: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
-    { key: 'price_eur', label: 'Price', align: 'right', muted: true, sortable: true, render: v => formatEUR(v) },
-  ];
-
-  const renderActions = (row) => {
-    if (deleteConfirm === row.id) {
-      return (
-        <div className="delete-actions">
-          <button className="btn btn--danger btn--sm" onClick={() => handleDelete(row.id)}>Yes</button>
-          <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(null)}>No</button>
-        </div>
-      );
-    }
-    return <button className="btn btn--danger btn--sm" onClick={() => setDeleteConfirm(row.id)}>Delete</button>;
-  };
-
   const assetOptions = assets.map(a => ({ value: a.symbol, label: a.symbol }));
   const selectedAssetName = assets.find(a => a.symbol === asset)?.name || '';
   const filterButtons = ['ALL', ...assets.map(a => a.symbol)];
@@ -275,177 +254,177 @@ export default function Diary() {
 
       {/* Header */}
       <div className="page-head animate-in">
-        <div className="page-head__title">Purchase Diary</div>
-        <div className="page-head__sub">{purchases.length} purchases logged</div>
+        <div className="page-head__title">Diary</div>
+        <div className="page-head__sub">{purchases.length} transactions · {formatEUR(purchases.reduce((s, p) => s + (p.amount_eur || 0), 0))} invested</div>
       </div>
 
-      {/* === DRY POWDER — uninvested broker cash (top panel) === */}
-      <div className="section-header animate-in-1">
-        <div className="section-header__title">Dry Powder · Uninvested Cash</div>
-        <div className="section-header__meta">
-          Total <span style={{ color: 'var(--dry)', fontFamily: 'var(--font-num)' }}>{formatEUR(dryPowderTotal)}</span>
-        </div>
-      </div>
-      <div className="panel section-gap animate-in-1">
-        {cashPositions.length > 0 && (
-          <div className="dry-list">
-            {cashPositions.map(p => {
-              const isUsd = (p.currency || 'EUR').toUpperCase() === 'USD';
-              return (
-                <div key={p.id} className="dry-row" style={{ opacity: cpEditId === p.id ? 0.5 : 1 }}>
-                  <span className="dry-row__dot" />
-                  <span className="dry-row__label">{p.label}</span>
-                  <span className="dry-row__amount">
-                    {isUsd ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)}
-                    {isUsd && eurUsdRate && <span className="dry-row__sub">≈ {formatEUR(toEur(p.amount_eur, 'USD'))}</span>}
-                  </span>
-                  {cpDeleteConfirm === p.id ? (
-                    <span className="dry-row__actions">
-                      <button className="btn btn--danger btn--sm" onClick={() => handleCashDelete(p.id)}>Yes</button>
-                      <button className="btn btn--ghost btn--sm" onClick={() => setCpDeleteConfirm(null)}>No</button>
-                    </span>
-                  ) : (
-                    <span className="dry-row__actions">
-                      <button className="btn btn--ghost btn--sm" onClick={() => handleCashEdit(p)}>Edit</button>
-                      <button className="btn btn--danger btn--sm" onClick={() => setCpDeleteConfirm(p.id)}>Delete</button>
-                    </span>
-                  )}
+      {/* === TWO-COLUMN TOP: Log a Purchase | Dry Powder === */}
+      <div className="diary-top animate-in-1">
+
+        {/* LEFT — Log a Purchase */}
+        <div className="panel">
+          <div className="diary-card__head"><span className="diary-card__dot" style={{ background: 'var(--accent)' }} />Log a Purchase</div>
+          <form onSubmit={handleSubmit}>
+            <div className="form-grid">
+              <FormInput label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <div className="form-group">
+                <label className="form-label">Asset</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)} style={{ flex: 1, fontWeight: 600 }}>
+                    {assetOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  <button type="button" className="icon-btn" onClick={() => setShowAddAsset(true)} title="Add new asset" aria-label="Add asset">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        <form onSubmit={handleCashSubmit} className={cashPositions.length > 0 ? 'dry-form' : ''}>
-          <div className="form-grid">
-            <FormInput label="Broker" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} placeholder="e.g. Trade Republic" />
-            <div className="form-group">
-              <label className="form-label">
-                Amount
-                <span className="mini-toggle" style={{ float: 'right' }}>
-                  {['EUR', 'USD'].map(c => (
-                    <button
-                      key={c} type="button"
-                      className={`mini-toggle__btn ${cpCurrency === c ? 'active' : ''}`}
-                      onClick={() => setCpCurrency(c)}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </span>
-              </label>
-              <input type="number" step="any" className="form-input" value={cpAmount} onChange={e => setCpAmount(e.target.value)} placeholder="0.00" />
-              {cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate && (
-                <div className="form-hint">≈ {formatEUR(parseFloat(cpAmount) / eurUsdRate)}</div>
-              )}
-            </div>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
-            {cpEditId ? 'Edit this broker’s parked cash.' : 'Cash parked on a broker, waiting to be invested. Drops automatically when you fund a purchase from it.'}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-            {cpEditId && (
-              <button type="button" className="btn btn--ghost" onClick={resetCpForm}>Cancel</button>
-            )}
-            <button type="submit" className="btn btn--primary" disabled={cpSubmitting}>
-              {cpSubmitting ? 'Saving...' : cpEditId ? 'Save Changes' : 'Add Broker'}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="section-header animate-in-1">
-        <div className="section-header__title">New Purchase</div>
-      </div>
-      <div className="panel section-gap animate-in-1">
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <FormInput label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
-            <div className="form-group">
-              <label className="form-label">Asset</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)} style={{ flex: 1, fontWeight: 600 }}>
-                  {assetOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-                <button type="button" className="icon-btn" onClick={() => setShowAddAsset(true)} title="Add new asset" aria-label="Add asset">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                </button>
+                {selectedAssetName && <div className="form-hint" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedAssetName}</div>}
               </div>
-              {selectedAssetName && <div className="form-hint" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedAssetName}</div>}
+              <div className="form-group">
+                <label className="form-label">
+                  Price {asset}
+                  <span className="mini-toggle" style={{ float: 'right' }}>
+                    {['EUR', 'USD'].map(c => (
+                      <button
+                        key={c} type="button"
+                        className={`mini-toggle__btn ${priceCurrency === c ? 'active' : ''}`}
+                        onClick={() => setPriceCurrency(c)}
+                        disabled={c === 'USD' && !hasUsdRate}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </span>
+                </label>
+                <input
+                  type="number" step="any" className="form-input"
+                  value={currentPriceInput}
+                  onChange={e => handlePriceInputChange(e.target.value)}
+                  placeholder="0.00" disabled={useLivePrice}
+                />
+                {priceCurrency === 'USD' && priceEur && (
+                  <div className="form-hint">≈ {parseFloat(priceEur).toLocaleString('en-US', { minimumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 2, maximumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 4, useGrouping: 'always' })} €</div>
+                )}
+              </div>
+              <FormInput label="Amount EUR" type="number" step="any" value={amountEur} onChange={e => handleAmountChange(e.target.value)} placeholder="0.00" />
+              <FormInput label={`Quantity ${asset || ''}`} type="number" step="any" value={qty} onChange={e => handleQtyChange(e.target.value)} placeholder="0.00" />
             </div>
-            <div className="form-group">
-              <label className="form-label">
-                Price {asset}
-                <span className="mini-toggle" style={{ float: 'right' }}>
-                  {['EUR', 'USD'].map(c => (
-                    <button
-                      key={c} type="button"
-                      className={`mini-toggle__btn ${priceCurrency === c ? 'active' : ''}`}
-                      onClick={() => setPriceCurrency(c)}
-                      disabled={c === 'USD' && !hasUsdRate}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </span>
+
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
+              Fill in <strong style={{ color: 'var(--text-2)' }}>Amount EUR</strong> or <strong style={{ color: 'var(--text-2)' }}>Quantity</strong> — the other is computed automatically
+            </div>
+
+            <div className="form-row">
+              <label className="checkbox-wrapper">
+                <input type="checkbox" checked={useLivePrice} onChange={e => setUseLivePrice(e.target.checked)} />
+                <span className="checkbox-label">Use live price</span>
               </label>
-              <input
-                type="number" step="any" className="form-input"
-                value={currentPriceInput}
-                onChange={e => handlePriceInputChange(e.target.value)}
-                placeholder="0.00" disabled={useLivePrice}
-              />
-              {priceCurrency === 'USD' && priceEur && (
-                <div className="form-hint">≈ {parseFloat(priceEur).toLocaleString('en-US', { minimumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 2, maximumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 4, useGrouping: 'always' })} €</div>
-              )}
             </div>
-            <FormInput label="Amount EUR" type="number" step="any" value={amountEur} onChange={e => handleAmountChange(e.target.value)} placeholder="0.00" />
-            <FormInput label={`Quantity ${asset || ''}`} type="number" step="any" value={qty} onChange={e => handleQtyChange(e.target.value)} placeholder="0.00" />
-          </div>
 
-          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
-            Fill in <strong style={{ color: 'var(--text-2)' }}>Amount EUR</strong> or <strong style={{ color: 'var(--text-2)' }}>Quantity</strong> — the other is computed automatically
-          </div>
+            {cashPositions.length > 0 && (
+              <div className="form-group">
+                <label className="form-label">Funded From <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(optional)</span></label>
+                <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
+                  <option value="">— Don’t touch dry powder —</option>
+                  {cashPositions.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.label} ({(p.currency || 'EUR').toUpperCase() === 'USD' ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)})
+                    </option>
+                  ))}
+                </select>
+                <div className="form-hint">The invested amount is deducted from this broker’s dry powder.</div>
+              </div>
+            )}
 
-          <div className="form-row">
-            <label className="checkbox-wrapper">
-              <input type="checkbox" checked={useLivePrice} onChange={e => setUseLivePrice(e.target.checked)} />
-              <span className="checkbox-label">Use live price</span>
-            </label>
-          </div>
+            <FormInput label="Notes" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add a note..." />
+            <AlertMessage type="error" message={error} />
 
+            <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
+              {submitting ? 'Adding...' : 'Add Purchase'}
+            </button>
+          </form>
+        </div>
+
+        {/* RIGHT — Dry Powder */}
+        <div className="panel">
+          <div className="diary-card__head">
+            <span className="diary-card__dot" style={{ background: 'var(--dry)' }} />Dry Powder
+            <span className="diary-card__total" style={{ color: 'var(--dry)' }}>{formatEUR(dryPowderTotal)}</span>
+          </div>
           {cashPositions.length > 0 && (
-            <div className="form-group">
-              <label className="form-label">Funded From <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(optional)</span></label>
-              <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
-                <option value="">— Don’t touch dry powder —</option>
-                {cashPositions.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.label} ({(p.currency || 'EUR').toUpperCase() === 'USD' ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)})
-                  </option>
-                ))}
-              </select>
-              <div className="form-hint">The invested amount is deducted from this broker’s dry powder.</div>
+            <div className="dry-list">
+              {cashPositions.map(p => {
+                const isUsd = (p.currency || 'EUR').toUpperCase() === 'USD';
+                return (
+                  <div key={p.id} className="dry-row" style={{ opacity: cpEditId === p.id ? 0.5 : 1 }}>
+                    <span className="dry-row__dot" />
+                    <span className="dry-row__label">{p.label}</span>
+                    <span className="dry-row__amount">
+                      {isUsd ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)}
+                      {isUsd && eurUsdRate && <span className="dry-row__sub">≈ {formatEUR(toEur(p.amount_eur, 'USD'))}</span>}
+                    </span>
+                    {cpDeleteConfirm === p.id ? (
+                      <span className="dry-row__actions">
+                        <button className="btn btn--danger btn--sm" onClick={() => handleCashDelete(p.id)}>Yes</button>
+                        <button className="btn btn--ghost btn--sm" onClick={() => setCpDeleteConfirm(null)}>No</button>
+                      </span>
+                    ) : (
+                      <span className="dry-row__actions">
+                        <button className="btn btn--ghost btn--sm" onClick={() => handleCashEdit(p)}>Edit</button>
+                        <button className="btn btn--danger btn--sm" onClick={() => setCpDeleteConfirm(p.id)}>Delete</button>
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          <FormInput label="Notes" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add a note..." />
-          <AlertMessage type="error" message={error} />
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-            <button type="submit" className="btn btn--primary btn--lg" disabled={submitting}>
-              {submitting ? 'Adding...' : 'Add Purchase'}
-            </button>
-          </div>
-        </form>
+          <form onSubmit={handleCashSubmit} className={cashPositions.length > 0 ? 'dry-form' : ''}>
+            <div className="form-grid">
+              <FormInput label="Broker" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} placeholder="e.g. Trade Republic" />
+              <div className="form-group">
+                <label className="form-label">
+                  Amount
+                  <span className="mini-toggle" style={{ float: 'right' }}>
+                    {['EUR', 'USD'].map(c => (
+                      <button
+                        key={c} type="button"
+                        className={`mini-toggle__btn ${cpCurrency === c ? 'active' : ''}`}
+                        onClick={() => setCpCurrency(c)}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </span>
+                </label>
+                <input type="number" step="any" className="form-input" value={cpAmount} onChange={e => setCpAmount(e.target.value)} placeholder="0.00" />
+                {cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate && (
+                  <div className="form-hint">≈ {formatEUR(parseFloat(cpAmount) / eurUsdRate)}</div>
+                )}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
+              {cpEditId ? 'Edit this broker’s parked cash.' : 'Cash parked on a broker, waiting to be invested. Drops automatically when you fund a purchase from it.'}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+              {cpEditId && (
+                <button type="button" className="btn btn--ghost" onClick={resetCpForm}>Cancel</button>
+              )}
+              <button type="submit" className="btn btn--primary" disabled={cpSubmitting}>
+                {cpSubmitting ? 'Saving...' : cpEditId ? 'Save Changes' : 'Add Broker'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
+      {/* === HISTORY — clean rows === */}
       <div className="animate-in-2">
         <div className="section-header">
-          <div className="section-header__title">Purchase History · {filteredPurchases.length}</div>
+          <div className="section-header__title">History · {filteredPurchases.length}</div>
           <div className="section-header__actions">
             <div className="filter-bar">
               {filterButtons.map(f => (
@@ -456,8 +435,31 @@ export default function Diary() {
             </div>
           </div>
         </div>
-        <div className="panel panel--flush overflow-auto">
-          <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
+        <div className="panel panel--flush" style={{ padding: '6px 0' }}>
+          {filteredPurchases.length === 0 ? (
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No transactions yet</div>
+          ) : (
+            [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date)).map(p => (
+              <div key={p.id} className="tx-row">
+                <AssetBadge asset={p.asset} color={getColor(p.asset)} />
+                <span className="tx-row__date">{formatDate(p.date)}</span>
+                <div className="tx-row__right">
+                  <div className="tx-row__amount">{formatEUR(p.amount_eur)}</div>
+                  <div className="tx-row__detail">{formatQty(p.quantity, getDecimals(p.asset))} {p.asset} @ {formatEUR(p.price_eur)}</div>
+                </div>
+                <div className="tx-row__actions">
+                  {deleteConfirm === p.id ? (
+                    <div className="delete-actions">
+                      <button className="btn btn--danger btn--sm" onClick={() => handleDelete(p.id)}>Yes</button>
+                      <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(null)}>No</button>
+                    </div>
+                  ) : (
+                    <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(p.id)}>Delete</button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
