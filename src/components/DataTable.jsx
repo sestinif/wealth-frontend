@@ -34,7 +34,7 @@ export default function DataTable({ columns, data, defaultSort, actions }) {
   }, [data, sortKey, sortDir]);
 
   if (!data || data.length === 0) {
-    return <EmptyState compact icon="inbox" title="Nessun dato" description="Non ci sono ancora movimenti da mostrare." />;
+    return <EmptyState compact icon="inbox" title="No Data" description="Nothing to show yet." />;
   }
 
   return (

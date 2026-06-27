@@ -14,10 +14,10 @@ export default function SetupPage({ onComplete }) {
   const navigate = useNavigate();
 
   const requirements = [
-    { text: 'Minimo 8 caratteri', met: password.length >= 8 },
-    { text: 'Contiene maiuscola', met: /[A-Z]/.test(password) },
-    { text: 'Contiene numero', met: /[0-9]/.test(password) },
-    { text: 'Le password coincidono', met: password && password === confirmPassword }
+    { text: 'At least 8 characters', met: password.length >= 8 },
+    { text: 'Contains an uppercase letter', met: /[A-Z]/.test(password) },
+    { text: 'Contains a number', met: /[0-9]/.test(password) },
+    { text: 'Passwords match', met: password && password === confirmPassword }
   ];
 
   const allMet = requirements.every(r => r.met);
@@ -25,7 +25,7 @@ export default function SetupPage({ onComplete }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!allMet) { setError('Tutti i requisiti devono essere soddisfatti'); return; }
+    if (!allMet) { setError('All requirements must be met'); return; }
 
     setLoading(true);
     try {
@@ -34,7 +34,7 @@ export default function SetupPage({ onComplete }) {
       navigate('/login');
     } catch (err) {
       const msg = err.message || 'Setup failed';
-      setError(msg.startsWith('[') ? 'Controlla tutti i campi e riprova.' : msg);
+      setError(msg.startsWith('[') ? 'Check all fields and try again.' : msg);
     } finally { setLoading(false); }
   };
 
@@ -42,8 +42,8 @@ export default function SetupPage({ onComplete }) {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-logo">W</div>
-        <h1 className="auth-title">Benvenuto in Wealth</h1>
-        <p className="auth-subtitle">Crea il tuo account</p>
+        <h1 className="auth-title">Welcome to Wealth</h1>
+        <p className="auth-subtitle">Create your account</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -56,7 +56,7 @@ export default function SetupPage({ onComplete }) {
             <input type="password" className="form-input form-input--lg" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
           <div className="form-group">
-            <input type="password" className="form-input form-input--lg" placeholder="Conferma password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <input type="password" className="form-input form-input--lg" placeholder="Confirm password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
           </div>
 
           <div className="req-list">
@@ -70,7 +70,7 @@ export default function SetupPage({ onComplete }) {
           <AlertMessage type="error" message={error} />
 
           <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading || !allMet} style={{ opacity: allMet && !loading ? 1 : 0.5 }}>
-            {loading ? 'CREAZIONE IN CORSO...' : 'CREA ACCOUNT'}
+            {loading ? 'CREATING...' : 'CREATE ACCOUNT'}
           </button>
         </form>
       </div>

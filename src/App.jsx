@@ -17,7 +17,7 @@ function ProtectedRoute({ children, isAuthenticated, isLoading }) {
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
-function LoadingScreen({ message = "CARICAMENTO..." }) {
+function LoadingScreen({ message = "LOADING..." }) {
   return (
     <div className="loading-screen">
       <div className="loading-logo">W</div>

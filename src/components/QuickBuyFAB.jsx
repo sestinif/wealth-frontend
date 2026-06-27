@@ -67,7 +67,7 @@ export default function QuickBuyFAB() {
     const parsedAmount = parseFloat(amountEur);
     const parsedPrice = parseFloat(priceEur);
     if (!asset || !parsedAmount || parsedAmount <= 0 || !parsedPrice || parsedPrice <= 0) {
-      toast('Completa asset, importo e prezzo', 'error');
+      toast('Fill in asset, amount and price', 'error');
       return;
     }
     setSubmitting(true);
@@ -75,11 +75,11 @@ export default function QuickBuyFAB() {
       const today = new Date().toISOString().split('T')[0];
       const usd = (currentAsset?.asset_type === 'crypto') ? parseFloat(priceUsd) || 0 : 0;
       await api.addPurchase(today, asset, parsedAmount, parsedPrice, notes, usd);
-      toast(`Acquisto ${asset} registrato`, 'success');
+      toast(`${asset} purchase recorded`, 'success');
       resetForm();
       setOpen(false);
     } catch (err) {
-      toast('Errore: ' + err.message, 'error');
+      toast('Error: ' + err.message, 'error');
     } finally { setSubmitting(false); }
   };
 
@@ -91,8 +91,8 @@ export default function QuickBuyFAB() {
       <button
         className="fab"
         onClick={() => setOpen(true)}
-        title="Acquisto rapido"
-        aria-label="Acquisto rapido"
+        title="Quick Buy"
+        aria-label="Quick Buy"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" />
@@ -103,13 +103,13 @@ export default function QuickBuyFAB() {
       {open && (
         <>
           <div className="fab-overlay" onClick={() => setOpen(false)} />
-          <div className="fab-modal" role="dialog" aria-label="Acquisto rapido">
+          <div className="fab-modal" role="dialog" aria-label="Quick Buy">
             <div className="fab-modal__header">
               <div>
-                <div className="fab-modal__eyebrow">Acquisto rapido</div>
-                <div className="fab-modal__title">Registra un nuovo acquisto</div>
+                <div className="fab-modal__eyebrow">Quick Buy</div>
+                <div className="fab-modal__title">Record a New Purchase</div>
               </div>
-              <button className="fab-modal__close" onClick={() => setOpen(false)} aria-label="Chiudi"><Icon name="x" size={16} /></button>
+              <button className="fab-modal__close" onClick={() => setOpen(false)} aria-label="Close"><Icon name="x" size={16} /></button>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -130,7 +130,7 @@ export default function QuickBuyFAB() {
 
               <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                 <div className="form-group">
-                  <label className="form-label">Importo EUR</label>
+                  <label className="form-label">Amount EUR</label>
                   <input
                     type="number" step="any" className="form-input"
                     value={amountEur} onChange={e => handleAmount(e.target.value)}
@@ -138,7 +138,7 @@ export default function QuickBuyFAB() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Quantità {asset}</label>
+                  <label className="form-label">{asset} Quantity</label>
                   <input
                     type="number" step="any" className="form-input"
                     value={qty} onChange={e => handleQty(e.target.value)}
@@ -150,7 +150,7 @@ export default function QuickBuyFAB() {
               <div className="fab-price-row">
                 <label className="checkbox-wrapper">
                   <input type="checkbox" checked={useLivePrice} onChange={e => setUseLivePrice(e.target.checked)} />
-                  <span className="checkbox-label">Usa prezzo live</span>
+                  <span className="checkbox-label">Use live price</span>
                 </label>
                 {livePrice && (
                   <div className="fab-price-display">
@@ -163,7 +163,7 @@ export default function QuickBuyFAB() {
 
               {!useLivePrice && (
                 <div className="form-group">
-                  <label className="form-label">Prezzo EUR</label>
+                  <label className="form-label">Price EUR</label>
                   <input
                     type="number" step="any" className="form-input"
                     value={priceEur}
@@ -186,18 +186,18 @@ export default function QuickBuyFAB() {
               )}
 
               <div className="form-group">
-                <label className="form-label">Note (opzionale)</label>
+                <label className="form-label">Notes (optional)</label>
                 <input
                   type="text" className="form-input"
                   value={notes} onChange={e => setNotes(e.target.value)}
-                  placeholder="DCA settimanale, Binance, ecc."
+                  placeholder="Weekly DCA, Binance, etc."
                 />
               </div>
 
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
-                <button type="button" className="btn btn--ghost" onClick={() => setOpen(false)}>Annulla</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
                 <button type="submit" className="btn btn--primary" disabled={submitting}>
-                  {submitting ? 'Aggiunta...' : 'Registra acquisto'}
+                  {submitting ? 'Adding...' : 'Record Purchase'}
                 </button>
               </div>
             </form>

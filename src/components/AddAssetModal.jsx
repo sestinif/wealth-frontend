@@ -43,7 +43,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
       onAdded(newAsset);
     } catch (err) {
       setAdding('');
-      alert('Errore: ' + err.message);
+      alert('Error: ' + err.message);
     }
   };
 
@@ -65,10 +65,10 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
         }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Aggiungi nuovo asset</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>Cerca su CoinGecko o Yahoo Finance</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Add New Asset</div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>Search on CoinGecko or Yahoo Finance</div>
             </div>
-            <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Chiudi"><Icon name="x" size={14} /></button>
+            <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Close"><Icon name="x" size={14} /></button>
           </div>
 
           <div style={{ padding: 20 }}>
@@ -84,16 +84,16 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               type="text"
               className="form-input form-input--lg"
               placeholder={
-                type === 'crypto' ? 'Es. bitcoin, ethereum, solana...'
-                : type === 'dex' ? 'Es. brett, pepe, wif, bonk...'
-                : 'Es. VUAA, SPY, AAPL...'
+                type === 'crypto' ? 'e.g. bitcoin, ethereum, solana...'
+                : type === 'dex' ? 'e.g. brett, pepe, wif, bonk...'
+                : 'e.g. VUAA, SPY, AAPL...'
               }
               value={query}
               onChange={e => setQuery(e.target.value)}
               style={{ marginBottom: 12 }}
             />
 
-            {loading && <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center', padding: 12 }}>Ricerca in corso...</div>}
+            {loading && <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center', padding: 12 }}>Searching...</div>}
 
             <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {results.map(r => (
@@ -120,15 +120,15 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                     {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
                   </div>
                   <button className="btn btn--primary btn--sm" disabled={adding === r.symbol} onClick={() => handleAdd(r)}>
-                    {adding === r.symbol ? '...' : 'Aggiungi'}
+                    {adding === r.symbol ? '...' : 'Add'}
                   </button>
                 </div>
               ))}
               {!loading && query.length >= 2 && results.length === 0 && (
-                <EmptyState compact icon="search" title="Nessun risultato" description={`Niente trovato per "${query}". Prova un altro nome o simbolo.`} />
+                <EmptyState compact icon="search" title="No Results" description={`Nothing found for "${query}". Try another name or symbol.`} />
               )}
               {!loading && query.length < 2 && (
-                <EmptyState compact icon="search" title="Cerca un asset" description="Digita almeno 2 caratteri per iniziare la ricerca." />
+                <EmptyState compact icon="search" title="Search for an Asset" description="Type at least 2 characters to start searching." />
               )}
             </div>
           </div>

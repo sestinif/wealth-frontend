@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 
 const COMMANDS = [
   { label: 'Dashboard', path: '/dashboard', keys: 'D' },
-  { label: 'Diario — Aggiungi acquisto', path: '/diary', keys: 'A' },
-  { label: 'Report', path: '/reports', keys: 'R' },
-  { label: 'Grafici', path: '/charts', keys: 'G' },
-  { label: 'Impostazioni — Gestisci asset', path: '/settings', keys: 'S' },
+  { label: 'Diary — Add Purchase', path: '/diary', keys: 'A' },
+  { label: 'Reports', path: '/reports', keys: 'R' },
+  { label: 'Charts', path: '/charts', keys: 'G' },
+  { label: 'Settings — Manage Assets', path: '/settings', keys: 'S' },
 ];
 
 export default function CommandPalette() {
@@ -74,7 +74,7 @@ export default function CommandPalette() {
               value={query}
               onChange={e => { setQuery(e.target.value); setSelected(0); }}
               onKeyDown={handleKeyDown}
-              placeholder="Cerca o naviga..."
+              placeholder="Search or navigate..."
               style={{
                 width: '100%', background: 'none', border: 'none', outline: 'none',
                 color: 'var(--text-1)', fontSize: 14, fontFamily: 'inherit',
@@ -104,14 +104,14 @@ export default function CommandPalette() {
             ))}
             {filtered.length === 0 && (
               <div style={{ padding: '16px 12px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
-                Nessun risultato
+                No results
               </div>
             )}
           </div>
           <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↑↓ naviga</span>
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↵ seleziona</span>
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>esc chiudi</span>
+            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↑↓ navigate</span>
+            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↵ select</span>
+            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>esc close</span>
           </div>
         </div>
       </div>

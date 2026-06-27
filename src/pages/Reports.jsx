@@ -41,7 +41,7 @@ export default function Reports() {
   }, [tab, year, month]);
 
   if (loading) return <PageLayout title="Report" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
-  if (!user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
+  if (!user) return <div className="loading-screen"><div className="loading-error">Failed to load</div></div>;
 
   const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B7BFF';
   const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
@@ -50,23 +50,23 @@ export default function Reports() {
     value: 2024 + i, label: String(2024 + i)
   }));
   const monthOptions = [
-    [1, 'Gennaio'], [2, 'Febbraio'], [3, 'Marzo'], [4, 'Aprile'], [5, 'Maggio'], [6, 'Giugno'],
-    [7, 'Luglio'], [8, 'Agosto'], [9, 'Settembre'], [10, 'Ottobre'], [11, 'Novembre'], [12, 'Dicembre']
+    [1, 'January'], [2, 'February'], [3, 'March'], [4, 'April'], [5, 'May'], [6, 'June'],
+    [7, 'July'], [8, 'August'], [9, 'September'], [10, 'October'], [11, 'November'], [12, 'December']
   ].map(([v, l]) => ({ value: v, label: l }));
 
   const assetColumns = [
     { key: 'asset', label: 'Asset', render: (v) => <AssetBadge asset={v} color={getColor(v)} /> },
-    { key: 'invested', label: 'Investito', align: 'right', muted: true, render: v => formatEUR(v) },
-    { key: 'value', label: 'Valore', align: 'right', render: v => formatEUR(v) },
-    { key: 'qty', label: 'Quantità', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
+    { key: 'invested', label: 'Invested', align: 'right', muted: true, render: v => formatEUR(v) },
+    { key: 'value', label: 'Value', align: 'right', render: v => formatEUR(v) },
+    { key: 'qty', label: 'Quantity', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
     { key: 'pnl', label: 'P&L', align: 'right', render: v => <span className={v >= 0 ? 'pnl-positive' : 'pnl-negative'}>{formatPnL(v)}</span> },
   ];
 
   const txColumns = [
-    { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
+    { key: 'date', label: 'Date', sortable: true, render: v => formatDate(v) },
     { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={getColor(v)} /> },
-    { key: 'amount_eur', label: 'Importo', align: 'right', sortable: true, render: v => formatEUR(v) },
-    { key: 'quantity', label: 'Quantità', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
+    { key: 'amount_eur', label: 'Amount', align: 'right', sortable: true, render: v => formatEUR(v) },
+    { key: 'quantity', label: 'Quantity', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
   ];
 
   const assetData = report ? Object.entries(report.by_asset).map(([asset, d]) => ({ asset, ...d })) : [];
@@ -74,7 +74,7 @@ export default function Reports() {
 
   const periodLabel = tab === 'monthly'
     ? `${monthOptions.find(m => m.value === month)?.label} ${year}`
-    : tab === 'annual' ? `Anno ${year}`
+    : tab === 'annual' ? `Year ${year}`
     : 'Lifetime';
 
   return (
@@ -82,13 +82,13 @@ export default function Reports() {
 
       {/* Header */}
       <div className="page-head animate-in">
-        <div className="page-head__title">Report {periodLabel}</div>
-        <div className="page-head__sub">Analisi periodica del tuo portfolio</div>
+        <div className="page-head__title">{periodLabel} Report</div>
+        <div className="page-head__sub">Periodic analysis of your portfolio</div>
       </div>
 
       {/* Tab + filters */}
       <div className="tab-bar animate-in-1">
-        {[['lifetime', 'Lifetime'], ['annual', 'Annuale'], ['monthly', 'Mensile']].map(([key, label]) => (
+        {[['lifetime', 'Lifetime'], ['annual', 'Annual'], ['monthly', 'Monthly']].map(([key, label]) => (
           <button key={key} className={`btn btn--ghost ${tab === key ? 'active' : ''}`} onClick={() => setTab(key)}>
             {label}
           </button>
@@ -116,17 +116,17 @@ export default function Reports() {
           {/* Stat band for the period */}
           <div className="stat-band animate-in-2">
             <div className="stat-cell">
-              <div className="stat-cell__label">Investito nel periodo</div>
+              <div className="stat-cell__label">Invested in Period</div>
               <AnimatedNumber value={report.total_invested} suffix="€" className="stat-cell__value stat-cell__value--muted" />
               <div className="stat-cell__sub">&nbsp;</div>
             </div>
             <div className="stat-cell">
-              <div className="stat-cell__label">Valore attuale</div>
+              <div className="stat-cell__label">Current Value</div>
               <AnimatedNumber value={report.total_value} suffix="€" className="stat-cell__value" />
               <div className="stat-cell__sub">&nbsp;</div>
             </div>
             <div className="stat-cell">
-              <div className="stat-cell__label">Profitto / Perdita</div>
+              <div className="stat-cell__label">Profit / Loss</div>
               <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+' : '-'} suffix="€" className={`stat-cell__value ${report.pnl >= 0 ? 'stat-cell__value--green' : 'stat-cell__value--red'}`} />
               <div className="stat-cell__sub" style={{ color: pnlC }}>{formatPct(report.pnl_pct)}</div>
             </div>
@@ -135,8 +135,8 @@ export default function Reports() {
           {/* Asset breakdown */}
           <div className="animate-in-3" style={{ marginBottom: 24 }}>
             <div className="section-header">
-              <div className="section-header__title">Breakdown per Asset</div>
-              <div className="section-header__meta">{assetData.length} asset</div>
+              <div className="section-header__title">Breakdown by Asset</div>
+              <div className="section-header__meta">{assetData.length} assets</div>
             </div>
             <div className="panel panel--flush overflow-auto">
               <DataTable columns={assetColumns} data={assetData} />
@@ -147,11 +147,11 @@ export default function Reports() {
           {report.transactions && report.transactions.length > 0 && (
             <div className="animate-in-4" style={{ marginBottom: 24 }}>
               <div className="section-header">
-                <div className="section-header__title">Transazioni del periodo</div>
+                <div className="section-header__title">Transactions in Period</div>
                 <div className="section-header__actions">
-                  <span className="section-header__meta">{report.transactions.length} acquisti</span>
+                  <span className="section-header__meta">{report.transactions.length} purchases</span>
                   <button className={`collapse-btn ${showTx ? 'expanded' : ''}`} onClick={() => setShowTx(!showTx)}>
-                    {showTx ? 'Nascondi' : 'Mostra'}
+                    {showTx ? 'Hide' : 'Show'}
                     <Icon name="chevron" size={13} className="collapse-btn__arrow" />
                   </button>
                 </div>

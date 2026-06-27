@@ -49,8 +49,8 @@ export default function Charts() {
     fetchData();
   }, []);
 
-  if (loading) return <PageLayout title="Grafici" username=""><PageSkeleton rows={6} /></PageLayout>;
-  if (!user || !dashboard) return <div className="loading-screen"><div className="loading-error">Errore</div></div>;
+  if (loading) return <PageLayout title="Charts" username=""><PageSkeleton rows={6} /></PageLayout>;
+  if (!user || !dashboard) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
   const days = timeRange === '7d' ? 7 : timeRange === '14d' ? 14 : 30;
   const portfolioData = buildPortfolio(dashboard, days);
@@ -68,23 +68,23 @@ export default function Charts() {
   const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
 
   return (
-    <PageLayout title="Grafici" username={user.username}>
+    <PageLayout title="Charts" username={user.username}>
 
       {/* Header */}
       <div className="page-head animate-in">
-        <div className="page-head__title">Grafici & Analytics</div>
-        <div className="page-head__sub">Andamento del tuo portfolio nel tempo</div>
+        <div className="page-head__title">Charts & Analytics</div>
+        <div className="page-head__sub">Your portfolio performance over time</div>
       </div>
 
       {/* Portfolio Value — Full Width */}
       <div className="panel section-gap animate-in-1">
         <div className="panel__head">
           <div>
-            <h3 className="panel__title">Valore Portfolio</h3>
+            <h3 className="panel__title">Portfolio Value</h3>
             <div className="panel__metric">
               <span className="panel__metric-value">{formatEUR(lastVal)}</span>
               <span className={`panel__metric-delta ${portfolioChange >= 0 ? 'panel__metric-delta--up' : 'panel__metric-delta--down'}`}>
-                {portfolioChange >= 0 ? '+' : ''}{portfolioChange.toFixed(2)}% ({days}g)
+                {portfolioChange >= 0 ? '+' : ''}{portfolioChange.toFixed(2)}% ({days}d)
               </span>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function Charts() {
               <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
               <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
                 tickFormatter={yEur} />
-              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} labelStyle={{ color: '#7A7880', fontSize: 10 }}
+              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Value']} labelStyle={{ color: '#7A7880', fontSize: 10 }}
                 cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
               <Area type="monotone" dataKey="value" {...ANIM}
                 stroke="#8B7BFF"
@@ -116,15 +116,15 @@ export default function Charts() {
                 activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
-        ) : <EmptyState compact icon="chart" title="Nessun dato" description="Registra acquisti per costruire lo storico del portfolio." />}
+        ) : <EmptyState compact icon="chart" title="No data" description="Record purchases to build your portfolio history." />}
       </div>
 
       {/* Allocation + Pie */}
       <div className="grid-2col section-gap animate-in-2">
         <div className="panel">
           <div className="panel__head">
-            <h3 className="panel__title">Allocazione nel tempo</h3>
-            <span className="panel__sub">Valori in EUR · stacked</span>
+            <h3 className="panel__title">Allocation Over Time</h3>
+            <span className="panel__sub">Values in EUR · stacked</span>
           </div>
           {allocData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -140,13 +140,13 @@ export default function Charts() {
                 ))}
               </AreaChart>
             </ResponsiveContainer>
-          ) : <EmptyState compact icon="chart" title="Nessun dato" description="L'allocazione comparirà dopo i primi acquisti." />}
+          ) : <EmptyState compact icon="chart" title="No data" description="Allocation will appear after your first purchases." />}
         </div>
 
         <div className="panel">
           <div className="panel__head">
-            <h3 className="panel__title">Distribuzione attuale</h3>
-            <span className="panel__sub">Peso % in EUR</span>
+            <h3 className="panel__title">Current Distribution</h3>
+            <span className="panel__sub">Weight % in EUR</span>
           </div>
           {pieData.length > 0 ? (
             <>
@@ -157,12 +157,12 @@ export default function Charts() {
                       stroke="none" strokeWidth={0} {...ANIM}>
                       {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
-                    <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Valore']} />
+                    <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Value']} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="donut-center">
                   <div className="donut-center__val">{formatEUR(dashboard.summary.total_value)}</div>
-                  <div className="donut-center__lbl">Totale</div>
+                  <div className="donut-center__lbl">Total</div>
                 </div>
               </div>
               <div className="pie-legend">
@@ -176,7 +176,7 @@ export default function Charts() {
                 ))}
               </div>
             </>
-          ) : <EmptyState compact icon="inbox" title="Nessun dato" description="Nessun asset con valore da distribuire." />}
+          ) : <EmptyState compact icon="inbox" title="No data" description="No assets with value to distribute." />}
         </div>
       </div>
 
@@ -184,8 +184,8 @@ export default function Charts() {
       <div className="grid-2col animate-in-3">
         <div className="panel">
           <div className="panel__head">
-            <h3 className="panel__title">Investimenti mensili {new Date().getFullYear()}</h3>
-            <span className="panel__sub">Investito vs valore · EUR</span>
+            <h3 className="panel__title">Monthly Investments {new Date().getFullYear()}</h3>
+            <span className="panel__sub">Invested vs value · EUR</span>
           </div>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
@@ -196,11 +196,11 @@ export default function Charts() {
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#7A7880', fontSize: 10 }}
                   cursor={{ fill: 'rgba(139,123,255,0.06)' }} />
                 <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={8} />
-                <Bar dataKey="invested" name="Investito" fill="#8B7BFF" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
-                <Bar dataKey="value" name="Valore attuale" fill="#34D399" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
+                <Bar dataKey="invested" name="Invested" fill="#8B7BFF" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
+                <Bar dataKey="value" name="Current value" fill="#34D399" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
               </BarChart>
             </ResponsiveContainer>
-          ) : <EmptyState compact icon="chart" title="Nessun investimento" description="Gli investimenti mensili dell'anno appariranno qui." />}
+          ) : <EmptyState compact icon="chart" title="No investments" description="This year's monthly investments will appear here." />}
         </div>
 
         <div className="panel">
@@ -209,7 +209,7 @@ export default function Charts() {
               <h3 className="panel__title">DCA vs Market Price</h3>
               {dcaData.length > 0 && (
                 <div className="panel__sub" style={{ marginTop: 4 }}>
-                  {dcaData.length} acquisti · Media: {formatEUR(dcaData[dcaData.length - 1]?.dca || 0)}
+                  {dcaData.length} purchases · Average: {formatEUR(dcaData[dcaData.length - 1]?.dca || 0)}
                 </div>
               )}
             </div>
@@ -231,14 +231,14 @@ export default function Charts() {
                 <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={52}
                   tickFormatter={yEur} domain={[(min) => min * 0.985, (max) => max * 1.015]} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Acquisto #${n}`} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
+                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Purchase #${n}`} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
                 <Legend wrapperStyle={LEGEND} iconType="plainline" iconSize={16} />
-                <Line type="monotone" dataKey="market" name="Prezzo attuale" stroke="#7A7880" strokeWidth={1.5} dot={false} strokeDasharray="5 4" {...ANIM} />
-                <Line type="monotone" dataKey="dca" name="Il tuo DCA" stroke="#8B7BFF" strokeWidth={2.5} strokeLinecap="round" {...ANIM}
+                <Line type="monotone" dataKey="market" name="Current price" stroke="#7A7880" strokeWidth={1.5} dot={false} strokeDasharray="5 4" {...ANIM} />
+                <Line type="monotone" dataKey="dca" name="Your DCA" stroke="#8B7BFF" strokeWidth={2.5} strokeLinecap="round" {...ANIM}
                   dot={lastDot(dcaData.length, '#8B7BFF')} activeDot={{ r: 4, fill: '#B3A8FF', stroke: '#15151A', strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
-          ) : <EmptyState compact icon="inbox" title={`Nessun acquisto ${dcaAsset}`} description="Seleziona un asset con acquisti registrati." />}
+          ) : <EmptyState compact icon="inbox" title={`No ${dcaAsset} purchases`} description="Select an asset with recorded purchases." />}
         </div>
       </div>
     </PageLayout>
@@ -275,7 +275,7 @@ function buildAllocation(d, assets, days) {
 function buildMonthly(d) {
   if (!d?.purchases?.length) return [];
   const { prices, purchases } = d;
-  const ms = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+  const ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const y = new Date().getFullYear();
   return ms.map((m, i) => {
     const k = `${y}-${String(i + 1).padStart(2, '0')}`;

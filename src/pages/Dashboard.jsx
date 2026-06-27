@@ -47,7 +47,7 @@ export default function Dashboard() {
   const forceRefresh = async () => {
     setRefreshing(true);
     try { await api.refreshPrices(); await refresh(); toast('Prices updated', 'success'); }
-    catch (err) { toast('Errore: ' + err.message, 'error'); }
+    catch (err) { toast('Error: ' + err.message, 'error'); }
     finally { setRefreshing(false); }
   };
 
@@ -63,7 +63,7 @@ export default function Dashboard() {
       await api.updateAssetTracking(symbol, !currentValue);
       await refresh();
       toast(`${symbol} ${!currentValue ? 'included in totals' : 'excluded from totals'}`, 'success');
-    } catch (err) { toast('Errore: ' + err.message, 'error'); }
+    } catch (err) { toast('Error: ' + err.message, 'error'); }
   };
 
   if (loading) return <PageLayout title="Dashboard" username=""><DashboardSkeleton /></PageLayout>;
@@ -219,17 +219,42 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 1. NET WORTH COMMAND CENTER — total + split by market (crypto/stock/cash) */}
+            {/* 1. NET WORTH COMMAND CENTER — total + allocation donut + split by market */}
             <div className="networth-card animate-in-1">
-              <div className="dash-hero__label"><span className="live-dot" />Net Worth</div>
-              <AnimatedNumber value={totalEur * rate} prefix={symPre} suffix={symSuf} className="networth-card__value" />
-              <div className="dash-hero__meta">
-                <span className={`dash-pill ${pfUp ? 'dash-pill--up' : 'dash-pill--down'}`}>
-                  {pfUp ? '+' : ''}{pfChange.toFixed(1)}%
-                </span>
-                {chartData.length > 1 && (
-                  <span className="dash-hero__delta">{deltaStr} · 30d portfolio</span>
-                )}
+              <div className="networth-card__top">
+                <div className="networth-card__lead">
+                  <div className="dash-hero__label"><span className="live-dot" />Net Worth</div>
+                  <AnimatedNumber value={totalEur * rate} prefix={symPre} suffix={symSuf} className="networth-card__value" />
+                  <div className="dash-hero__meta">
+                    <span className={`dash-pill ${pfUp ? 'dash-pill--up' : 'dash-pill--down'}`}>
+                      {pfUp ? '+' : ''}{pfChange.toFixed(1)}%
+                    </span>
+                    {chartData.length > 1 && (
+                      <span className="dash-hero__delta">{deltaStr} · 30d portfolio</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Allocation donut — balances the number, symmetric hero */}
+                {(() => {
+                  const C = 289; let acc = 0;
+                  const segs = breakdown.filter(b => b.pct > 0).map(b => {
+                    const len = (b.pct / 100) * C; const seg = { color: b.color, len, off: acc }; acc += len; return seg;
+                  });
+                  const nMarkets = breakdown.filter(b => b.value > 0).length;
+                  return (
+                    <svg className="networth-donut" viewBox="0 0 120 120" role="img" aria-label="Allocation by market">
+                      <circle cx="60" cy="60" r="46" fill="none" stroke="var(--bg-elev)" strokeWidth="13" />
+                      {segs.map((s, i) => (
+                        <circle key={i} cx="60" cy="60" r="46" fill="none" stroke={s.color} strokeWidth="13"
+                          strokeDasharray={`${s.len} ${C - s.len}`} strokeDashoffset={-s.off}
+                          transform="rotate(-90 60 60)" />
+                      ))}
+                      <text x="60" y="57" textAnchor="middle" fill="var(--text-1)" fontFamily="var(--font-num)" fontSize="16" fontWeight="600">{nMarkets}</text>
+                      <text x="60" y="71" textAnchor="middle" fill="var(--text-3)" fontFamily="Inter" fontSize="7.5" letterSpacing="1">MARKETS</text>
+                    </svg>
+                  );
+                })()}
               </div>
 
               {/* Proportion bar — crypto vs stock vs cash */}

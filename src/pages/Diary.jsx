@@ -128,15 +128,22 @@ export default function Diary() {
 
   const hasUsdRate = prices[asset]?.eur && prices[asset]?.usd;
 
+  // Round live prices to sane precision (2 decimals for normal prices, more for sub-1 micro).
+  const liveStr = (n) => {
+    const v = Number(n);
+    if (!v) return '';
+    return (Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(6)).toString();
+  };
+
   useEffect(() => {
     if (useLivePrice && asset && prices[asset]) {
       const priceInfo = prices[asset];
       if (priceCurrency === 'USD' && priceInfo.usd) {
-        setPriceUsd(priceInfo.usd.toString());
-        if (priceInfo.eur) setPriceEur(priceInfo.eur.toString());
+        setPriceUsd(liveStr(priceInfo.usd));
+        if (priceInfo.eur) setPriceEur(liveStr(priceInfo.eur));
       } else {
-        setPriceEur((priceInfo.eur || '').toString());
-        setPriceUsd((priceInfo.usd || '').toString());
+        setPriceEur(liveStr(priceInfo.eur));
+        setPriceUsd(liveStr(priceInfo.usd));
       }
     }
   }, [asset, useLivePrice, prices, priceCurrency]);
@@ -264,7 +271,7 @@ export default function Diary() {
         {/* LEFT — Log a Purchase */}
         <div className="panel">
           <div className="diary-card__head"><span className="diary-card__dot" style={{ background: 'var(--accent)' }} />Log a Purchase</div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="diary-form">
             <div className="form-grid">
               <FormInput label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
               <div className="form-group">
@@ -341,9 +348,11 @@ export default function Diary() {
             <FormInput label="Notes" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add a note..." />
             <AlertMessage type="error" message={error} />
 
-            <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
-              {submitting ? 'Adding...' : 'Add Purchase'}
-            </button>
+            <div className="diary-form__foot">
+              <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
+                {submitting ? 'Adding...' : 'Add Purchase'}
+              </button>
+            </div>
           </form>
         </div>
 
@@ -382,7 +391,7 @@ export default function Diary() {
             </div>
           )}
 
-          <form onSubmit={handleCashSubmit} className={cashPositions.length > 0 ? 'dry-form' : ''}>
+          <form onSubmit={handleCashSubmit} className={`diary-form ${cashPositions.length > 0 ? 'dry-form' : ''}`}>
             <div className="form-grid">
               <FormInput label="Broker" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} placeholder="e.g. Trade Republic" />
               <div className="form-group">
@@ -409,11 +418,11 @@ export default function Diary() {
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
               {cpEditId ? 'Edit this broker’s parked cash.' : 'Cash parked on a broker, waiting to be invested. Drops automatically when you fund a purchase from it.'}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+            <div className="diary-form__foot">
               {cpEditId && (
-                <button type="button" className="btn btn--ghost" onClick={resetCpForm}>Cancel</button>
+                <button type="button" className="btn btn--ghost btn--lg btn--full" onClick={resetCpForm}>Cancel</button>
               )}
-              <button type="submit" className="btn btn--primary" disabled={cpSubmitting}>
+              <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
                 {cpSubmitting ? 'Saving...' : cpEditId ? 'Save Changes' : 'Add Broker'}
               </button>
             </div>

@@ -12,10 +12,10 @@ export default function Sidebar({ username, open = false, onClose }) {
 
   const navItems = [
     { path: '/dashboard', label: 'DASHBOARD', icon: <DashboardIcon /> },
-    { path: '/diary', label: 'DIARIO', icon: <DiaryIcon /> },
-    { path: '/reports', label: 'REPORT', icon: <ReportIcon /> },
-    { path: '/charts', label: 'GRAFICI', icon: <ChartIcon /> },
-    { path: '/settings', label: 'IMPOSTAZIONI', icon: <SettingsIcon /> }
+    { path: '/diary', label: 'DIARY', icon: <DiaryIcon /> },
+    { path: '/reports', label: 'REPORTS', icon: <ReportIcon /> },
+    { path: '/charts', label: 'CHARTS', icon: <ChartIcon /> },
+    { path: '/settings', label: 'SETTINGS', icon: <SettingsIcon /> }
   ];
 
   return (
@@ -26,7 +26,7 @@ export default function Sidebar({ username, open = false, onClose }) {
         <div className="sidebar__subtitle">INVESTMENT TRACKER</div>
         <div className="sidebar__status">
           <div className="sidebar__status-dot" />
-          {assets.length > 0 ? `${assets.length} ASSET TRACKED` : '...'}
+          {assets.length > 0 ? `${assets.length} ASSETS TRACKED` : '...'}
         </div>
       </div>
 

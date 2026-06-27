@@ -23,7 +23,7 @@ export default function Topbar({ title, username, onMenu }) {
           {isMac ? '⌘' : 'Ctrl+'}K
         </span>
         <span className="topbar__username">{username}</span>
-        <button className="btn btn--danger btn--sm" onClick={handleLogout}>Esci</button>
+        <button className="btn btn--danger btn--sm" onClick={handleLogout}>Log Out</button>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export default function Settings() {
 
   const handleSaveName = () => {
     saveDisplayName(nameInput);
-    toast(nameInput.trim() ? `Perfetto, ti chiamerò ${nameInput.trim()}` : 'Nome ripristinato', 'success');
+    toast(nameInput.trim() ? `Perfect, I'll call you ${nameInput.trim()}` : 'Name reset', 'success');
   };
 
   const [assets, setAssets] = useState([]);
@@ -73,7 +73,7 @@ export default function Settings() {
       const [updated, newPrices] = await Promise.all([api.getAssets(), api.getPrices()]);
       setAssets(updated); setPrices(newPrices);
       setSearchResults(prev => prev.filter(r => r.symbol !== result.symbol));
-      toast(`${result.symbol} aggiunto al portfolio`, 'success');
+      toast(`${result.symbol} added to portfolio`, 'success');
     } catch (err) { setAssetError(err.message); }
   };
 
@@ -82,7 +82,7 @@ export default function Settings() {
     try {
       await api.removeAsset(symbol);
       setAssets(prev => prev.filter(a => a.symbol !== symbol));
-      toast(`${symbol} rimosso`, 'success');
+      toast(`${symbol} removed`, 'success');
     } catch (err) { setAssetError(err.message); }
   };
 
@@ -95,15 +95,15 @@ export default function Settings() {
 
   const handleChangePassword = async (e) => {
     e.preventDefault(); setError(''); setSuccess('');
-    if (!oldPassword || !newPassword || !confirmPassword) { setError('Completa tutti i campi'); return; }
-    if (newPassword !== confirmPassword) { setError('Le password non coincidono'); return; }
-    if (newPassword.length < 8) { setError('Almeno 8 caratteri'); return; }
+    if (!oldPassword || !newPassword || !confirmPassword) { setError('Please fill in all fields'); return; }
+    if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
+    if (newPassword.length < 8) { setError('At least 8 characters'); return; }
     setSubmitting(true);
     try {
       await api.changePassword(oldPassword, newPassword);
-      setSuccess('Password cambiata');
+      setSuccess('Password changed');
       setOldPassword(''); setNewPassword(''); setConfirmPassword('');
-      toast('Password aggiornata', 'success');
+      toast('Password updated', 'success');
     } catch (err) { setError(err.message); }
     finally { setSubmitting(false); }
   };
@@ -117,21 +117,21 @@ export default function Settings() {
     return isCrypto ? formatUSD(val) : formatEUR(val);
   };
 
-  if (loading) return <PageLayout title="Impostazioni" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;
-  if (!user) return <div className="loading-screen"><div className="loading-error">Errore</div></div>;
+  if (loading) return <PageLayout title="Settings" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;
+  if (!user) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
   return (
-    <PageLayout title="Impostazioni" username={user.username} size="md">
+    <PageLayout title="Settings" username={user.username} size="md">
 
       {/* Header */}
       <div className="page-head animate-in">
-        <div className="page-head__title">Impostazioni</div>
-        <div className="page-head__sub">Gestisci portfolio e account</div>
+        <div className="page-head__title">Settings</div>
+        <div className="page-head__sub">Manage Portfolio and Account</div>
       </div>
 
       {/* Tabs */}
       <div className="tab-bar animate-in-1">
-        {[['portfolio', 'Portfolio'], ['account', 'Account & Sicurezza']].map(([k, l]) => (
+        {[['portfolio', 'Portfolio'], ['account', 'Account & Security']].map(([k, l]) => (
           <button key={k} className={`btn btn--ghost ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
             {l}
           </button>
@@ -145,7 +145,7 @@ export default function Settings() {
           <AlertMessage type="success" message={assetSuccess} />
 
           <div className="section-header">
-            <div className="section-header__title">Asset tracciati · {assets.length}</div>
+            <div className="section-header__title">Tracked Assets · {assets.length}</div>
           </div>
 
           <div className="asset-list mb-24">
@@ -153,14 +153,14 @@ export default function Settings() {
               <div key={asset.symbol} className="asset-row">
                 <AssetBadge asset={asset.symbol} color={asset.color} />
                 <div className="asset-row__price">{getPrice(asset)}</div>
-                <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Cambia colore" />
-                <button className="asset-row__remove" onClick={() => handleRemoveAsset(asset.symbol)} title="Rimuovi" aria-label="Rimuovi"><Icon name="trash" size={14} /></button>
+                <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Change Color" />
+                <button className="asset-row__remove" onClick={() => handleRemoveAsset(asset.symbol)} title="Remove" aria-label="Remove"><Icon name="trash" size={14} /></button>
               </div>
             ))}
           </div>
 
           <div className="section-header">
-            <div className="section-header__title">Aggiungi nuovo asset</div>
+            <div className="section-header__title">Add New Asset</div>
           </div>
 
           <div className="panel">
@@ -172,13 +172,13 @@ export default function Settings() {
             </div>
             <FormInput
               placeholder={
-                searchType === 'crypto' ? 'Cerca crypto (ethereum, solana...)'
-                : searchType === 'dex' ? 'Cerca meme coin (brett, pepe, wif...)'
-                : 'Cerca ETF/azione (SPY, AAPL...)'
+                searchType === 'crypto' ? 'Search crypto (ethereum, solana...)'
+                : searchType === 'dex' ? 'Search meme coin (brett, pepe, wif...)'
+                : 'Search ETF/stock (SPY, AAPL...)'
               }
               value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             />
-            {searching && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>Ricerca...</div>}
+            {searching && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>Searching...</div>}
             {searchResults.length > 0 && (
               <div className="asset-list" style={{ marginTop: 8 }}>
                 {searchResults.map(r => (
@@ -200,7 +200,7 @@ export default function Settings() {
                     <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
                       {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
                     </div>
-                    <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Aggiungi</button>
+                    <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Add</button>
                   </div>
                 ))}
               </div>
@@ -216,46 +216,46 @@ export default function Settings() {
             <div className="section-header__title">Account</div>
           </div>
           <div className="panel" style={{ marginBottom: 20 }}>
-            <FormInput label="Nome visualizzato" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
-            <div className="form-hint" style={{ marginBottom: 12 }}>Come vuoi essere salutato nella dashboard (es. Federico)</div>
-            <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 20 }}>Salva nome</button>
+            <FormInput label="Display Name" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
+            <div className="form-hint" style={{ marginBottom: 12 }}>How you'd like to be greeted on the dashboard (e.g. Federico)</div>
+            <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 20 }}>Save Name</button>
             <FormInput label="Username" value={user.username} disabled />
             <FormInput label="Email" type="email" value={user.email} disabled />
             <div className="info-text" style={{ marginTop: 4, fontSize: 11 }}>
-              Membro da {new Date(user.created_at).toLocaleDateString('it-IT')}
+              Member since {new Date(user.created_at).toLocaleDateString('en-US')}
             </div>
           </div>
 
           <div className="section-header">
-            <div className="section-header__title">Sicurezza · Cambia password</div>
+            <div className="section-header__title">Security · Change Password</div>
           </div>
           <div className="panel" style={{ marginBottom: 20 }}>
             <form onSubmit={handleChangePassword}>
-              <FormInput label="Password attuale" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
-              <FormInput label="Nuova password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-              <FormInput label="Conferma" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+              <FormInput label="Current Password" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
+              <FormInput label="New Password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+              <FormInput label="Confirm" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
               <AlertMessage type="error" message={error} />
               <AlertMessage type="success" message={success} />
               <button type="submit" className="btn btn--primary btn--full" disabled={submitting}>
-                {submitting ? 'Salvataggio...' : 'Aggiorna password'}
+                {submitting ? 'Saving...' : 'Update Password'}
               </button>
             </form>
           </div>
 
           <div className="section-header">
-            <div className="section-header__title">Sicurezza · Sessioni</div>
+            <div className="section-header__title">Security · Sessions</div>
           </div>
           <div className="panel" style={{ marginBottom: 20 }}>
             <div className="info-text" style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-2)' }}>
-              Disconnette questo e tutti gli altri dispositivi. Dovrai accedere di nuovo.
+              Logs out this and all other devices. You'll need to sign in again.
             </div>
             <button className="btn btn--danger btn--sm" onClick={() => api.logoutAll()}>
-              Disconnetti tutti i dispositivi
+              Log Out All Devices
             </button>
           </div>
 
           <div className="section-header">
-            <div className="section-header__title">Informazioni app</div>
+            <div className="section-header__title">App Info</div>
           </div>
           <div className="panel">
             <div className="info-text">

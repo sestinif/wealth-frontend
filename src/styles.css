@@ -435,6 +435,14 @@ body::after {
   .networth-card { padding: 18px; }
   .networth-card__value { font-size: 32px; }
 }
+.networth-card__top {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.networth-card__lead { min-width: 0; }
+.networth-donut { width: 116px; height: 116px; flex-shrink: 0; }
+@media (max-width: 520px) {
+  .networth-card__top { flex-direction: column-reverse; align-items: flex-start; gap: 14px; }
+}
 
 /* Proportion bar — invested vs liquid cash, one continuous track */
 .split-bar {
@@ -509,9 +517,14 @@ body::after {
 /* === DIARY redesign === */
 .diary-top {
   display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-  margin-bottom: 24px; align-items: start;
+  margin-bottom: 24px; align-items: stretch;
 }
 @media (max-width: 760px) { .diary-top { grid-template-columns: 1fr; } }
+/* Equal-height cards with the primary action pinned to the bottom → both
+   CTAs are identical in size AND aligned on the same baseline. */
+.diary-top > .panel { display: flex; flex-direction: column; }
+.diary-form { flex: 1; display: flex; flex-direction: column; }
+.diary-form__foot { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .diary-card__head {
   display: flex; align-items: center; gap: 9px;
   font-size: 13px; color: var(--text-1); font-weight: 500;
