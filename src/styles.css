@@ -90,8 +90,8 @@ body::after {
   --topbar-h: 52px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --radius: 14px;
-  --radius-sm: 9px;
+  --radius: 16px;
+  --radius-sm: 10px;
   /* Elevation — 3-layer physical shadows (contact + ambient + cast light) */
   --elev-1: 0 1px 1px rgba(0,0,0,0.32), 0 2px 4px rgba(0,0,0,0.16);
   --elev-2: 0 1px 1px rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.18), 0 12px 28px rgba(0,0,0,0.22);
@@ -461,10 +461,13 @@ body::after {
   .wealth-cards { grid-template-columns: 1fr; }
 }
 .wealth-card {
-  background: var(--bg-elev);
+  background: var(--bg-card-grad);
   border: 0.5px solid var(--border);
-  border-radius: 12px; padding: 14px 16px;
+  border-radius: 14px; padding: 15px 16px;
+  box-shadow: var(--edge), var(--elev-1);
+  transition: box-shadow 200ms var(--ease), transform 200ms var(--ease);
 }
+.wealth-card:hover { box-shadow: var(--highlight), var(--elev-2); transform: translateY(-1px); }
 .wealth-card__top {
   display: flex; align-items: center; gap: 7px;
   font-size: 12px; color: var(--text-2); font-weight: 400;
@@ -514,9 +517,10 @@ body::after {
   gap: 12px; margin-bottom: 24px;
 }
 .dash-kpi {
-  background: var(--bg-elev);
+  background: var(--bg-card-grad);
   border: 0.5px solid var(--border);
-  border-radius: 12px; padding: 14px 16px;
+  border-radius: 14px; padding: 14px 16px;
+  box-shadow: var(--edge), var(--elev-1);
 }
 .dash-kpi__label {
   font-size: 12px; color: var(--text-2); font-weight: 400;
@@ -653,9 +657,10 @@ body::after {
    shadows or the cursor-spotlight; used for chart & content cards. --- */
 .panel {
   position: relative;
-  background: var(--bg-card);
+  background: var(--bg-card-grad);
   border: 0.5px solid var(--border);
   border-radius: var(--radius); padding: 20px;
+  box-shadow: var(--edge), var(--elev-2);
 }
 .panel + .panel { margin-top: 16px; }
 .panel__head {
@@ -879,11 +884,11 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .btn:disabled:hover { transform: none; }
 
 .btn--primary {
-  background: linear-gradient(135deg, #8B7BFF, #7C5CFC);
+  background: linear-gradient(180deg, #9486FF, #7C5CFC);
   color: #fff;
-  box-shadow: 0 1px 4px rgba(139,123,255,0.2);
+  box-shadow: 0 2px 8px rgba(124,92,252,0.32), inset 0 1px 0 rgba(255,255,255,0.22);
 }
-.btn--primary:hover { box-shadow: 0 4px 14px rgba(139,123,255,0.3); }
+.btn--primary:hover { box-shadow: 0 6px 18px rgba(124,92,252,0.42), inset 0 1px 0 rgba(255,255,255,0.22); }
 .btn--danger { background: var(--red-bg); color: var(--red-soft); }
 .btn--danger:hover { background: rgba(251,113,133,0.18); }
 .btn--ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
