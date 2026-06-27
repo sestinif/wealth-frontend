@@ -33,6 +33,7 @@ export default function Diary() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showAddAsset, setShowAddAsset] = useState(false);
+  const [fundedFrom, setFundedFrom] = useState(''); // broker id whose dry powder funds this buy
 
   // Dry powder — uninvested broker cash (manual)
   const [cashPositions, setCashPositions] = useState([]);
@@ -207,7 +208,23 @@ export default function Diary() {
       await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd);
       const updatedPurchases = await api.getPurchases();
       setPurchases(updatedPurchases);
-      setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes('');
+
+      // Funded from a broker? Deduct the invested amount from its dry powder so it stays in sync.
+      if (fundedFrom) {
+        const pos = cashPositions.find(p => p.id === fundedFrom);
+        if (pos) {
+          const cur = (pos.currency || 'EUR').toUpperCase();
+          const deduction = cur === 'USD' && eurUsdRate ? parsedAmount * eurUsdRate : parsedAmount;
+          const newAmount = Math.max(0, (Number(pos.amount_eur) || 0) - deduction);
+          try {
+            await api.updateCashPosition(pos.id, pos.label, Number(newAmount.toFixed(2)), cur);
+            setCashPositions(await api.getCashPositions());
+            toast(`${formatEUR(parsedAmount)} deployed from ${pos.label}`, 'success');
+          } catch (e) { /* purchase already saved; dry powder sync is best-effort */ }
+        }
+      }
+
+      setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes(''); setFundedFrom('');
       setDate(new Date().toISOString().split('T')[0]);
       setError('');
       toast(`${asset} purchase added`, 'success');
@@ -260,6 +277,81 @@ export default function Diary() {
       <div className="page-head animate-in">
         <div className="page-head__title">Purchase Diary</div>
         <div className="page-head__sub">{purchases.length} purchases logged</div>
+      </div>
+
+      {/* === DRY POWDER — uninvested broker cash (top panel) === */}
+      <div className="section-header animate-in-1">
+        <div className="section-header__title">Dry Powder · Uninvested Cash</div>
+        <div className="section-header__meta">
+          Total <span style={{ color: 'var(--dry)', fontFamily: 'var(--font-num)' }}>{formatEUR(dryPowderTotal)}</span>
+        </div>
+      </div>
+      <div className="panel section-gap animate-in-1">
+        {cashPositions.length > 0 && (
+          <div className="dry-list">
+            {cashPositions.map(p => {
+              const isUsd = (p.currency || 'EUR').toUpperCase() === 'USD';
+              return (
+                <div key={p.id} className="dry-row" style={{ opacity: cpEditId === p.id ? 0.5 : 1 }}>
+                  <span className="dry-row__dot" />
+                  <span className="dry-row__label">{p.label}</span>
+                  <span className="dry-row__amount">
+                    {isUsd ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)}
+                    {isUsd && eurUsdRate && <span className="dry-row__sub">≈ {formatEUR(toEur(p.amount_eur, 'USD'))}</span>}
+                  </span>
+                  {cpDeleteConfirm === p.id ? (
+                    <span className="dry-row__actions">
+                      <button className="btn btn--danger btn--sm" onClick={() => handleCashDelete(p.id)}>Yes</button>
+                      <button className="btn btn--ghost btn--sm" onClick={() => setCpDeleteConfirm(null)}>No</button>
+                    </span>
+                  ) : (
+                    <span className="dry-row__actions">
+                      <button className="btn btn--ghost btn--sm" onClick={() => handleCashEdit(p)}>Edit</button>
+                      <button className="btn btn--danger btn--sm" onClick={() => setCpDeleteConfirm(p.id)}>Delete</button>
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <form onSubmit={handleCashSubmit} className={cashPositions.length > 0 ? 'dry-form' : ''}>
+          <div className="form-grid">
+            <FormInput label="Broker" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} placeholder="e.g. Trade Republic" />
+            <div className="form-group">
+              <label className="form-label">
+                Amount
+                <span className="mini-toggle" style={{ float: 'right' }}>
+                  {['EUR', 'USD'].map(c => (
+                    <button
+                      key={c} type="button"
+                      className={`mini-toggle__btn ${cpCurrency === c ? 'active' : ''}`}
+                      onClick={() => setCpCurrency(c)}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </span>
+              </label>
+              <input type="number" step="any" className="form-input" value={cpAmount} onChange={e => setCpAmount(e.target.value)} placeholder="0.00" />
+              {cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate && (
+                <div className="form-hint">≈ {formatEUR(parseFloat(cpAmount) / eurUsdRate)}</div>
+              )}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
+            {cpEditId ? 'Edit this broker’s parked cash.' : 'Cash parked on a broker, waiting to be invested. Drops automatically when you fund a purchase from it.'}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+            {cpEditId && (
+              <button type="button" className="btn btn--ghost" onClick={resetCpForm}>Cancel</button>
+            )}
+            <button type="submit" className="btn btn--primary" disabled={cpSubmitting}>
+              {cpSubmitting ? 'Saving...' : cpEditId ? 'Save Changes' : 'Add Broker'}
+            </button>
+          </div>
+        </form>
       </div>
 
       <div className="section-header animate-in-1">
@@ -325,6 +417,21 @@ export default function Diary() {
             </label>
           </div>
 
+          {cashPositions.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">Funded From <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(optional)</span></label>
+              <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
+                <option value="">— Don’t touch dry powder —</option>
+                {cashPositions.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.label} ({(p.currency || 'EUR').toUpperCase() === 'USD' ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)})
+                  </option>
+                ))}
+              </select>
+              <div className="form-hint">The invested amount is deducted from this broker’s dry powder.</div>
+            </div>
+          )}
+
           <FormInput label="Notes" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add a note..." />
           <AlertMessage type="error" message={error} />
 
@@ -352,94 +459,6 @@ export default function Diary() {
         <div className="panel panel--flush overflow-auto">
           <DataTable columns={columns} data={filteredPurchases} defaultSort={{ key: 'date', direction: 'desc' }} actions={renderActions} />
         </div>
-      </div>
-
-      {/* === DRY POWDER — uninvested broker cash === */}
-      <div className="animate-in-2" style={{ marginTop: 28 }}>
-        <div className="section-header">
-          <div className="section-header__title">Dry Powder · Uninvested Cash</div>
-          <div className="section-header__meta">
-            Total <span style={{ color: 'var(--dry)', fontFamily: 'var(--font-num)' }}>{formatEUR(dryPowderTotal)}</span>
-          </div>
-        </div>
-        <div className="panel section-gap animate-in-2">
-          <form onSubmit={handleCashSubmit}>
-            <div className="form-grid">
-              <FormInput label="Broker" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} placeholder="e.g. Trade Republic" />
-              <div className="form-group">
-                <label className="form-label">
-                  Amount
-                  <span className="mini-toggle" style={{ float: 'right' }}>
-                    {['EUR', 'USD'].map(c => (
-                      <button
-                        key={c} type="button"
-                        className={`mini-toggle__btn ${cpCurrency === c ? 'active' : ''}`}
-                        onClick={() => setCpCurrency(c)}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </span>
-                </label>
-                <input type="number" step="any" className="form-input" value={cpAmount} onChange={e => setCpAmount(e.target.value)} placeholder="0.00" />
-                {cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate && (
-                  <div className="form-hint">≈ {formatEUR(parseFloat(cpAmount) / eurUsdRate)}</div>
-                )}
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
-              Cash sitting on a broker, waiting to be invested. Counts toward your net worth but not as invested.
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-              {cpEditId && (
-                <button type="button" className="btn btn--ghost" onClick={resetCpForm}>Cancel</button>
-              )}
-              <button type="submit" className="btn btn--primary btn--lg" disabled={cpSubmitting}>
-                {cpSubmitting ? 'Saving...' : cpEditId ? 'Save Changes' : 'Add Dry Powder'}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {cashPositions.length > 0 && (
-          <div className="panel panel--flush overflow-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Broker</th>
-                  <th className="text-right">Amount</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cashPositions.map(p => (
-                  <tr key={p.id} style={{ opacity: cpEditId === p.id ? 0.6 : 1 }}>
-                    <td style={{ color: 'var(--text-1)' }}>{p.label}</td>
-                    <td className="text-right" style={{ fontFamily: 'var(--font-num)', color: 'var(--text-1)' }}>
-                      {(p.currency || 'EUR').toUpperCase() === 'USD' ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)}
-                      {(p.currency || 'EUR').toUpperCase() === 'USD' && eurUsdRate && (
-                        <span style={{ color: 'var(--text-3)', fontSize: 11, marginLeft: 6 }}>≈ {formatEUR(toEur(p.amount_eur, 'USD'))}</span>
-                      )}
-                    </td>
-                    <td className="text-right">
-                      {cpDeleteConfirm === p.id ? (
-                        <div className="delete-actions" style={{ justifyContent: 'flex-end' }}>
-                          <button className="btn btn--danger btn--sm" onClick={() => handleCashDelete(p.id)}>Yes</button>
-                          <button className="btn btn--ghost btn--sm" onClick={() => setCpDeleteConfirm(null)}>No</button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                          <button className="btn btn--ghost btn--sm" onClick={() => handleCashEdit(p)}>Edit</button>
-                          <button className="btn btn--danger btn--sm" onClick={() => setCpDeleteConfirm(p.id)}>Delete</button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
 
       {showAddAsset && (

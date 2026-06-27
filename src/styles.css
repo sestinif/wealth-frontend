@@ -486,6 +486,23 @@ body::after {
 }
 .wealth-card__meta--off { font-style: italic; opacity: 0.8; }
 
+/* Dry powder — broker balances list (Diary top panel) */
+.dry-list { display: flex; flex-direction: column; margin-bottom: 4px; }
+.dry-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 0.5px solid var(--border);
+}
+.dry-row:last-child { border-bottom: none; }
+.dry-row__dot { width: 8px; height: 8px; border-radius: 999px; background: var(--dry); flex-shrink: 0; }
+.dry-row__label { color: var(--text-1); font-size: 14px; }
+.dry-row__amount {
+  margin-left: auto; font-family: var(--font-num); color: var(--text-1);
+  font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 8px;
+}
+.dry-row__sub { color: var(--text-3); font-size: 11px; }
+.dry-row__actions { display: flex; gap: 6px; flex-shrink: 0; }
+.dry-form { border-top: 0.5px solid var(--border); padding-top: 16px; margin-top: 8px; }
+
 /* --- 2. TREND AREA CHART (sparkline-hero look) --- */
 .dash-trend {
   margin-top: 16px; margin-bottom: 24px;
