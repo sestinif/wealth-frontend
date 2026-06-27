@@ -522,7 +522,8 @@ body::after {
 @media (max-width: 760px) { .diary-top { grid-template-columns: 1fr; } }
 /* Equal-height cards with the primary action pinned to the bottom → both
    CTAs are identical in size AND aligned on the same baseline. */
-.diary-top > .panel { display: flex; flex-direction: column; }
+/* cancel the global `.panel + .panel` top margin that pushed the 2nd card down */
+.diary-top > .panel { display: flex; flex-direction: column; margin-top: 0; }
 .diary-form { flex: 1; display: flex; flex-direction: column; }
 .diary-form__foot { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .diary-card__head {
@@ -995,7 +996,7 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 
 /* GRID */
 .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; align-items: stretch; }
-.grid-2col > .card, .grid-2col > .panel { height: 100%; display: flex; flex-direction: column; }
+.grid-2col > .card, .grid-2col > .panel { height: 100%; display: flex; flex-direction: column; margin-top: 0; }
 .grid-2col > .card > .card__head, .grid-2col > .panel > .panel__head { flex: 0 0 auto; }
 
 /* TAB / FILTER */
