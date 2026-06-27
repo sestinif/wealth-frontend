@@ -52,7 +52,7 @@ export default function AnimatedNumber({ value, prefix = '', suffix = '', durati
 
   useEffect(() => () => clearTimeout(flashTimer.current), []);
 
-  const formatted = display.toLocaleString('it-IT', {
+  const formatted = display.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
     useGrouping: 'always',

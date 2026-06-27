@@ -161,6 +161,50 @@ export const api = {
     return handleResponse(response);
   },
 
+  // Net worth = portfolio + read-only external bank balances (Mercury).
+  // external_accounts is [] when bank sync is off, so this is always safe to call.
+  getNetWorth: async () => {
+    const response = await fetch(`${BASE_URL}/networth`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  // --- Dry powder (uninvested broker cash) ---
+
+  getCashPositions: async () => {
+    const response = await fetch(`${BASE_URL}/cash-positions`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  addCashPosition: async (label, amountEur, currency = 'EUR', note = '') => {
+    const response = await fetch(`${BASE_URL}/cash-positions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ label, amount_eur: amountEur, currency, note })
+    });
+    return handleResponse(response);
+  },
+
+  updateCashPosition: async (id, label, amountEur, currency = 'EUR', note = '') => {
+    const response = await fetch(`${BASE_URL}/cash-positions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ label, amount_eur: amountEur, currency, note })
+    });
+    return handleResponse(response);
+  },
+
+  deleteCashPosition: async (id) => {
+    const response = await fetch(`${BASE_URL}/cash-positions/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   getMonthlyReport: async (year, month) => {
     const response = await fetch(`${BASE_URL}/reports/monthly?year=${year}&month=${month}`, {
       headers: authHeaders()

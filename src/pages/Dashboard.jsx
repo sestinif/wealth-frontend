@@ -15,6 +15,8 @@ import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, form
 export default function Dashboard() {
   const toast = useToast();
   const [data, setData] = useState(null);
+  const [networth, setNetworth] = useState(null);
+  const [cashPositions, setCashPositions] = useState([]);
   const [user, setUser] = useState(null);
   const [assets, setAssets] = useState([]);
   const [marketInfo, setMarketInfo] = useState({});
@@ -30,8 +32,13 @@ export default function Dashboard() {
 
   const refresh = async () => {
     try {
-      const [d, u, a, s] = await Promise.all([api.getDashboard(), api.getMe(), api.getAssets(), api.getPricesStatus().catch(() => ({}))]);
-      setData(d); setUser(u); setAssets(a);
+      const [d, u, a, s, nw, cp] = await Promise.all([
+        api.getDashboard(), api.getMe(), api.getAssets(),
+        api.getPricesStatus().catch(() => ({})),
+        api.getNetWorth().catch(() => null),
+        api.getCashPositions().catch(() => []),
+      ]);
+      setData(d); setUser(u); setAssets(a); setNetworth(nw); setCashPositions(cp || []);
       setCacheAge(s?.cache_age_seconds);
       api.getMarketInfo().then(setMarketInfo).catch(() => {});
     } catch (err) {}
@@ -39,7 +46,7 @@ export default function Dashboard() {
 
   const forceRefresh = async () => {
     setRefreshing(true);
-    try { await api.refreshPrices(); await refresh(); toast('Prezzi aggiornati', 'success'); }
+    try { await api.refreshPrices(); await refresh(); toast('Prices updated', 'success'); }
     catch (err) { toast('Errore: ' + err.message, 'error'); }
     finally { setRefreshing(false); }
   };
@@ -55,12 +62,12 @@ export default function Dashboard() {
     try {
       await api.updateAssetTracking(symbol, !currentValue);
       await refresh();
-      toast(`${symbol} ${!currentValue ? 'incluso nei totali' : 'escluso dai totali'}`, 'success');
+      toast(`${symbol} ${!currentValue ? 'included in totals' : 'excluded from totals'}`, 'success');
     } catch (err) { toast('Errore: ' + err.message, 'error'); }
   };
 
   if (loading) return <PageLayout title="Dashboard" username=""><DashboardSkeleton /></PageLayout>;
-  if (!data || !user) return <div className="loading-screen"><div className="loading-error">Errore nel caricamento</div></div>;
+  if (!data || !user) return <div className="loading-screen"><div className="loading-error">Failed to load</div></div>;
 
   const { summary, prices, purchases } = data;
   const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
@@ -80,7 +87,7 @@ export default function Dashboard() {
 
   // Greeting
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buongiorno' : hour < 18 ? 'Buon pomeriggio' : 'Buonasera';
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const performers = mainAssets
     .map(a => ({ symbol: a.symbol, pnl_pct: summary.by_asset[a.symbol].invested > 0 ? ((summary.by_asset[a.symbol].value / summary.by_asset[a.symbol].invested - 1) * 100) : 0 }))
     .sort((a, b) => b.pnl_pct - a.pnl_pct);
@@ -102,11 +109,11 @@ export default function Dashboard() {
   const pfUp = pfChange >= 0;
 
   const recentColumns = [
-    { key: 'date', label: 'Data', sortable: true, render: v => formatDate(v) },
+    { key: 'date', label: 'Date', sortable: true, render: v => formatDate(v) },
     { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={gc(v)} /> },
-    { key: 'amount_eur', label: 'Importo', align: 'right', sortable: true, render: v => formatEUR(v) },
-    { key: 'quantity', label: 'Quantità', align: 'right', muted: true, render: (v, row) => formatQty(v, gd(row.asset)) },
-    { key: 'price_eur', label: 'Prezzo', align: 'right', muted: true, render: v => formatPrice(v, 'EUR') },
+    { key: 'amount_eur', label: 'Amount', align: 'right', sortable: true, render: v => formatEUR(v) },
+    { key: 'quantity', label: 'Quantity', align: 'right', muted: true, render: (v, row) => formatQty(v, gd(row.asset)) },
+    { key: 'price_eur', label: 'Price', align: 'right', muted: true, render: v => formatPrice(v, 'EUR') },
   ];
   const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
 
@@ -122,6 +129,54 @@ export default function Dashboard() {
         const symPre = isUsd ? '$' : '';   // USD symbol before
         const symSuf = isUsd ? '' : '€';   // EUR symbol after (IT convention)
         const money = (v) => isUsd ? formatUSD(v * rate) : formatEUR(v);
+
+        // --- Net worth split: invested (portfolio) + cash (read-only bank balances) ---
+        // All figures normalized to EUR here; money() re-applies the USD rate for display.
+        // Mercury returns balances in their own currency (often USD), so convert to EUR
+        // using the same eurUsdRate the rest of the app already derives.
+        const externalAccounts = networth?.external_accounts || [];
+        const cashEur = externalAccounts.reduce((s, acc) => {
+          const cur = (acc.currency || 'EUR').toUpperCase();
+          const bal = Number(acc.balance) || 0;
+          if (cur === 'EUR') return s + bal;
+          if (cur === 'USD' && eurUsdRate) return s + bal / eurUsdRate;
+          return s + bal; // unknown currency: best-effort, count at face value
+        }, 0);
+
+        // Invested split by market: crypto (incl. dex tokens) vs stock/ETF.
+        const cryptoAssets = mainAssets.filter(a => a.asset_type === 'crypto' || a.asset_type === 'dex_token');
+        const stockAssets = mainAssets.filter(a => a.asset_type === 'stock_etf');
+        const valOf = (a) => summary.by_asset[a.symbol]?.value || 0;
+        const cryptoEur = cryptoAssets.reduce((s, a) => s + valOf(a), 0);
+        const stockEur = stockAssets.reduce((s, a) => s + valOf(a), 0);
+
+        // Dry powder — uninvested broker cash. Each position carries its own currency;
+        // convert USD positions to EUR with the same rate used everywhere else.
+        const dryPowderEur = (cashPositions || []).reduce((s, p) => {
+          const bal = Number(p.amount_eur) || 0;
+          const cur = (p.currency || 'EUR').toUpperCase();
+          if (cur === 'USD' && eurUsdRate) return s + bal / eurUsdRate;
+          return s + bal;
+        }, 0);
+
+        const totalEur = cryptoEur + stockEur + cashEur + dryPowderEur;
+        const pctOf = (v) => totalEur > 0 ? (v / totalEur) * 100 : 0;
+        const cryptoPct = pctOf(cryptoEur);
+        const stockPct = pctOf(stockEur);
+        const cashPct = pctOf(cashEur);
+        const dryPct = pctOf(dryPowderEur);
+        const cashConnected = externalAccounts.length > 0;
+        const nBrokers = (cashPositions || []).length;
+
+        // Breakdown card config — order, color, count, meta. Driven so the markup stays flat.
+        const breakdown = [
+          { key: 'crypto', label: 'Crypto Market', color: 'var(--accent)', value: cryptoEur, pct: cryptoPct, meta: `${cryptoPct.toFixed(0)}% · ${cryptoAssets.length} assets` },
+          { key: 'stock', label: 'Stock Market', color: 'var(--stock)', value: stockEur, pct: stockPct, meta: `${stockPct.toFixed(0)}% · ${stockAssets.length} assets` },
+          { key: 'cash', label: 'Cash', color: 'var(--cash)', value: cashEur, pct: cashPct, empty: 'No Account Connected',
+            meta: cashConnected ? `${cashPct.toFixed(0)}% · ${externalAccounts.length === 1 ? externalAccounts[0].name : `${externalAccounts.length} accounts`}` : null },
+          { key: 'dry', label: 'Dry Powder', color: 'var(--dry)', value: dryPowderEur, pct: dryPct, empty: 'No Uninvested Cash',
+            meta: nBrokers > 0 ? `${dryPct.toFixed(0)}% · ${nBrokers} ${nBrokers === 1 ? 'broker' : 'brokers'}` : null },
+        ];
 
         // Real 30d delta from the portfolio time-series (same source as the chart)
         const deltaAbs = pfLast - pfFirst;
@@ -146,8 +201,8 @@ export default function Dashboard() {
                 <div className="hero-greeting__title">{greeting}, {getDisplayName(user.username)}</div>
                 <div className="hero-greeting__sub">
                   {best && best.pnl_pct > 0
-                    ? <><span style={{ color: 'var(--text-1)' }}>{best.symbol}</span> è il tuo asset migliore con <span style={{ color: 'var(--green)' }}>+{best.pnl_pct.toFixed(1)}%</span> di rendimento</>
-                    : `${summary.n_purchases} acquisti nel tuo portfolio`}
+                    ? <><span style={{ color: 'var(--text-1)' }}>{best.symbol}</span> is your top performer at <span style={{ color: 'var(--green)' }}>+{best.pnl_pct.toFixed(1)}%</span></>
+                    : `${summary.n_purchases} purchases in your portfolio`}
                 </div>
               </div>
               <div className="currency-toggle" title={eurUsdRate ? `1 € = ${eurUsdRate.toFixed(4)} $` : 'Tasso non disponibile'}>
@@ -164,21 +219,42 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 1. HERO BLOCK — patrimonio netto */}
-            <div className="dash-hero animate-in-1">
-              <div className="dash-hero__top">
-                <div>
-                  <div className="dash-hero__label"><span className="live-dot" />Patrimonio netto</div>
-                  <AnimatedNumber value={summary.total_value * rate} prefix={symPre} suffix={symSuf} className="dash-hero__value" />
-                  <div className="dash-hero__meta">
-                    <span className={`dash-pill ${pfUp ? 'dash-pill--up' : 'dash-pill--down'}`}>
-                      {pfUp ? '+' : ''}{pfChange.toFixed(1).replace('.', ',')}%
-                    </span>
-                    {chartData.length > 1 && (
-                      <span className="dash-hero__delta">{deltaStr} · 30g</span>
-                    )}
+            {/* 1. NET WORTH COMMAND CENTER — total + split by market (crypto/stock/cash) */}
+            <div className="networth-card animate-in-1">
+              <div className="dash-hero__label"><span className="live-dot" />Net Worth</div>
+              <AnimatedNumber value={totalEur * rate} prefix={symPre} suffix={symSuf} className="networth-card__value" />
+              <div className="dash-hero__meta">
+                <span className={`dash-pill ${pfUp ? 'dash-pill--up' : 'dash-pill--down'}`}>
+                  {pfUp ? '+' : ''}{pfChange.toFixed(1)}%
+                </span>
+                {chartData.length > 1 && (
+                  <span className="dash-hero__delta">{deltaStr} · 30d portfolio</span>
+                )}
+              </div>
+
+              {/* Proportion bar — crypto vs stock vs cash */}
+              <div className="split-bar" role="img"
+                aria-label={`Crypto ${cryptoPct.toFixed(0)}%, stock ${stockPct.toFixed(0)}%, cash ${cashPct.toFixed(0)}%, dry powder ${dryPct.toFixed(0)}%`}>
+                {breakdown.filter(b => b.pct > 0).map(b => (
+                  <span key={b.key} className="split-bar__seg" style={{ width: `${b.pct}%`, background: b.color }} />
+                ))}
+                {totalEur === 0 && <span className="split-bar__seg split-bar__seg--empty" />}
+              </div>
+
+              {/* Breakdown cards — one per market */}
+              <div className="wealth-cards">
+                {breakdown.map(b => (
+                  <div key={b.key} className="wealth-card">
+                    <div className="wealth-card__top">
+                      <span className="wealth-card__dot" style={{ background: b.color }} />
+                      {b.label}
+                    </div>
+                    <AnimatedNumber value={b.value * rate} prefix={symPre} suffix={symSuf} className="wealth-card__value" />
+                    <div className="wealth-card__meta">
+                      {b.meta || <span className="wealth-card__meta--off">{b.empty || '—'}</span>}
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -196,7 +272,7 @@ export default function Dashboard() {
                     <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                       cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                      formatter={(v) => [formatEUR(v), 'Valore']} labelFormatter={(l) => formatDate(l)} />
+                      formatter={(v) => [formatEUR(v), 'Value']} labelFormatter={(l) => formatDate(l)} />
                     <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
                       fill="url(#hg)" dot={false} activeDot={{ r: 4, fill: '#8B7BFF', stroke: '#15151A', strokeWidth: 2 }}
                       animationDuration={900} animationEasing="ease-out" />
@@ -205,29 +281,36 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* 3. KPI ROW — investito / guadagno / asset */}
-            <div className="dash-kpis animate-in-2">
-              <div className="dash-kpi">
-                <div className="dash-kpi__label">Investito</div>
-                <div className="dash-kpi__value dash-kpi__value--1">{money(summary.total_invested)}</div>
-              </div>
-              <div className="dash-kpi">
-                <div className="dash-kpi__label">Guadagno</div>
-                <div className={`dash-kpi__value ${summary.pnl >= 0 ? 'dash-kpi__value--green' : 'dash-kpi__value--red'}`}>
-                  {summary.pnl >= 0 ? '+' : '-'}{money(Math.abs(summary.pnl))}
+            {/* 3. KPI ROW — guadagno / rendimento / asset */}
+            {(() => {
+              const pnlPct = summary.total_invested > 0 ? (summary.pnl / summary.total_invested) * 100 : 0;
+              return (
+                <div className="dash-kpis animate-in-2">
+                  <div className="dash-kpi">
+                    <div className="dash-kpi__label">Profit</div>
+                    <div className={`dash-kpi__value ${summary.pnl >= 0 ? 'dash-kpi__value--green' : 'dash-kpi__value--red'}`}>
+                      {summary.pnl >= 0 ? '+' : '-'}{money(Math.abs(summary.pnl))}
+                    </div>
+                  </div>
+                  <div className="dash-kpi">
+                    <div className="dash-kpi__label">Return</div>
+                    <div className={`dash-kpi__value ${pnlPct >= 0 ? 'dash-kpi__value--green' : 'dash-kpi__value--red'}`}>
+                      {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="dash-kpi">
+                    <div className="dash-kpi__label">Assets</div>
+                    <div className="dash-kpi__value dash-kpi__value--1">{mainAssets.length}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="dash-kpi">
-                <div className="dash-kpi__label">Asset</div>
-                <div className="dash-kpi__value dash-kpi__value--1">{mainAssets.length}</div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* 4. TWO-COLUMN — allocazione (labeled bars) + asset principali */}
             <div className="dash-split animate-in-3">
               {/* Left: allocation bars */}
               <div className="dash-panel">
-                <div className="dash-panel__title">Allocazione</div>
+                <div className="dash-panel__title">Allocation</div>
                 {topAlloc.length > 0 ? (
                   <div className="alloc-bars">
                     {topAlloc.map(slice => (
@@ -236,18 +319,18 @@ export default function Dashboard() {
                         <span className="alloc-bar__track">
                           <span className="alloc-bar__fill" style={{ width: `${slice.pct}%`, background: slice.color }} />
                         </span>
-                        <span className="alloc-bar__pct">{Number(slice.pct).toFixed(1).replace('.', ',')}%</span>
+                        <span className="alloc-bar__pct">{Number(slice.pct).toFixed(1)}%</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <EmptyState compact icon="inbox" title="Nessun asset" description="Configura i tuoi asset dalle Impostazioni." />
+                  <EmptyState compact icon="inbox" title="No Assets" description="Set up your assets in Settings." />
                 )}
               </div>
 
               {/* Right: top assets list */}
               <div className="dash-panel">
-                <div className="dash-panel__title">Asset principali</div>
+                <div className="dash-panel__title">Top Assets</div>
                 {topAssets.length > 0 ? (
                   <div className="dash-assets">
                     {topAssets.map(asset => {
@@ -260,15 +343,15 @@ export default function Dashboard() {
                           <span className="dash-asset__name">{asset.symbol}</span>
                           <span className="dash-asset__value">{money(d.value)}</span>
                           <span className={`dash-asset__delta ${up ? 'dash-asset__delta--up' : 'dash-asset__delta--down'}`}>
-                            {up ? '+' : ''}{pnlPct.toFixed(1).replace('.', ',')}%
+                            {up ? '+' : ''}{pnlPct.toFixed(1)}%
                           </span>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <EmptyState compact icon="inbox" title="Nessun asset"
-                    description="Aggiungi un acquisto con il pulsante + in basso a destra per iniziare." />
+                  <EmptyState compact icon="inbox" title="No Assets"
+                    description="Add a purchase with the + button at the bottom right to get started." />
                 )}
               </div>
             </div>
@@ -280,11 +363,11 @@ export default function Dashboard() {
       <div className="animate-in-3">
         <div className="section-header">
           <div className="section-header__title">
-            Portfolio Principale · {mainAssets.length} asset
+            Main Portfolio · {mainAssets.length} assets
           </div>
           <div className="section-header__actions">
             <button className={`collapse-btn ${showDetails ? 'expanded' : ''}`} onClick={() => setShowDetails(!showDetails)}>
-              {showDetails ? 'Nascondi dettagli' : 'Mostra dettagli'}
+              {showDetails ? 'Hide Details' : 'Show Details'}
               <Icon name="chevron" size={13} className="collapse-btn__arrow" />
             </button>
           </div>
@@ -341,7 +424,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="asset-strip__cell asset-strip__cell--right">
-                    <label className="toggle" title={included ? 'Escluso dai totali' : 'Incluso nei totali'}>
+                    <label className="toggle" title={included ? 'Excluded from totals' : 'Included in totals'}>
                       <input type="checkbox" checked={included} onChange={() => handleToggleTracking(asset.symbol, included)} />
                       <span className="toggle__slider" />
                     </label>
@@ -361,9 +444,9 @@ export default function Dashboard() {
             {specAssets.length > 0 && (
               <>
                 <div className="section-header" style={{ marginTop: 20 }}>
-                  <div className="section-header__title">Speculativo · Non incluso</div>
+                  <div className="section-header__title">Speculative · Not Included</div>
                   <div className="section-header__meta">
-                    Valore <span style={{ color: 'var(--text-1)' }}>{formatEUR(summary.spec_value)}</span>
+                    Value <span style={{ color: 'var(--text-1)' }}>{formatEUR(summary.spec_value)}</span>
                     <span style={{ marginLeft: 10, color: summary.spec_pnl >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
                       {formatPnL(summary.spec_pnl)} ({formatPct(summary.spec_pnl_pct)})
                     </span>
@@ -383,9 +466,9 @@ export default function Dashboard() {
       {/* === MARKET OVERVIEW (collapsed by default) === */}
       <div className="animate-in-3" style={{ marginBottom: 24 }}>
         <div className="section-header">
-          <div className="section-header__title">Panoramica Mercato</div>
+          <div className="section-header__title">Market Overview</div>
           <button className={`collapse-btn ${showMarket ? 'expanded' : ''}`} onClick={() => setShowMarket(!showMarket)}>
-            {showMarket ? 'Nascondi' : 'Mostra'}
+            {showMarket ? 'Hide' : 'Show'}
             <Icon name="chevron" size={13} className="collapse-btn__arrow" />
           </button>
         </div>
@@ -396,11 +479,11 @@ export default function Dashboard() {
                 <thead>
                   <tr>
                     <th>Asset</th>
-                    <th className="text-right">Prezzo</th>
+                    <th className="text-right">Price</th>
                     <th className="text-right">24h</th>
-                    <th className="text-right">7g</th>
+                    <th className="text-right">7d</th>
                     <th className="text-right">ATH</th>
-                    <th className="text-right">Da ATH</th>
+                    <th className="text-right">From ATH</th>
                     <th className="text-right">Market Cap</th>
                     <th className="text-right">Rank</th>
                   </tr>
@@ -437,7 +520,7 @@ export default function Dashboard() {
                 </tbody>
               </table>
             ) : (
-              <div style={{ padding: 20, fontSize: 12, color: 'var(--text-3)' }}><span className="live-dot" /> Caricamento dati...</div>
+              <div style={{ padding: 20, fontSize: 12, color: 'var(--text-3)' }}><span className="live-dot" /> Loading data...</div>
             )}
           </div>
         )}
@@ -446,9 +529,9 @@ export default function Dashboard() {
       {/* === CHARTS (collapsed by default) === */}
       <div style={{ marginBottom: 24 }}>
         <div className="section-header">
-          <div className="section-header__title">Grafici & Analytics</div>
+          <div className="section-header__title">Charts & Analytics</div>
           <button className={`collapse-btn ${showCharts ? 'expanded' : ''}`} onClick={() => setShowCharts(!showCharts)}>
-            {showCharts ? 'Nascondi' : 'Mostra'}
+            {showCharts ? 'Hide' : 'Show'}
             <Icon name="chevron" size={13} className="collapse-btn__arrow" />
           </button>
         </div>
@@ -456,8 +539,8 @@ export default function Dashboard() {
           <>
             <div className="card section-gap">
               <div className="card__head">
-                <h3 className="card__title">Portfolio Principale — 30 giorni</h3>
-                <span className="card__subtitle">Valore totale in EUR</span>
+                <h3 className="card__title">Main Portfolio — 30 Days</h3>
+                <span className="card__subtitle">Total Value in EUR</span>
               </div>
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -480,7 +563,7 @@ export default function Dashboard() {
                     <Tooltip
                       contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                       cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                      formatter={(v) => [formatEUR(v), 'Valore portfolio']}
+                      formatter={(v) => [formatEUR(v), 'Portfolio value']}
                       labelFormatter={(l) => formatDate(l)}
                     />
                     <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
@@ -491,13 +574,13 @@ export default function Dashboard() {
                       activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
                   </AreaChart>
                 </ResponsiveContainer>
-              ) : <EmptyState compact icon="chart" title="Nessun dato" description="Aggiungi acquisti per vedere l'andamento del portfolio." />}
+              ) : <EmptyState compact icon="chart" title="No Data" description="Add purchases to see your portfolio trend." />}
             </div>
 
             <div className="card overflow-auto">
               <div className="card__head">
-                <h3 className="card__title">Ultimi acquisti</h3>
-                <span className="card__subtitle">Ultimi {recentPurchases.length} movimenti</span>
+                <h3 className="card__title">Latest Purchases</h3>
+                <span className="card__subtitle">Last {recentPurchases.length} movements</span>
               </div>
               <DataTable columns={recentColumns} data={recentPurchases} defaultSort={{ key: 'date', direction: 'desc' }} />
             </div>
@@ -507,9 +590,9 @@ export default function Dashboard() {
 
       {/* Footer */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '20px 0 8px', fontSize: 10, color: 'var(--text-3)' }}>
-        <span>Prezzi {cacheAge != null ? `aggiornati ${Math.round(cacheAge / 60)} min fa` : 'in caricamento'}</span>
+        <span>Prices {cacheAge != null ? `updated ${Math.round(cacheAge / 60)} min ago` : 'loading'}</span>
         <button onClick={forceRefresh} disabled={refreshing} className="btn btn--ghost btn--sm" style={{ fontSize: 10, padding: '3px 10px' }}>
-          {refreshing ? 'Aggiornamento...' : <><Icon name="refresh" size={12} /> Aggiorna ora</>}
+          {refreshing ? 'Refreshing...' : <><Icon name="refresh" size={12} /> Refresh now</>}
         </button>
       </div>
     </PageLayout>
@@ -541,7 +624,7 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included,
             <div style={{ fontSize: 11, color: pc, fontWeight: 500, fontFamily: 'var(--font-num)' }}>{formatPnL(d.pnl)}</div>
             {ch24 !== 0 && <div style={{ fontSize: 9, color: ch24Color, fontFamily: 'var(--font-num)' }}>{ch24 >= 0 ? '+' : ''}{ch24}% 24h</div>}
           </div>
-          <label className="toggle" title={included ? 'Escluso' : 'Incluso'}>
+          <label className="toggle" title={included ? 'Excluded' : 'Included'}>
             <input type="checkbox" checked={included} onChange={() => onToggle(asset.symbol, included)} />
             <span className="toggle__slider" />
           </label>
@@ -562,11 +645,11 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included,
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: 6, columnGap: 12, fontSize: 11 }}>
         <div>
-          <div style={{ color: 'var(--text-3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 1 }}>Quantità</div>
+          <div style={{ color: 'var(--text-3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 1 }}>Quantity</div>
           <div style={{ color: 'var(--text-1)', fontFamily: 'var(--font-num)' }}>{formatQty(d.qty, asset.decimals)}</div>
         </div>
         <div>
-          <div style={{ color: 'var(--text-3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 1 }}>Investito</div>
+          <div style={{ color: 'var(--text-3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 1 }}>Invested</div>
           <div style={{ color: 'var(--text-1)', fontFamily: 'var(--font-num)' }}>{formatEUR(d.invested)}</div>
         </div>
         <div>
@@ -576,7 +659,7 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included,
           </div>
         </div>
         <div>
-          <div style={{ color: 'var(--text-3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 1 }}>Valore</div>
+          <div style={{ color: 'var(--text-3)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 1 }}>Value</div>
           <div style={{ color: 'var(--text-1)', fontFamily: 'var(--font-num)' }}>{formatEUR(d.value)}</div>
         </div>
       </div>

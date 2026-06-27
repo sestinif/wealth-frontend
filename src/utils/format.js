@@ -1,5 +1,5 @@
 export const formatEUR = (value, decimals = 2) =>
-  `${Number(value).toLocaleString('it-IT', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })} €`;
+  `${Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })} €`;
 
 export const formatUSD = (value, decimals = 2) =>
   `$ ${Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })}`;
@@ -10,7 +10,7 @@ export const formatQty = (value, decimals = 2) => {
   let d = decimals;
   if (Math.abs(n) > 0 && Math.abs(n) < 1) d = Math.max(decimals, 4);
   if (Math.abs(n) > 1000) d = Math.min(decimals, 2);
-  return n.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: 'always' });
+  return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: 'always' });
 };
 
 export const formatPrice = (value, currency = 'EUR') => {
@@ -20,8 +20,7 @@ export const formatPrice = (value, currency = 'EUR') => {
   if (Math.abs(n) > 0 && Math.abs(n) < 0.01) decimals = 8;
   else if (Math.abs(n) < 1) decimals = 4;
   else if (Math.abs(n) < 100) decimals = 2;
-  const locale = currency === 'USD' ? 'en-US' : 'it-IT';
-  const num = n.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' });
+  const num = n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' });
   return currency === 'USD' ? `$ ${num}` : `${num} €`;
 };
 
