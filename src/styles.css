@@ -522,8 +522,10 @@ body::after {
 @media (max-width: 760px) { .diary-top { grid-template-columns: 1fr; } }
 /* Equal-height cards with the primary action pinned to the bottom → both
    CTAs are identical in size AND aligned on the same baseline. */
-/* cancel the global `.panel + .panel` top margin that pushed the 2nd card down */
+/* cancel the global `.panel + .panel` top margin that pushed the 2nd card down.
+   Use a 3-class selector so it beats `.panel + .panel` regardless of source order. */
 .diary-top > .panel { display: flex; flex-direction: column; margin-top: 0; }
+.diary-top > .panel + .panel { margin-top: 0; }
 .diary-form { flex: 1; display: flex; flex-direction: column; }
 .diary-form__foot { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .diary-card__head {
