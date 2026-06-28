@@ -561,6 +561,24 @@ body::after {
 .dash-trend {
   margin-top: 16px; margin-bottom: 24px;
 }
+.chart-periods {
+  display: flex; align-items: center; gap: 4px; margin-bottom: 8px;
+}
+.chart-periods__btn {
+  font-family: var(--font-num); font-size: 11px; letter-spacing: 0.02em;
+  color: var(--text-3); background: transparent; border: 0.5px solid transparent;
+  padding: 4px 11px; border-radius: 999px; cursor: pointer;
+  transition: all 140ms var(--ease);
+}
+.chart-periods__btn:hover { color: var(--text-2); }
+.chart-periods__btn.active {
+  color: var(--text-1); background: var(--bg-elev);
+  box-shadow: inset 0 0 0 0.5px var(--border);
+}
+.chart-periods__note {
+  margin-left: auto; font-size: 10px; color: var(--text-3);
+  font-family: var(--font-num); letter-spacing: 0.02em;
+}
 
 /* --- 3. KPI ROW (3 flat surfaces) --- */
 .dash-kpis {

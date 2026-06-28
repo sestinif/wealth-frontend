@@ -170,6 +170,23 @@ export const api = {
     return handleResponse(response);
   },
 
+  // Daily net-worth snapshots (powers the 1W/1M/1Y/All chart).
+  postNetworthSnapshot: async (payload) => {
+    const response = await fetch(`${BASE_URL}/networth/snapshot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(payload)
+    });
+    return handleResponse(response);
+  },
+
+  getNetworthHistory: async () => {
+    const response = await fetch(`${BASE_URL}/networth/history`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   // --- Dry powder (uninvested broker cash) ---
 
   getCashPositions: async () => {

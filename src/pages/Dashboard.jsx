@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import DataTable from '../components/DataTable';
@@ -17,6 +17,9 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [networth, setNetworth] = useState(null);
   const [cashPositions, setCashPositions] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [chartPeriod, setChartPeriod] = useState('1M');
+  const snapshotDone = useRef(false);
   const [user, setUser] = useState(null);
   const [assets, setAssets] = useState([]);
   const [marketInfo, setMarketInfo] = useState({});
@@ -41,6 +44,17 @@ export default function Dashboard() {
       setData(d); setUser(u); setAssets(a); setNetworth(nw); setCashPositions(cp || []);
       setCacheAge(s?.cache_age_seconds);
       api.getMarketInfo().then(setMarketInfo).catch(() => {});
+      api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
+
+      // Record today's net-worth snapshot once per load (backend upserts per day).
+      if (!snapshotDone.current) {
+        snapshotDone.current = true;
+        try {
+          const fig = computeNetFigures(d, a, nw, cp);
+          await api.postNetworthSnapshot(fig);
+          api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
+        } catch (e) { /* best-effort */ }
+      }
     } catch (err) {}
   };
 
@@ -283,28 +297,46 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 2. TREND AREA CHART — clean sparkline hero */}
-            {chartData.length > 1 && (
-              <div className="dash-trend animate-in-2">
-                <ResponsiveContainer width="100%" height={150}>
-                  <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.10} />
-                        <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                      cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                      formatter={(v) => [formatEUR(v), 'Value']} labelFormatter={(l) => formatDate(l)} />
-                    <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
-                      fill="url(#hg)" dot={false} activeDot={{ r: 4, fill: '#8B7BFF', stroke: '#15151A', strokeWidth: 2 }}
-                      animationDuration={900} animationEasing="ease-out" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            {/* 2. NET WORTH CHART — period selectable (1W / 1M / 1Y / All) */}
+            {(() => {
+              const periods = [['1W', 7], ['1M', 30], ['1Y', 365], ['All', 100000]];
+              const days = (periods.find(p => p[0] === chartPeriod) || ['1M', 30])[1];
+              const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+              const cutoffStr = cutoff.toISOString().split('T')[0];
+              const hist = (history || []).filter(h => h.date >= cutoffStr).map(h => ({ date: h.date, value: h.total || 0 }));
+              const usingHistory = hist.length >= 2;
+              const series = usingHistory ? hist : chartData;
+              if (series.length < 2) return null;
+              return (
+                <div className="dash-trend animate-in-2">
+                  <div className="chart-periods">
+                    {periods.map(([k]) => (
+                      <button key={k} type="button"
+                        className={`chart-periods__btn ${chartPeriod === k ? 'active' : ''}`}
+                        onClick={() => setChartPeriod(k)}>{k}</button>
+                    ))}
+                    {!usingHistory && <span className="chart-periods__note">portfolio · building history</span>}
+                  </div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <AreaChart data={series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.10} />
+                          <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
+                      <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
+                        cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                        formatter={(v) => [money(v), usingHistory ? 'Net worth' : 'Portfolio']} labelFormatter={(l) => formatDate(l)} />
+                      <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
+                        fill="url(#hg)" dot={false} activeDot={{ r: 4, fill: '#8B7BFF', stroke: '#15151A', strokeWidth: 2 }}
+                        animationDuration={900} animationEasing="ease-out" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            })()}
 
             {/* 3. KPI ROW — guadagno / rendimento / asset */}
             {(() => {
@@ -690,6 +722,22 @@ function renderAssetCard(asset, summary, prices, marketInfo, onToggle, included,
       </div>
     </div>
   );
+}
+
+// EUR-normalized net-worth figures for the daily snapshot (same formula as the hero).
+function computeNetFigures(d, assets, networth, cashPositions) {
+  const summary = d.summary, prices = d.prices || {};
+  let rate = null;
+  for (const sym of Object.keys(prices)) {
+    const p = prices[sym];
+    if (p?.eur > 0 && p?.usd > 0) { rate = p.usd / p.eur; break; }
+  }
+  const toEur = (bal, cur) => ((cur || 'EUR').toUpperCase() === 'USD' && rate) ? bal / rate : bal;
+  const mainAssets = (assets || []).filter(x => summary.by_asset[x.symbol]?.include_in_totals !== false && summary.by_asset[x.symbol]);
+  const portfolio = mainAssets.reduce((s, x) => s + (summary.by_asset[x.symbol]?.value || 0), 0);
+  const cash = (networth?.external_accounts || []).reduce((s, acc) => s + toEur(Number(acc.balance) || 0, acc.currency), 0);
+  const dry = (cashPositions || []).reduce((s, p) => s + toEur(Number(p.amount_eur) || 0, p.currency), 0);
+  return { total: portfolio + cash + dry, portfolio, cash, dry };
 }
 
 function buildChartData(purchases, prices, assets, mode) {
