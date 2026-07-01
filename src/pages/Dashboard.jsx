@@ -457,6 +457,12 @@ export default function Dashboard() {
                     {priceUsdForStock && <div className="asset-strip__price-sub">≈ {priceUsdForStock}</div>}
                   </div>
                   <div className="asset-strip__cell asset-strip__cell--right">
+                    <div className="asset-strip__primary">
+                      {isCrypto ? formatPrice(d.avg_price_usd || d.avg_price || 0, 'USD') : formatPrice(d.avg_price || 0, 'EUR')}
+                    </div>
+                    <div className="asset-strip__secondary">Avg · DCA</div>
+                  </div>
+                  <div className="asset-strip__cell asset-strip__cell--right">
                     <div className="asset-strip__primary" style={{ color: ch24Color }}>
                       {ch24 !== 0 ? (ch24 >= 0 ? '+' : '') + ch24.toFixed(2) + '%' : '—'}
                     </div>
