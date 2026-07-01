@@ -15,6 +15,7 @@ export default function Sidebar({ username, open = false, onClose }) {
     { path: '/diary', label: 'DIARY', icon: <DiaryIcon /> },
     { path: '/reports', label: 'REPORTS', icon: <ReportIcon /> },
     { path: '/charts', label: 'CHARTS', icon: <ChartIcon /> },
+    { path: '/dca', label: 'DCA', icon: <DcaIcon /> },
     { path: '/settings', label: 'SETTINGS', icon: <SettingsIcon /> }
   ];
 
@@ -79,6 +80,17 @@ function ChartIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3" />
       <polyline points="12 12 20 7.5" /><polyline points="12 12 12 21" /><polyline points="12 12 4 7.5" />
+    </svg>
+  );
+}
+
+function DcaIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <line x1="8" y1="7" x2="16" y2="7" />
+      <line x1="8" y1="11" x2="10" y2="11" /><line x1="14" y1="11" x2="16" y2="11" />
+      <line x1="8" y1="15" x2="10" y2="15" /><line x1="14" y1="15" x2="16" y2="15" />
     </svg>
   );
 }
