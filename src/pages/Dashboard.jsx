@@ -261,9 +261,6 @@ export default function Dashboard() {
             {/* 1. NET WORTH COMMAND CENTER — total + allocation donut + split by market */}
             <div className="networth-card animate-in-1">
               <div className="networth-card__top">
-                <div className="networth-card__date">
-                  {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
-                </div>
                 <div className="networth-card__lead">
                   <div className="dash-hero__label"><span className="live-dot" />Net Worth</div>
                   <AnimatedNumber value={totalEur * rate} prefix={symPre} suffix={symSuf} smallDecimals className="networth-card__value" />

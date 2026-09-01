@@ -475,19 +475,14 @@ body::after {
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
   position: relative;
 }
-/* Instrument date stamp — quiet metadata pinned to the hero's top-right */
-.networth-card__date {
-  position: absolute; top: 0; right: 0;
-  font-family: var(--font-num); font-variant-numeric: tabular-nums;
-  font-size: 10px; letter-spacing: 1.6px; color: var(--text-3);
-}
-@media (max-width: 520px) { .networth-card__date { position: static; order: -1; } }
 /* Small dimmed decimals inside a big animated number */
 .num__dec { font-size: 0.5em; color: var(--text-3); font-weight: 500; letter-spacing: 0; }
 .networth-card__lead { min-width: 0; }
 .networth-donut { width: 116px; height: 116px; flex-shrink: 0; }
+/* Mobile: the donut goes — the split bar already tells the allocation
+   story, and a stacked donut above the number just crowds the hero. */
 @media (max-width: 520px) {
-  .networth-card__top { flex-direction: column-reverse; align-items: flex-start; gap: 14px; }
+  .networth-donut { display: none; }
 }
 
 /* Proportion bar — hairline instrument track, not a pill */
