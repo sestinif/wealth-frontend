@@ -11,16 +11,6 @@ export default function Sidebar({ username, open = false, onClose }) {
     api.getAssets().then(setAssets).catch(() => {});
   }, []);
 
-  // Last net worth computed by the dashboard (EUR) — cached so the sidebar
-  // never issues its own bank/price calls.
-  const netWorth = (() => {
-    try {
-      const v = parseFloat(localStorage.getItem('nw_total_eur'));
-      if (!v || Number.isNaN(v)) return null;
-      return v >= 1000 ? `€${(v / 1000).toFixed(1)}k` : `€${Math.round(v)}`;
-    } catch { return null; }
-  })();
-
   const sections = [
     {
       label: 'OVERVIEW',
@@ -54,10 +44,7 @@ export default function Sidebar({ username, open = false, onClose }) {
   return (
     <div className={`sidebar ${open ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
-        <div className="sidebar__brand-row">
-          <div className="sidebar__logo">W</div>
-          {netWorth && <div className="sidebar__nw">{netWorth}</div>}
-        </div>
+        <div className="sidebar__logo">W</div>
         <div className="sidebar__title">WEALTH</div>
         <div className="sidebar__subtitle">INVESTMENT TRACKER</div>
         <div className="sidebar__status">

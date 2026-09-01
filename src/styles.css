@@ -213,12 +213,6 @@ body::after {
 .nav-item.active .nav-item__icon { opacity: 1; color: var(--accent-soft); }
 
 /* Sidebar sections + footer nav */
-.sidebar__brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.sidebar__brand-row .sidebar__logo { margin-bottom: 0; }
-.sidebar__nw {
-  font-family: var(--font-num); font-variant-numeric: tabular-nums;
-  font-size: 11px; color: var(--green); letter-spacing: 0.2px;
-}
 .sidebar__section { margin-bottom: 14px; }
 .sidebar__section-label {
   font-size: 9px; letter-spacing: 1.6px; color: var(--text-3);
