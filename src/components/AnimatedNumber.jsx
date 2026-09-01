@@ -11,7 +11,7 @@ const renderSuffix = (s) => {
   return affix ? <span className="num__affix num__affix--suf">{affix}</span> : null;
 };
 
-export default function AnimatedNumber({ value, prefix = '', suffix = '', duration = 800, decimals = 2, className = '', style = {} }) {
+export default function AnimatedNumber({ value, prefix = '', suffix = '', duration = 800, decimals = 2, className = '', style = {}, smallDecimals = false }) {
   const [display, setDisplay] = useState(0);
   const [flash, setFlash] = useState('');
   const prevValue = useRef(0);
@@ -58,12 +58,16 @@ export default function AnimatedNumber({ value, prefix = '', suffix = '', durati
     useGrouping: 'always',
   });
 
+  // Swiss-instrument treatment: integer digits stay the hero, the fraction
+  // shrinks and dims (".44") so the big number reads calm and precise at once.
+  const [intPart, decPart] = smallDecimals && decimals > 0 ? formatted.split('.') : [formatted, null];
+
   return (
     <span
       className={`${className} ${flash}`.trim()}
       style={{ fontVariantNumeric: 'tabular-nums', ...style }}
     >
-      {renderPrefix(prefix)}{formatted}{renderSuffix(suffix)}
+      {renderPrefix(prefix)}{intPart}{decPart != null && <span className="num__dec">.{decPart}</span>}{renderSuffix(suffix)}
     </span>
   );
 }

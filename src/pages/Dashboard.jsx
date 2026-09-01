@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PageLayout from '../components/PageLayout';
-import DataTable from '../components/DataTable';
 import AssetBadge from '../components/AssetBadge';
 import AnimatedNumber from '../components/AnimatedNumber';
 import Icon from '../components/Icon';
@@ -10,7 +9,7 @@ import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName } from '../utils/user';
-import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, CHART_GRID, allocationSlices, yEur } from '../utils/format';
+import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, allocationSlices } from '../utils/format';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -41,7 +40,6 @@ export default function Dashboard() {
   // Progressive disclosure
   const [showDetails, setShowDetails] = useState(false);
   const [showMarket, setShowMarket] = useState(false);
-  const [showCharts, setShowCharts] = useState(false);
   const [displayCurrency, setDisplayCurrency] = useState('EUR');
 
   const refresh = async () => {
@@ -121,8 +119,6 @@ export default function Dashboard() {
   if (!data || !user) return <div className="loading-screen"><div className="loading-error">Failed to load</div></div>;
 
   const { summary, prices, purchases } = data;
-  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
-  const gd = (s) => assets.find(a => a.symbol === s)?.decimals || 2;
 
   const mainAssets = assets.filter(a => summary.by_asset[a.symbol]?.include_in_totals !== false && summary.by_asset[a.symbol]);
   const specAssets = assets.filter(a => summary.by_asset[a.symbol]?.include_in_totals === false && summary.by_asset[a.symbol]);
@@ -159,14 +155,6 @@ export default function Dashboard() {
   const pfChange = pfFirst > 0 ? ((pfLast - pfFirst) / pfFirst * 100) : 0;
   const pfUp = pfChange >= 0;
 
-  const recentColumns = [
-    { key: 'date', label: 'Date', sortable: true, render: v => formatDate(v) },
-    { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={gc(v)} /> },
-    { key: 'amount_eur', label: 'Amount', align: 'right', sortable: true, render: v => formatEUR(v) },
-    { key: 'quantity', label: 'Quantity', align: 'right', muted: true, render: (v, row) => formatQty(v, gd(row.asset)) },
-    { key: 'price_eur', label: 'Price', align: 'right', muted: true, render: v => formatPrice(v, 'EUR') },
-  ];
-  const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
 
   return (
     <PageLayout title="Dashboard" username={user.username}>
@@ -273,9 +261,12 @@ export default function Dashboard() {
             {/* 1. NET WORTH COMMAND CENTER — total + allocation donut + split by market */}
             <div className="networth-card animate-in-1">
               <div className="networth-card__top">
+                <div className="networth-card__date">
+                  {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+                </div>
                 <div className="networth-card__lead">
                   <div className="dash-hero__label"><span className="live-dot" />Net Worth</div>
-                  <AnimatedNumber value={totalEur * rate} prefix={symPre} suffix={symSuf} className="networth-card__value" />
+                  <AnimatedNumber value={totalEur * rate} prefix={symPre} suffix={symSuf} smallDecimals className="networth-card__value" />
                   <div className="dash-hero__meta">
                     <span className={`dash-pill ${pfUp ? 'dash-pill--up' : 'dash-pill--down'}`}>
                       {pfUp ? '+' : ''}{pfChange.toFixed(1)}%
@@ -295,9 +286,9 @@ export default function Dashboard() {
                   const nMarkets = breakdown.filter(b => b.value > 0).length;
                   return (
                     <svg className="networth-donut" viewBox="0 0 120 120" role="img" aria-label="Allocation by market">
-                      <circle cx="60" cy="60" r="46" fill="none" stroke="var(--bg-elev)" strokeWidth="13" />
+                      <circle cx="60" cy="60" r="46" fill="none" stroke="var(--bg-elev)" strokeWidth="9" />
                       {segs.map((s, i) => (
-                        <circle key={i} cx="60" cy="60" r="46" fill="none" stroke={s.color} strokeWidth="13"
+                        <circle key={i} cx="60" cy="60" r="46" fill="none" stroke={s.color} strokeWidth="9"
                           strokeDasharray={`${s.len} ${C - s.len}`} strokeDashoffset={-s.off}
                           transform="rotate(-90 60 60)" />
                       ))}
@@ -438,19 +429,13 @@ export default function Dashboard() {
                   </div>
                   <ResponsiveContainer width="100%" height={160}>
                     <AreaChart data={series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.10} />
-                          <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
                       <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                        cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                        cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }}
                         formatter={(v) => [money(v), usingHistory ? 'Net worth' : 'Portfolio']} labelFormatter={(l) => formatDate(l)} />
-                      <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
-                        fill="url(#hg)" dot={false} activeDot={{ r: 4, fill: '#8B7BFF', stroke: '#15151A', strokeWidth: 2 }}
-                        animationDuration={900} animationEasing="ease-out" />
+                      <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={1.5} strokeLinecap="round"
+                        fill="#8B7BFF" fillOpacity={0.06} dot={false} activeDot={{ r: 3.5, fill: '#8B7BFF', stroke: '#131316', strokeWidth: 1.5 }}
+                        animationDuration={700} animationEasing="ease-out" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -705,68 +690,6 @@ export default function Dashboard() {
               <div style={{ padding: 20, fontSize: 12, color: 'var(--text-3)' }}><span className="live-dot" /> Loading data...</div>
             )}
           </div>
-        )}
-      </div>
-
-      {/* === CHARTS (collapsed by default) === */}
-      <div style={{ marginBottom: 24 }}>
-        <div className="section-header">
-          <div className="section-header__title">Charts & Analytics</div>
-          <button className={`collapse-btn ${showCharts ? 'expanded' : ''}`} onClick={() => setShowCharts(!showCharts)}>
-            {showCharts ? 'Hide' : 'Show'}
-            <Icon name="chevron" size={13} className="collapse-btn__arrow" />
-          </button>
-        </div>
-        {showCharts && (
-          <>
-            <div className="card section-gap">
-              <div className="card__head">
-                <h3 className="card__title">Main Portfolio — 30 Days</h3>
-                <span className="card__subtitle">Total Value in EUR</span>
-              </div>
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={chartData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.22} />
-                        <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid {...CHART_GRID} />
-                    <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#7A7880', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={40} tickFormatter={(d) => formatDate(d).slice(0, 5)} />
-                    <YAxis
-                      stroke="transparent"
-                      tick={{ fill: '#7A7880', fontSize: 10 }}
-                      axisLine={false} tickLine={false} width={48}
-                      domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                      tickFormatter={yEur}
-                    />
-                    <Tooltip
-                      contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                      cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                      formatter={(v) => [formatEUR(v), 'Portfolio value']}
-                      labelFormatter={(l) => formatDate(l)}
-                    />
-                    <Area type="monotone" dataKey="value" stroke="#8B7BFF" strokeWidth={2} strokeLinecap="round"
-                      fill="url(#dg)" animationDuration={900} animationEasing="ease-out"
-                      dot={(p) => p.index === chartData.length - 1
-                        ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill="#8B7BFF" opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill="#8B7BFF" stroke="#15151A" strokeWidth={2} /></g>
-                        : <g key={p.index} />}
-                      activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : <EmptyState compact icon="chart" title="No Data" description="Add purchases to see your portfolio trend." />}
-            </div>
-
-            <div className="card overflow-auto">
-              <div className="card__head">
-                <h3 className="card__title">Latest Purchases</h3>
-                <span className="card__subtitle">Last {recentPurchases.length} movements</span>
-              </div>
-              <DataTable columns={recentColumns} data={recentPurchases} defaultSort={{ key: 'date', direction: 'desc' }} />
-            </div>
-          </>
         )}
       </div>
 

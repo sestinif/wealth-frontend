@@ -8,26 +8,35 @@ import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatUSD, formatPct, allocationSlices, rankedColors, yEur } from '../utils/format';
 
+// Swiss-instrument chart chrome: flat surfaces, hairline solid grid,
+// tabular numerals — no gradients, no glow, no blur.
 const TT = {
-  background: '#1C1C22',
-  backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(255,255,255,0.10)',
-  borderRadius: 10, padding: '8px 12px',
-  fontSize: 12, fontFamily: "'Inter', sans-serif",
+  background: '#17171B',
+  border: '0.5px solid rgba(255,255,255,0.12)',
+  borderRadius: 8, padding: '7px 11px',
+  fontSize: 12, fontFamily: "'Space Grotesk', 'Inter', sans-serif",
   fontVariantNumeric: 'tabular-nums',
-  boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+  boxShadow: 'none',
 };
 const TT_ITEM = { color: '#C9C7C3', fontSize: 12 };
-const AXIS = { fill: '#7A7880', fontSize: 10, fontFamily: "'Inter', sans-serif" };
-const GRID = { stroke: 'rgba(255,255,255,0.06)', strokeDasharray: '2 4', vertical: false };
-const ANIM = { animationDuration: 900, animationEasing: 'ease-out' };
+const AXIS = { fill: '#6E6C74', fontSize: 10, fontFamily: "'Space Grotesk', 'Inter', sans-serif" };
+const GRID = { stroke: 'rgba(255,255,255,0.05)', vertical: false };
+const ANIM = { animationDuration: 700, animationEasing: 'ease-out' };
 const LEGEND = { fontSize: 11, paddingTop: 8, fontFamily: "'Inter', sans-serif" };
 
-// Glowing dot on the most recent point — reads as "live", very premium.
+// Solid endpoint marker on the most recent point — a fixed instrument tick, no halo.
 const lastDot = (len, color) => (p) =>
   p.index === len - 1 && p.cx != null
-    ? <g key="last"><circle cx={p.cx} cy={p.cy} r={7} fill={color} opacity={0.2} /><circle cx={p.cx} cy={p.cy} r={3.5} fill={color} stroke="#15151A" strokeWidth={2} /></g>
+    ? <circle key="last" cx={p.cx} cy={p.cy} r={3} fill={color} stroke="#131316" strokeWidth={1.5} />
     : <g key={p.index} />;
+
+// Prices below €1 (dex tokens) die under Math.round — keep sane precision instead.
+const px = (v) => {
+  const n = Number(v) || 0;
+  if (n >= 100) return Math.round(n);
+  if (n >= 1) return Number(n.toFixed(2));
+  return Number(n.toFixed(6));
+};
 
 export default function Charts() {
   const [user, setUser] = useState(null);
@@ -36,12 +45,16 @@ export default function Charts() {
   const [loading, setLoading] = useState(true);
   const [dcaAsset, setDcaAsset] = useState('');
   const [timeRange, setTimeRange] = useState('30d');
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [u, d, a] = await Promise.all([api.getMe(), api.getDashboard(), api.getAssets()]);
-        setUser(u); setDashboard(d); setAssets(a);
+        const [u, d, a, h] = await Promise.all([
+          api.getMe(), api.getDashboard(), api.getAssets(),
+          api.getNetworthHistory().catch(() => []),
+        ]);
+        setUser(u); setDashboard(d); setAssets(a); setHistory(h || []);
         if (a.length > 0 && !dcaAsset) setDcaAsset(a[0].symbol);
       } catch (err) {}
       finally { setLoading(false); }
@@ -53,7 +66,20 @@ export default function Charts() {
   if (!user || !dashboard) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
   const days = timeRange === '7d' ? 7 : timeRange === '14d' ? 14 : 30;
-  const portfolioData = buildPortfolio(dashboard, days);
+
+  // Prefer REAL recorded history (daily snapshots) over reconstruction —
+  // the reconstruction prices past days at TODAY's prices, so it only moves
+  // on purchase dates. Fall back to it (clearly labeled) until history accrues.
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const histSeries = (history || [])
+    .filter(h => h.date >= cutoffStr && (h.portfolio || 0) > 0)
+    .map(h => {
+      const dt = new Date(h.date);
+      return { date: h.date, label: `${dt.getDate()}/${dt.getMonth() + 1}`, value: Math.round(h.portfolio) };
+    });
+  const usingHistory = histSeries.length >= 2;
+  const portfolioData = usingHistory ? histSeries : buildPortfolio(dashboard, days);
   const allocData = buildAllocation(dashboard, assets, days);
   const monthlyData = buildMonthly(dashboard);
   const dcaData = buildDCA(dashboard, dcaAsset);
@@ -87,6 +113,7 @@ export default function Charts() {
                 {portfolioChange >= 0 ? '+' : ''}{portfolioChange.toFixed(2)}% ({days}d)
               </span>
             </div>
+            <span className="panel__sub">{usingHistory ? 'Recorded daily' : 'Reconstructed at today’s prices · building history'}</span>
           </div>
           <div className="filter-bar">
             {['7d', '14d', '30d'].map(r => (
@@ -97,23 +124,17 @@ export default function Charts() {
         {portfolioData.length > 0 ? (
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={portfolioData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.18} />
-                  <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
-                </linearGradient>
-              </defs>
               <CartesianGrid {...GRID} />
               <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
               <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
                 tickFormatter={yEur} />
-              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Value']} labelStyle={{ color: '#7A7880', fontSize: 10 }}
-                cursor={{ stroke: 'rgba(139,123,255,0.4)', strokeWidth: 1, strokeDasharray: '3 3' }} />
+              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Value']} labelStyle={{ color: '#6E6C74', fontSize: 10 }}
+                cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }} />
               <Area type="monotone" dataKey="value" {...ANIM}
                 stroke="#8B7BFF"
-                strokeWidth={2} strokeLinecap="round" fill="url(#pg)"
+                strokeWidth={1.5} strokeLinecap="round" fill="#8B7BFF" fillOpacity={0.06}
                 dot={lastDot(portfolioData.length, '#8B7BFF')}
-                activeDot={{ r: 4, fill: '#fff', stroke: '#15151A', strokeWidth: 2 }} />
+                activeDot={{ r: 3.5, fill: '#8B7BFF', stroke: '#131316', strokeWidth: 1.5 }} />
             </AreaChart>
           </ResponsiveContainer>
         ) : <EmptyState compact icon="chart" title="No data" description="Record purchases to build your portfolio history." />}
@@ -123,8 +144,8 @@ export default function Charts() {
       <div className="grid-2col section-gap animate-in-2">
         <div className="panel">
           <div className="panel__head">
-            <h3 className="panel__title">Allocation Over Time</h3>
-            <span className="panel__sub">Values in EUR · stacked</span>
+            <h3 className="panel__title">Holdings Growth</h3>
+            <span className="panel__sub">Quantity held × today’s price · stacked EUR</span>
           </div>
           {allocData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -136,7 +157,7 @@ export default function Charts() {
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
                 {assets.map(a => (
                   <Area key={a.symbol} type="monotone" dataKey={a.symbol} {...ANIM}
-                    stackId="1" stroke={allocColor[a.symbol]} fill={allocColor[a.symbol]} fillOpacity={0.55} strokeWidth={1.2} />
+                    stackId="1" stroke={allocColor[a.symbol]} fill={allocColor[a.symbol]} fillOpacity={0.4} strokeWidth={1} />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
@@ -153,7 +174,7 @@ export default function Charts() {
               <div className="donut-wrap">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={66} outerRadius={108} paddingAngle={5} cornerRadius={6} dataKey="value"
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={106} paddingAngle={2} cornerRadius={2} dataKey="value"
                       stroke="none" strokeWidth={0} {...ANIM}>
                       {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
@@ -161,7 +182,7 @@ export default function Charts() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="donut-center">
-                  <div className="donut-center__val">{formatEUR(dashboard.summary.total_value)}</div>
+                  <div className="donut-center__val">{formatEUR(pieData.reduce((s, e) => s + (e.value || 0), 0))}</div>
                   <div className="donut-center__lbl">Total</div>
                 </div>
               </div>
@@ -196,8 +217,8 @@ export default function Charts() {
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#7A7880', fontSize: 10 }}
                   cursor={{ fill: 'rgba(139,123,255,0.06)' }} />
                 <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={8} />
-                <Bar dataKey="invested" name="Invested" fill="#8B7BFF" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
-                <Bar dataKey="value" name="Current value" fill="#34D399" radius={[5, 5, 0, 0]} barSize={16} {...ANIM} />
+                <Bar dataKey="invested" name="Invested" fill="#8B7BFF" radius={[2, 2, 0, 0]} barSize={14} {...ANIM} />
+                <Bar dataKey="value" name="Current value" fill="#34D399" radius={[2, 2, 0, 0]} barSize={14} {...ANIM} />
               </BarChart>
             </ResponsiveContainer>
           ) : <EmptyState compact icon="chart" title="No investments" description="This year's monthly investments will appear here." />}
@@ -221,21 +242,16 @@ export default function Charts() {
           {dcaData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={dcaData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="dcaFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8B7BFF" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="#8B7BFF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid {...GRID} />
                 <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
                 <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={52}
-                  tickFormatter={yEur} domain={[(min) => min * 0.985, (max) => max * 1.015]} />
+                  tickFormatter={(v) => v >= 1 ? yEur(v) : '€' + Number(v).toFixed(4)}
+                  domain={[(min) => min * 0.985, (max) => max * 1.015]} />
                 <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Purchase #${n}`} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
                 <Legend wrapperStyle={LEGEND} iconType="plainline" iconSize={16} />
-                <Line type="monotone" dataKey="market" name="Current price" stroke="#7A7880" strokeWidth={1.5} dot={false} strokeDasharray="5 4" {...ANIM} />
-                <Line type="monotone" dataKey="dca" name="Your DCA" stroke="#8B7BFF" strokeWidth={2.5} strokeLinecap="round" {...ANIM}
-                  dot={lastDot(dcaData.length, '#8B7BFF')} activeDot={{ r: 4, fill: '#B3A8FF', stroke: '#15151A', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="market" name="Current price" stroke="#6E6C74" strokeWidth={1} dot={false} strokeDasharray="4 4" {...ANIM} />
+                <Line type="monotone" dataKey="dca" name="Your DCA" stroke="#8B7BFF" strokeWidth={1.5} strokeLinecap="round" {...ANIM}
+                  dot={lastDot(dcaData.length, '#8B7BFF')} activeDot={{ r: 3.5, fill: '#8B7BFF', stroke: '#131316', strokeWidth: 1.5 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : <EmptyState compact icon="inbox" title={`No ${dcaAsset} purchases`} description="Select an asset with recorded purchases." />}
@@ -295,7 +311,7 @@ function buildDCA(d, asset) {
   let ti = 0, tq = 0;
   return ps.map((p, i) => {
     ti += p.amount_eur; tq += p.quantity;
-    return { n: i + 1, dca: Math.round(ti / tq), market: Math.round(pi.eur || 0) };
+    return { n: i + 1, dca: px(ti / tq), market: px(pi.eur || 0) };
   });
 }
 

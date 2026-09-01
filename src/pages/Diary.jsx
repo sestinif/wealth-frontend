@@ -82,6 +82,21 @@ export default function Diary() {
   const filteredPurchases = filterAsset === 'ALL' ? purchases : purchases.filter(p => p.asset === filterAsset);
   const filterButtons = ['ALL', ...assets.map(a => a.symbol)];
 
+  // Hard-grid registro: rows grouped under month headers, newest month first.
+  const monthLabel = (ds) => new Date(ds).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }).toUpperCase();
+  const monthKey = (ds) => String(ds || '').slice(0, 7);
+  const groupByMonth = (rows, dateOf) => {
+    const groups = new Map();
+    [...rows].sort((a, b) => new Date(dateOf(b)) - new Date(dateOf(a))).forEach(r => {
+      const k = monthKey(dateOf(r));
+      if (!groups.has(k)) groups.set(k, { key: k, label: monthLabel(dateOf(r)), rows: [] });
+      groups.get(k).rows.push(r);
+    });
+    return [...groups.values()];
+  };
+  const purchaseGroups = groupByMonth(filteredPurchases, p => p.date);
+  const bankGroups = groupByMonth(bankEntries, en => en.date);
+
   return (
     <PageLayout title="Diary" username={user.username} size="md">
 
@@ -112,28 +127,36 @@ export default function Diary() {
           {filteredPurchases.length === 0 ? (
             <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No transactions yet</div>
           ) : (
-            [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date)).map(p => (
-              <div key={p.id} className="tx-row">
-                <AssetBadge asset={p.asset} color={getColor(p.asset)} />
-                <span className="tx-row__date">
-                  {formatDate(p.date)}
-                  {(() => { const l = cashPositions.find(x => x.id === p.funded_from)?.label; return l ? ` · from ${l}` : ''; })()}
-                </span>
-                <div className="tx-row__right">
-                  <div className="tx-row__amount">{formatEUR(p.amount_eur)}</div>
-                  <div className="tx-row__detail">{formatQty(p.quantity, getDecimals(p.asset))} {p.asset} @ {formatEUR(p.price_eur)}</div>
+            purchaseGroups.map(g => (
+              <React.Fragment key={g.key}>
+                <div className="month-head">
+                  <span className="month-head__label">{g.label}</span>
+                  <span className="month-head__total">{formatEUR(g.rows.reduce((s, p) => s + (p.amount_eur || 0), 0))} invested</span>
                 </div>
-                <div className="tx-row__actions">
-                  {deleteConfirm === p.id ? (
-                    <div className="delete-actions">
-                      <button className="btn btn--danger btn--sm" onClick={() => handleDelete(p.id)}>Yes</button>
-                      <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(null)}>No</button>
+                {g.rows.map(p => (
+                  <div key={p.id} className="tx-row">
+                    <AssetBadge asset={p.asset} color={getColor(p.asset)} />
+                    <span className="tx-row__date">
+                      {formatDate(p.date)}
+                      {(() => { const l = cashPositions.find(x => x.id === p.funded_from)?.label; return l ? ` · from ${l}` : ''; })()}
+                    </span>
+                    <div className="tx-row__right">
+                      <div className="tx-row__amount">{formatEUR(p.amount_eur)}</div>
+                      <div className="tx-row__detail">{formatQty(p.quantity, getDecimals(p.asset))} {p.asset} @ {formatEUR(p.price_eur)}</div>
                     </div>
-                  ) : (
-                    <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(p.id)}>Delete</button>
-                  )}
-                </div>
-              </div>
+                    <div className="tx-row__actions">
+                      {deleteConfirm === p.id ? (
+                        <div className="delete-actions">
+                          <button className="btn btn--danger btn--sm" onClick={() => handleDelete(p.id)}>Yes</button>
+                          <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(null)}>No</button>
+                        </div>
+                      ) : (
+                        <button className="btn btn--ghost btn--sm" onClick={() => setDeleteConfirm(p.id)}>Delete</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </React.Fragment>
             ))
           )}
         </div>
@@ -148,24 +171,31 @@ export default function Diary() {
           {bankEntries.length === 0 ? (
             <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No bank movements yet</div>
           ) : (
-            bankEntries.map(en => {
-              const enFmt = ((en.currency || 'USD').toUpperCase() === 'USD') ? formatUSD : formatEUR;
-              const isIn = Number(en.amount) >= 0;
-              return (
-                <div key={en.id} className="cash-entry">
-                  <span className="cash-entry__bank">{en.bank}</span>
-                  <span className="cash-entry__date">{formatDate(en.date)}</span>
-                  <span className={`cash-entry__amount ${isIn ? 'cash-entry__amount--in' : 'cash-entry__amount--out'}`}>
-                    {isIn ? '+' : '−'}{enFmt(Math.abs(Number(en.amount) || 0))}
-                  </span>
-                  {en.note ? <span className="cash-entry__note">{en.note}</span> : <span className="cash-entry__note" />}
-                  <button type="button" className="cash-entry__del"
-                    onClick={() => beDelId === en.id ? handleBankEntryDelete(en.id) : setBeDelId(en.id)}>
-                    {beDelId === en.id ? 'Sure?' : '×'}
-                  </button>
+            bankGroups.map(g => (
+              <React.Fragment key={g.key}>
+                <div className="month-head" style={{ padding: '14px 0 6px' }}>
+                  <span className="month-head__label">{g.label}</span>
                 </div>
-              );
-            })
+                {g.rows.map(en => {
+                  const enFmt = ((en.currency || 'USD').toUpperCase() === 'USD') ? formatUSD : formatEUR;
+                  const isIn = Number(en.amount) >= 0;
+                  return (
+                    <div key={en.id} className="cash-entry">
+                      <span className="cash-entry__bank">{en.bank}</span>
+                      <span className="cash-entry__date">{formatDate(en.date)}</span>
+                      <span className={`cash-entry__amount ${isIn ? 'cash-entry__amount--in' : 'cash-entry__amount--out'}`}>
+                        {isIn ? '+' : '−'}{enFmt(Math.abs(Number(en.amount) || 0))}
+                      </span>
+                      {en.note ? <span className="cash-entry__note">{en.note}</span> : <span className="cash-entry__note" />}
+                      <button type="button" className="cash-entry__del"
+                        onClick={() => beDelId === en.id ? handleBankEntryDelete(en.id) : setBeDelId(en.id)}>
+                        {beDelId === en.id ? 'Sure?' : '×'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ))
           )}
         </div>
       </div>

@@ -1,16 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { removeToken } from '../api.js';
 import Icon from './Icon';
 
+// Log Out lives in the sidebar footer now — the top edge stays quiet.
 export default function Topbar({ title, username, onMenu }) {
-  const navigate = useNavigate();
   const isMac = navigator.platform?.includes('Mac');
-
-  const handleLogout = () => {
-    removeToken();
-    navigate('/login');
-  };
 
   return (
     <div className="topbar">
@@ -23,7 +16,6 @@ export default function Topbar({ title, username, onMenu }) {
           {isMac ? '⌘' : 'Ctrl+'}K
         </span>
         <span className="topbar__username">{username}</span>
-        <button className="btn btn--danger btn--sm" onClick={handleLogout}>Log Out</button>
       </div>
     </div>
   );
