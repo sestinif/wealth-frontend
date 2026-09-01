@@ -222,6 +222,32 @@ export const api = {
     return handleResponse(response);
   },
 
+  // --- Bank ledger (manual money in/out per bank, e.g. Relay) ---
+
+  getBankEntries: async () => {
+    const response = await fetch(`${BASE_URL}/bank-entries`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  addBankEntry: async (bank, date, amount, currency = 'USD', note = '') => {
+    const response = await fetch(`${BASE_URL}/bank-entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ bank, date, amount, currency, note })
+    });
+    return handleResponse(response);
+  },
+
+  deleteBankEntry: async (id) => {
+    const response = await fetch(`${BASE_URL}/bank-entries/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   getMonthlyReport: async (year, month) => {
     const response = await fetch(`${BASE_URL}/reports/monthly?year=${year}&month=${month}`, {
       headers: authHeaders()

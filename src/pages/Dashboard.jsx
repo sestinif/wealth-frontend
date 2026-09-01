@@ -17,6 +17,17 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [networth, setNetworth] = useState(null);
   const [cashPositions, setCashPositions] = useState([]);
+  // Bank ledger (manual money in/out — Relay). Balance comes from networth.external_accounts;
+  // entries power the movements list under the expanded Cash card.
+  const [bankEntries, setBankEntries] = useState([]);
+  const [cashOpen, setCashOpen] = useState(false);
+  const [beFormOpen, setBeFormOpen] = useState(false);
+  const [beHistoryOpen, setBeHistoryOpen] = useState(false);
+  const [beAmount, setBeAmount] = useState('');
+  const [beDate, setBeDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [beNote, setBeNote] = useState('');
+  const [beSaving, setBeSaving] = useState(false);
+  const [beDelId, setBeDelId] = useState(null);
   const [history, setHistory] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('1M');
   const snapshotDone = useRef(false);
@@ -35,13 +46,15 @@ export default function Dashboard() {
 
   const refresh = async () => {
     try {
-      const [d, u, a, s, nw, cp] = await Promise.all([
+      const [d, u, a, s, nw, cp, be] = await Promise.all([
         api.getDashboard(), api.getMe(), api.getAssets(),
         api.getPricesStatus().catch(() => ({})),
         api.getNetWorth().catch(() => null),
         api.getCashPositions().catch(() => []),
+        api.getBankEntries().catch(() => []),
       ]);
       setData(d); setUser(u); setAssets(a); setNetworth(nw); setCashPositions(cp || []);
+      setBankEntries(be || []);
       setCacheAge(s?.cache_age_seconds);
       api.getMarketInfo().then(setMarketInfo).catch(() => {});
       api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
@@ -77,6 +90,29 @@ export default function Dashboard() {
       await api.updateAssetTracking(symbol, !currentValue);
       await refresh();
       toast(`${symbol} ${!currentValue ? 'included in totals' : 'excluded from totals'}`, 'success');
+    } catch (err) { toast('Error: ' + err.message, 'error'); }
+  };
+
+  // Bank ledger handlers — entries are always for Relay (USD), positive = in, negative = out.
+  const handleBankEntrySubmit = async (e) => {
+    e.preventDefault();
+    const amount = parseFloat(String(beAmount).replace(',', '.'));
+    if (!amount || Number.isNaN(amount)) { toast('Enter an amount', 'error'); return; }
+    setBeSaving(true);
+    try {
+      await api.addBankEntry('Relay', beDate, amount, 'USD', beNote.trim());
+      setBeAmount(''); setBeNote(''); setBeFormOpen(false);
+      await refresh();
+      toast('Relay updated', 'success');
+    } catch (err) { toast('Error: ' + err.message, 'error'); }
+    finally { setBeSaving(false); }
+  };
+
+  const handleBankEntryDelete = async (id) => {
+    try {
+      await api.deleteBankEntry(id);
+      setBeDelId(null);
+      await refresh();
     } catch (err) { toast('Error: ' + err.message, 'error'); }
   };
 
@@ -280,21 +316,103 @@ export default function Dashboard() {
                 {totalEur === 0 && <span className="split-bar__seg split-bar__seg--empty" />}
               </div>
 
-              {/* Breakdown cards — one per market */}
+              {/* Breakdown cards — one per market. Cash expands into the per-account list. */}
               <div className="wealth-cards">
-                {breakdown.map(b => (
-                  <div key={b.key} className="wealth-card">
-                    <div className="wealth-card__top">
-                      <span className="wealth-card__dot" style={{ background: b.color }} />
-                      {b.label}
+                {breakdown.map(b => {
+                  const clickable = b.key === 'cash';
+                  return (
+                    <div key={b.key}
+                      className={`wealth-card ${clickable ? 'wealth-card--clickable' : ''}`}
+                      onClick={clickable ? () => setCashOpen(o => !o) : undefined}
+                      role={clickable ? 'button' : undefined}
+                      tabIndex={clickable ? 0 : undefined}
+                      aria-expanded={clickable ? cashOpen : undefined}
+                      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCashOpen(o => !o); } } : undefined}>
+                      <div className="wealth-card__top">
+                        <span className="wealth-card__dot" style={{ background: b.color }} />
+                        {b.label}
+                        {clickable && <span className={`cash-chevron ${cashOpen ? 'cash-chevron--open' : ''}`}>▾</span>}
+                      </div>
+                      <AnimatedNumber value={b.value * rate} prefix={symPre} suffix={symSuf} className="wealth-card__value" />
+                      <div className="wealth-card__meta">
+                        {b.meta || <span className="wealth-card__meta--off">{b.empty || '—'}</span>}
+                      </div>
                     </div>
-                    <AnimatedNumber value={b.value * rate} prefix={symPre} suffix={symSuf} className="wealth-card__value" />
-                    <div className="wealth-card__meta">
-                      {b.meta || <span className="wealth-card__meta--off">{b.empty || '—'}</span>}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {/* Cash per account — Mercury rows come from the API, Relay from the manual ledger */}
+              {cashOpen && (() => {
+                const accountRows = externalAccounts.some(a => a.source === 'ledger')
+                  ? externalAccounts
+                  : [...externalAccounts, { source: 'ledger', name: 'Relay', currency: 'USD', balance: 0 }];
+                return (
+                  <div className="cash-accounts">
+                    {accountRows.map((acc, i) => {
+                      const accCur = (acc.currency || 'EUR').toUpperCase();
+                      const fmtOwn = (v) => accCur === 'USD' ? formatUSD(v) : formatEUR(v);
+                      const isLedger = acc.source === 'ledger';
+                      const entries = isLedger ? bankEntries.filter(en => en.bank === acc.name) : [];
+                      return (
+                        <div key={`${acc.name}-${accCur}-${i}`} className="cash-account">
+                          <div className="cash-account__row">
+                            <span className="cash-account__name">{acc.name}</span>
+                            <span className="cash-account__balance">{fmtOwn(Number(acc.balance) || 0)}</span>
+                            {isLedger && (
+                              <button type="button" className="cash-account__add" aria-label="Add movement"
+                                onClick={() => { setBeFormOpen(o => !o); setBeDelId(null); }}>
+                                {beFormOpen ? '×' : '+'}
+                              </button>
+                            )}
+                          </div>
+                          {isLedger && beFormOpen && (
+                            <form className="cash-entry-form" onSubmit={handleBankEntrySubmit}>
+                              <input type="number" step="0.01" inputMode="decimal" autoFocus
+                                placeholder="Amount in $ — minus for money out"
+                                value={beAmount} onChange={e => setBeAmount(e.target.value)} />
+                              <input type="date" value={beDate} onChange={e => setBeDate(e.target.value)} />
+                              <input type="text" placeholder="Note (optional)" maxLength={200}
+                                value={beNote} onChange={e => setBeNote(e.target.value)} />
+                              <button type="submit" className="btn btn--primary btn--sm" disabled={beSaving}>
+                                {beSaving ? 'Saving…' : 'Add'}
+                              </button>
+                            </form>
+                          )}
+                          {isLedger && entries.length > 0 && (
+                            <>
+                              <button type="button" className="cash-entries__toggle" onClick={() => { setBeHistoryOpen(o => !o); setBeDelId(null); }}>
+                                {beHistoryOpen ? 'Hide movements' : `Show ${entries.length} movement${entries.length === 1 ? '' : 's'}`}
+                              </button>
+                              {beHistoryOpen && (
+                                <div className="cash-entries">
+                                  {entries.map(en => {
+                                    const enFmt = ((en.currency || 'USD').toUpperCase() === 'USD') ? formatUSD : formatEUR;
+                                    const isIn = Number(en.amount) >= 0;
+                                    return (
+                                      <div key={en.id} className="cash-entry">
+                                        <span className="cash-entry__date">{formatDate(en.date)}</span>
+                                        <span className={`cash-entry__amount ${isIn ? 'cash-entry__amount--in' : 'cash-entry__amount--out'}`}>
+                                          {isIn ? '+' : '−'}{enFmt(Math.abs(Number(en.amount) || 0))}
+                                        </span>
+                                        {en.note ? <span className="cash-entry__note">{en.note}</span> : <span className="cash-entry__note" />}
+                                        <button type="button" className="cash-entry__del"
+                                          onClick={() => beDelId === en.id ? handleBankEntryDelete(en.id) : setBeDelId(en.id)}>
+                                          {beDelId === en.id ? 'Sure?' : '×'}
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* 2. NET WORTH CHART — period selectable (1W / 1M / 1Y / All) */}

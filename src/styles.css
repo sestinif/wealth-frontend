@@ -497,6 +497,75 @@ body::after {
 }
 .wealth-card__meta--off { font-style: italic; opacity: 0.8; }
 
+/* Cash per account — expands from the Cash breakdown card */
+.wealth-card--clickable { cursor: pointer; }
+.cash-chevron {
+  margin-left: auto; font-size: 10px; color: var(--text-3);
+  transition: transform 200ms var(--ease);
+}
+.cash-chevron--open { transform: rotate(180deg); }
+.cash-accounts {
+  margin-top: 12px;
+  background: var(--bg-card-grad);
+  border: 0.5px solid var(--border);
+  border-radius: 14px; padding: 6px 16px;
+  box-shadow: var(--edge), var(--elev-1);
+}
+.cash-account { border-bottom: 0.5px solid var(--border); }
+.cash-account:last-child { border-bottom: none; }
+.cash-account__row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+}
+.cash-account__name { color: var(--text-1); font-size: 14px; }
+.cash-account__balance {
+  margin-left: auto; font-family: var(--font-num); color: var(--text-1);
+  font-variant-numeric: tabular-nums; font-size: 14px;
+}
+.cash-account__add {
+  width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-elev); border: 0.5px solid var(--border);
+  color: var(--text-2); font-size: 15px; line-height: 1; cursor: pointer;
+  transition: border-color 150ms var(--ease), color 150ms var(--ease);
+}
+.cash-account__add:hover { border-color: var(--border-hover); color: var(--text-1); }
+.cash-entry-form {
+  display: flex; gap: 8px; flex-wrap: wrap; padding: 0 0 12px;
+}
+.cash-entry-form input {
+  background: var(--bg-elev); border: 0.5px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; color: var(--text-1); font-size: 13px;
+}
+.cash-entry-form input:focus { outline: none; border-color: var(--border-focus); }
+.cash-entry-form input[type="number"] { flex: 1 1 180px; font-family: var(--font-num); }
+.cash-entry-form input[type="date"] { flex: 0 1 140px; }
+.cash-entry-form input[type="text"] { flex: 1 1 140px; }
+.cash-entries__toggle {
+  background: none; border: none; padding: 0 0 12px; cursor: pointer;
+  color: var(--text-3); font-size: 11px; letter-spacing: 0.2px;
+}
+.cash-entries__toggle:hover { color: var(--text-2); }
+.cash-entries { padding-bottom: 8px; }
+.cash-entry {
+  display: flex; align-items: center; gap: 12px; padding: 7px 0;
+  border-top: 0.5px solid var(--border);
+}
+.cash-entry__date { color: var(--text-3); font-size: 12px; flex-shrink: 0; }
+.cash-entry__amount {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px;
+}
+.cash-entry__amount--in { color: var(--green); }
+.cash-entry__amount--out { color: var(--text-2); }
+.cash-entry__note {
+  color: var(--text-3); font-size: 12px; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cash-entry__del {
+  background: none; border: none; cursor: pointer; flex-shrink: 0;
+  color: var(--text-3); font-size: 12px; padding: 2px 4px;
+}
+.cash-entry__del:hover { color: var(--red, #E5484D); }
+
 /* Dry powder — broker balances list (Diary top panel) */
 .dry-list { display: flex; flex-direction: column; margin-bottom: 4px; }
 .dry-row {
