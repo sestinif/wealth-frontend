@@ -299,7 +299,7 @@ body::after {
 .card__title--lg { font-size: 11px; margin-bottom: 20px; color: var(--text-2); }
 .card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .card__head .card__title { margin-bottom: 0; }
-.card__subtitle { font-size: 10px; color: var(--text-3); font-family: var(--font-num); font-weight: 500; letter-spacing: 0.2px; }
+.card__subtitle { font-size: 10px; color: var(--text-3); font-weight: 500; letter-spacing: 0.2px; }
 
 /* ============ HERO GREETING ============ */
 .hero-greeting {
@@ -618,7 +618,7 @@ body::after {
 /* Month group header — hard-grid registro (Diary history) */
 .month-head {
   display: flex; align-items: baseline; justify-content: space-between;
-  padding: 14px 16px 6px;
+  padding: 14px 18px 6px;
 }
 .month-head__label {
   font-size: 10px; letter-spacing: 1.8px; color: var(--text-3);
@@ -702,26 +702,37 @@ body::after {
   margin-left: auto; font-family: var(--font-num);
   font-variant-numeric: tabular-nums; font-size: 14px;
 }
-/* Transaction history rows */
+/* Ledger rows — a hard grid: every column lines up across every row.
+   [who] [date] [detail........] [amount] [actions] */
 .tx-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 13px 18px;
+  display: grid;
+  grid-template-columns: 110px 92px minmax(0, 1fr) auto minmax(58px, auto);
+  align-items: center; gap: 12px;
+  padding: 12px 18px;
 }
 .tx-row + .tx-row { border-top: 0.5px solid var(--border); }
+.tx-row__label { font-size: 13px; font-weight: 500; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tx-row__date {
   font-size: 11px; color: var(--text-3);
-  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.tx-row__right { margin-left: auto; text-align: right; }
+.tx-row__detail {
+  font-size: 11px; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .tx-row__amount {
   font-family: var(--font-num); font-variant-numeric: tabular-nums;
   font-size: 14px; color: var(--text-1); font-weight: 500;
+  text-align: right; white-space: nowrap;
 }
-.tx-row__detail {
-  font-family: var(--font-num); font-variant-numeric: tabular-nums;
-  font-size: 11px; color: var(--text-3); margin-top: 2px;
+.tx-row__amount--in { color: var(--green); }
+.tx-row__amount--out { color: var(--text-2); }
+.tx-row__actions { display: flex; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .tx-row { grid-template-columns: 90px 1fr auto minmax(46px, auto); }
+  .tx-row__detail { display: none; }
 }
-.tx-row__actions { flex-shrink: 0; }
 
 /* === DCA Calculator === */
 .calc-assets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
@@ -781,7 +792,7 @@ body::after {
 }
 .chart-periods__note {
   margin-left: auto; font-size: 10px; color: var(--text-3);
-  font-family: var(--font-num); letter-spacing: 0.02em;
+  letter-spacing: 0.02em;
 }
 
 /* --- 3. KPI ROW (3 flat surfaces) --- */
@@ -953,7 +964,7 @@ body::after {
 }
 .panel__sub {
   font-size: 11px; color: var(--text-3); font-weight: 400;
-  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;
 }
 .panel--flush { padding: 0; }
 .panel--flush .panel__head { padding: 18px 20px 0; margin-bottom: 14px; }
@@ -1033,7 +1044,7 @@ body::after {
 .asset-strip__cell { min-width: 0; }
 .asset-strip__cell--right { text-align: right; }
 .asset-strip__primary { font-size: 13px; color: var(--text-1); font-weight: 500; font-family: var(--font-num); }
-.asset-strip__secondary { font-size: 10px; color: var(--text-3); margin-top: 2px; font-family: var(--font-num); }
+.asset-strip__secondary { font-size: 10px; color: var(--text-3); margin-top: 2px; }
 .asset-strip__label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 2px; }
 
 /* Divider */
@@ -1077,7 +1088,7 @@ body::after {
 .kpi-card { text-align: left; padding: 20px; }
 .kpi-card__label { font-size: 10px; color: var(--text-3); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
 .kpi-card__value { font-family: var(--font-num); font-size: 20px; font-weight: 600; margin-bottom: 3px; letter-spacing: -0.2px; }
-.kpi-card__subtext { font-size: 10px; color: var(--text-3); font-family: var(--font-num); }
+.kpi-card__subtext { font-size: 10px; color: var(--text-3); }
 
 /* ============ TABLE ============ */
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1133,7 +1144,7 @@ body::after {
 .form-input--lower { text-transform: lowercase; }
 select.form-input { color-scheme: dark; cursor: pointer; }
 textarea.form-input { min-height: 64px; resize: vertical; }
-.form-hint { font-size: 10px; color: var(--text-3); margin-top: 3px; font-family: var(--font-num); }
+.form-hint { font-size: 10px; color: var(--text-3); margin-top: 3px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .form-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 
@@ -1214,7 +1225,7 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 .asset-badge__icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .asset-badge__sym {
   font-size: 12px; font-weight: 600; color: var(--text-1);
-  font-family: var(--font-num); letter-spacing: 0.2px;
+  letter-spacing: 0.2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -1418,7 +1429,7 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 }
 .search-result:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.015); }
 .search-result__info { flex: 1; }
-.search-result__symbol { font-size: 13px; color: var(--text-1); font-weight: 600; font-family: var(--font-num); }
+.search-result__symbol { font-size: 13px; color: var(--text-1); font-weight: 600; }
 .search-result__name { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
 /* === iOS TOGGLE SWITCH === */

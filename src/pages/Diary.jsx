@@ -136,14 +136,12 @@ export default function Diary() {
                 {g.rows.map(p => (
                   <div key={p.id} className="tx-row">
                     <AssetBadge asset={p.asset} color={getColor(p.asset)} />
-                    <span className="tx-row__date">
-                      {formatDate(p.date)}
+                    <span className="tx-row__date">{formatDate(p.date)}</span>
+                    <span className="tx-row__detail">
+                      {formatQty(p.quantity, getDecimals(p.asset))} {p.asset} @ {formatEUR(p.price_eur)}
                       {(() => { const l = cashPositions.find(x => x.id === p.funded_from)?.label; return l ? ` · from ${l}` : ''; })()}
                     </span>
-                    <div className="tx-row__right">
-                      <div className="tx-row__amount">{formatEUR(p.amount_eur)}</div>
-                      <div className="tx-row__detail">{formatQty(p.quantity, getDecimals(p.asset))} {p.asset} @ {formatEUR(p.price_eur)}</div>
-                    </div>
+                    <span className="tx-row__amount">{formatEUR(p.amount_eur)}</span>
                     <div className="tx-row__actions">
                       {deleteConfirm === p.id ? (
                         <div className="delete-actions">
@@ -167,30 +165,32 @@ export default function Diary() {
         <div className="section-header">
           <div className="section-header__title">Bank Movements · {bankEntries.length}</div>
         </div>
-        <div className="panel panel--flush" style={{ padding: '6px 16px' }}>
+        <div className="panel panel--flush" style={{ padding: '6px 0' }}>
           {bankEntries.length === 0 ? (
-            <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No bank movements yet</div>
+            <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>No bank movements yet</div>
           ) : (
             bankGroups.map(g => (
               <React.Fragment key={g.key}>
-                <div className="month-head" style={{ padding: '14px 0 6px' }}>
+                <div className="month-head">
                   <span className="month-head__label">{g.label}</span>
                 </div>
                 {g.rows.map(en => {
                   const enFmt = ((en.currency || 'USD').toUpperCase() === 'USD') ? formatUSD : formatEUR;
                   const isIn = Number(en.amount) >= 0;
                   return (
-                    <div key={en.id} className="cash-entry">
-                      <span className="cash-entry__bank">{en.bank}</span>
-                      <span className="cash-entry__date">{formatDate(en.date)}</span>
-                      <span className={`cash-entry__amount ${isIn ? 'cash-entry__amount--in' : 'cash-entry__amount--out'}`}>
+                    <div key={en.id} className="tx-row">
+                      <span className="tx-row__label">{en.bank}</span>
+                      <span className="tx-row__date">{formatDate(en.date)}</span>
+                      <span className="tx-row__detail">{en.note || ''}</span>
+                      <span className={`tx-row__amount ${isIn ? 'tx-row__amount--in' : 'tx-row__amount--out'}`}>
                         {isIn ? '+' : '−'}{enFmt(Math.abs(Number(en.amount) || 0))}
                       </span>
-                      {en.note ? <span className="cash-entry__note">{en.note}</span> : <span className="cash-entry__note" />}
-                      <button type="button" className="cash-entry__del"
-                        onClick={() => beDelId === en.id ? handleBankEntryDelete(en.id) : setBeDelId(en.id)}>
-                        {beDelId === en.id ? 'Sure?' : '×'}
-                      </button>
+                      <div className="tx-row__actions">
+                        <button type="button" className="cash-entry__del"
+                          onClick={() => beDelId === en.id ? handleBankEntryDelete(en.id) : setBeDelId(en.id)}>
+                          {beDelId === en.id ? 'Sure?' : '×'}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
