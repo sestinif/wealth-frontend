@@ -1,28 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { api } from '../api.js';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { api, removeToken } from '../api.js';
 
 export default function Sidebar({ username, open = false, onClose }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [assets, setAssets] = useState([]);
 
   useEffect(() => {
     api.getAssets().then(setAssets).catch(() => {});
   }, []);
 
-  const navItems = [
-    { path: '/dashboard', label: 'DASHBOARD', icon: <DashboardIcon /> },
-    { path: '/diary', label: 'DIARY', icon: <DiaryIcon /> },
-    { path: '/reports', label: 'REPORTS', icon: <ReportIcon /> },
-    { path: '/charts', label: 'CHARTS', icon: <ChartIcon /> },
-    { path: '/dca', label: 'DCA', icon: <DcaIcon /> },
-    { path: '/settings', label: 'SETTINGS', icon: <SettingsIcon /> }
+  // Last net worth computed by the dashboard (EUR) — cached so the sidebar
+  // never issues its own bank/price calls.
+  const netWorth = (() => {
+    try {
+      const v = parseFloat(localStorage.getItem('nw_total_eur'));
+      if (!v || Number.isNaN(v)) return null;
+      return v >= 1000 ? `€${(v / 1000).toFixed(1)}k` : `€${Math.round(v)}`;
+    } catch { return null; }
+  })();
+
+  const sections = [
+    {
+      label: 'OVERVIEW',
+      items: [{ path: '/dashboard', label: 'DASHBOARD', icon: <DashboardIcon /> }],
+    },
+    {
+      label: 'ADD',
+      items: [{ path: '/add', label: 'ADD MOVEMENT', icon: <PlusIcon />, accent: true }],
+    },
+    {
+      label: 'TRACK',
+      items: [
+        { path: '/diary', label: 'DIARY', icon: <DiaryIcon /> },
+        { path: '/dca', label: 'DCA', icon: <DcaIcon /> },
+      ],
+    },
+    {
+      label: 'ANALYZE',
+      items: [
+        { path: '/reports', label: 'REPORTS', icon: <ReportIcon /> },
+        { path: '/charts', label: 'CHARTS', icon: <ChartIcon /> },
+      ],
+    },
   ];
+
+  const handleLogout = () => {
+    removeToken();
+    navigate('/login');
+  };
 
   return (
     <div className={`sidebar ${open ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
-        <div className="sidebar__logo">W</div>
+        <div className="sidebar__brand-row">
+          <div className="sidebar__logo">W</div>
+          {netWorth && <div className="sidebar__nw">{netWorth}</div>}
+        </div>
         <div className="sidebar__title">WEALTH</div>
         <div className="sidebar__subtitle">INVESTMENT TRACKER</div>
         <div className="sidebar__status">
@@ -32,20 +67,38 @@ export default function Sidebar({ username, open = false, onClose }) {
       </div>
 
       <nav className="sidebar__nav">
-        {navItems.map(item => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={onClose}
-            className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-          >
-            <div className="nav-item__icon">{item.icon}</div>
-            {item.label}
-          </Link>
+        {sections.map(section => (
+          <div key={section.label} className="sidebar__section">
+            <div className="sidebar__section-label">{section.label}</div>
+            {section.items.map(item => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={`nav-item ${item.accent ? 'nav-item--accent' : ''} ${location.pathname === item.path ? 'active' : ''}`}
+              >
+                <div className="nav-item__icon">{item.icon}</div>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         ))}
       </nav>
 
-      <div className="sidebar__footer">{username}</div>
+      <div className="sidebar__footer sidebar__footer--nav">
+        <Link
+          to="/settings"
+          onClick={onClose}
+          className={`nav-item nav-item--compact ${location.pathname === '/settings' ? 'active' : ''}`}
+        >
+          <div className="nav-item__icon"><SettingsIcon /></div>
+          SETTINGS
+        </Link>
+        <div className="sidebar__footer-row">
+          <span className="sidebar__user">{username}</span>
+          <button type="button" className="sidebar__logout" onClick={handleLogout}>Log Out</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -55,6 +108,15 @@ function DashboardIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
       <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
     </svg>
   );
 }

@@ -64,6 +64,7 @@ export default function Dashboard() {
         snapshotDone.current = true;
         try {
           const fig = computeNetFigures(d, a, nw, cp);
+          try { localStorage.setItem('nw_total_eur', String(fig.total)); } catch (e) { /* sidebar chip is best-effort */ }
           await api.postNetworthSnapshot(fig);
           api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
         } catch (e) { /* best-effort */ }

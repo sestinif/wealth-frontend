@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 const COMMANDS = [
   { label: 'Dashboard', path: '/dashboard', keys: 'D' },
-  { label: 'Diary — Add Purchase', path: '/diary', keys: 'A' },
+  { label: 'Add Movement', path: '/add', keys: 'A' },
+  { label: 'Diary — History', path: '/diary', keys: 'H' },
   { label: 'Reports', path: '/reports', keys: 'R' },
   { label: 'Charts', path: '/charts', keys: 'G' },
   { label: 'Settings — Manage Assets', path: '/settings', keys: 'S' },

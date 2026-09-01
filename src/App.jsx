@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import SetupPage from './pages/SetupPage';
 import Dashboard from './pages/Dashboard';
 import Diary from './pages/Diary';
+import AddMovement from './pages/AddMovement';
 import Reports from './pages/Reports';
 import Charts from './pages/Charts';
 import Calculator from './pages/Calculator';
@@ -99,6 +100,7 @@ export default function App() {
           <Route path="/setup" element={setupRequired ? <SetupPage onComplete={handleSetupComplete} /> : <Navigate to="/login" />} />
           <Route path="/login" element={!isAuthenticated ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
           <Route path="/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Dashboard /></ProtectedRoute>} />
+          <Route path="/add" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><AddMovement /></ProtectedRoute>} />
           <Route path="/diary" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Diary /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Reports /></ProtectedRoute>} />
           <Route path="/charts" element={<ProtectedRoute isAuthenticated={isAuthenticated} isLoading={false}><Charts /></ProtectedRoute>} />
