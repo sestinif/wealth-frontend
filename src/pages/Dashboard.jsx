@@ -4,21 +4,20 @@ import PageLayout from '../components/PageLayout';
 import AssetBadge from '../components/AssetBadge';
 import AnimatedNumber from '../components/AnimatedNumber';
 import Icon from '../components/Icon';
-import EmptyState from '../components/EmptyState';
 import { DashboardSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName } from '../utils/user';
-import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE, allocationSlices } from '../utils/format';
+import { formatEUR, formatUSD, formatQty, formatPnL, formatPct, formatDate, formatPrice, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE } from '../utils/format';
 
 export default function Dashboard() {
   const toast = useToast();
   const [data, setData] = useState(null);
   const [networth, setNetworth] = useState(null);
   const [cashPositions, setCashPositions] = useState([]);
-  // Cash card expansion — read-only per-account list (Mercury via API,
-  // ledger banks from /networth). Entries are managed in Add Movement.
-  const [cashOpen, setCashOpen] = useState(false);
+  // Which breakdown card is expanded ('crypto' | 'stock' | 'cash' | null) —
+  // one open at a time. Read-only lists; entries are managed in Add Movement.
+  const [openCard, setOpenCard] = useState(null);
   const [history, setHistory] = useState([]);
   const [chartPeriod, setChartPeriod] = useState('1M');
   const snapshotDone = useRef(false);
@@ -108,11 +107,6 @@ export default function Dashboard() {
 
   // Charts data
   const chartData = buildChartData(purchases, prices, assets, 'main');
-  const allocData = allocationSlices(
-    mainAssets
-      .filter(a => summary.by_asset[a.symbol]?.value > 0)
-      .map(a => ({ name: a.symbol, value: summary.by_asset[a.symbol].value }))
-  );
 
   // Hero portfolio trend (30d) — derived from the real time-series
   const valueSeries = chartData.map(d => d.value);
@@ -174,9 +168,10 @@ export default function Dashboard() {
         const nBrokers = (cashPositions || []).length;
 
         // Breakdown card config — order, color, count, meta. Driven so the markup stays flat.
+        const nAssets = (n) => `${n} ${n === 1 ? 'asset' : 'assets'}`;
         const breakdown = [
-          { key: 'crypto', label: 'Crypto Market', color: 'var(--accent)', value: cryptoEur, pct: cryptoPct, meta: `${cryptoPct.toFixed(0)}% · ${cryptoAssets.length} assets` },
-          { key: 'stock', label: 'Stock Market', color: 'var(--stock)', value: stockEur, pct: stockPct, meta: `${stockPct.toFixed(0)}% · ${stockAssets.length} assets` },
+          { key: 'crypto', label: 'Crypto Market', color: 'var(--accent)', value: cryptoEur, pct: cryptoPct, meta: `${cryptoPct.toFixed(0)}% · ${nAssets(cryptoAssets.length)}` },
+          { key: 'stock', label: 'Stock Market', color: 'var(--stock)', value: stockEur, pct: stockPct, meta: `${stockPct.toFixed(0)}% · ${nAssets(stockAssets.length)}` },
           { key: 'cash', label: 'Cash', color: 'var(--cash)', value: cashEur, pct: cashPct, empty: 'No Account Connected',
             meta: cashConnected ? `${cashPct.toFixed(0)}% · ${externalAccounts.length === 1 ? externalAccounts[0].name : `${externalAccounts.length} accounts`}` : null },
           { key: 'dry', label: 'Dry Powder', color: 'var(--dry)', value: dryPowderEur, pct: dryPct, empty: 'No Uninvested Cash',
@@ -187,16 +182,16 @@ export default function Dashboard() {
         const deltaAbs = pfLast - pfFirst;
         const deltaStr = (deltaAbs >= 0 ? '+' : '-') + money(Math.abs(deltaAbs));
 
-        // Top allocation slices (real data, already sorted desc with palette colors)
-        const topAlloc = allocData.slice(0, 6);
-        // Color lookup by symbol from the allocation palette (consistent dots)
-        const allocColor = Object.fromEntries(allocData.map(s => [s.name, s.color]));
-
-        // Top assets by value (real data) — reuse allocation colors for dots
-        const topAssets = mainAssets
-          .filter(a => summary.by_asset[a.symbol]?.value > 0)
-          .sort((a, b) => summary.by_asset[b.symbol].value - summary.by_asset[a.symbol].value)
-          .slice(0, 6);
+        // Per-asset rows for the expanded Crypto / Stock cards, largest first.
+        const assetRows = (list) => [...list]
+          .sort((a, b) => valOf(b) - valOf(a))
+          .map(a => {
+            const d = summary.by_asset[a.symbol] || {};
+            const pnlPct = d.invested > 0 ? (d.value / d.invested - 1) * 100 : 0;
+            return { symbol: a.symbol, decimals: a.decimals, qty: d.qty || 0, value: d.value || 0, pnlPct };
+          });
+        const expandable = { crypto: true, stock: true, cash: true };
+        const toggleCard = (key) => setOpenCard(k => (k === key ? null : key));
 
         return (
           <>
@@ -271,22 +266,26 @@ export default function Dashboard() {
                 {totalEur === 0 && <span className="split-bar__seg split-bar__seg--empty" />}
               </div>
 
-              {/* Breakdown cards — one per market. Cash expands into the per-account list. */}
+              {/* Breakdown cards — one per market. Crypto / Stock / Cash expand into their list.
+                  The panel lives inside the grid: full-width after the row on desktop,
+                  directly under the tapped card on a phone (see .wealth-panel order). */}
               <div className="wealth-cards">
-                {breakdown.map(b => {
-                  const clickable = b.key === 'cash';
+                {breakdown.map((b, i) => {
+                  const clickable = !!expandable[b.key];
+                  const isOpen = openCard === b.key;
                   return (
                     <div key={b.key}
-                      className={`wealth-card ${clickable ? 'wealth-card--clickable' : ''}`}
-                      onClick={clickable ? () => setCashOpen(o => !o) : undefined}
+                      className={`wealth-card ${clickable ? 'wealth-card--clickable' : ''} ${isOpen ? 'wealth-card--open' : ''}`}
+                      style={{ order: i * 2 }}
+                      onClick={clickable ? () => toggleCard(b.key) : undefined}
                       role={clickable ? 'button' : undefined}
                       tabIndex={clickable ? 0 : undefined}
-                      aria-expanded={clickable ? cashOpen : undefined}
-                      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCashOpen(o => !o); } } : undefined}>
+                      aria-expanded={clickable ? isOpen : undefined}
+                      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCard(b.key); } } : undefined}>
                       <div className="wealth-card__top">
                         <span className="wealth-card__dot" style={{ background: b.color }} />
                         {b.label}
-                        {clickable && <span className={`cash-chevron ${cashOpen ? 'cash-chevron--open' : ''}`}>▾</span>}
+                        {clickable && <span className={`cash-chevron ${isOpen ? 'cash-chevron--open' : ''}`}>▾</span>}
                       </div>
                       <AnimatedNumber value={b.value * rate} prefix={symPre} suffix={symSuf} className="wealth-card__value" />
                       <div className="wealth-card__meta">
@@ -295,32 +294,50 @@ export default function Dashboard() {
                     </div>
                   );
                 })}
-              </div>
 
-              {/* Cash per account — read-only list. Entries live in Add Movement. */}
-              {cashOpen && (
-                <div className="cash-accounts">
-                  {externalAccounts.map((acc, i) => {
-                    const accCur = (acc.currency || 'EUR').toUpperCase();
-                    const fmtOwn = (v) => accCur === 'USD' ? formatUSD(v) : formatEUR(v);
-                    return (
-                      <div key={`${acc.name}-${accCur}-${i}`} className="cash-account">
+                {openCard && (
+                  <div className="cash-accounts wealth-panel"
+                    style={{ '--panel-order': breakdown.findIndex(b => b.key === openCard) * 2 + 1 }}>
+                    {/* Crypto / Stock per asset — value in the display currency, P&L vs invested */}
+                    {(openCard === 'crypto' || openCard === 'stock') &&
+                      assetRows(openCard === 'crypto' ? cryptoAssets : stockAssets).map(r => (
+                        <div key={r.symbol} className="cash-account">
+                          <div className="cash-account__row cash-account__row--asset">
+                            <span className="cash-account__name">
+                              {r.symbol}
+                              <span className="cash-account__qty">{formatQty(r.qty, r.decimals)}</span>
+                            </span>
+                            <span className="cash-account__balance">{money(r.value)}</span>
+                            <span className={`cash-account__pnl ${r.pnlPct >= 0 ? 'cash-account__pnl--up' : 'cash-account__pnl--down'}`}>
+                              {r.pnlPct >= 0 ? '+' : ''}{r.pnlPct.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+
+                    {/* Cash per account — read-only list. Entries live in Add Movement. */}
+                    {openCard === 'cash' && externalAccounts.map((acc, i) => {
+                      const accCur = (acc.currency || 'EUR').toUpperCase();
+                      const fmtOwn = (v) => accCur === 'USD' ? formatUSD(v) : formatEUR(v);
+                      return (
+                        <div key={`${acc.name}-${accCur}-${i}`} className="cash-account">
+                          <div className="cash-account__row">
+                            <span className="cash-account__name">{acc.name}</span>
+                            <span className="cash-account__balance">{fmtOwn(Number(acc.balance) || 0)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {openCard === 'cash' && externalAccounts.length === 0 && (
+                      <div className="cash-account">
                         <div className="cash-account__row">
-                          <span className="cash-account__name">{acc.name}</span>
-                          <span className="cash-account__balance">{fmtOwn(Number(acc.balance) || 0)}</span>
+                          <span className="cash-account__name" style={{ color: 'var(--text-3)' }}>No accounts yet — add a bank movement from Add Movement</span>
                         </div>
                       </div>
-                    );
-                  })}
-                  {externalAccounts.length === 0 && (
-                    <div className="cash-account">
-                      <div className="cash-account__row">
-                        <span className="cash-account__name" style={{ color: 'var(--text-3)' }}>No accounts yet — add a bank movement from Add Movement</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 2. NET WORTH CHART — period selectable (1W / 1M / 1Y / All) */}
@@ -383,55 +400,6 @@ export default function Dashboard() {
               );
             })()}
 
-            {/* 4. TWO-COLUMN — allocazione (labeled bars) + asset principali */}
-            <div className="dash-split animate-in-3">
-              {/* Left: allocation bars */}
-              <div className="dash-panel">
-                <div className="dash-panel__title">Allocation</div>
-                {topAlloc.length > 0 ? (
-                  <div className="alloc-bars">
-                    {topAlloc.map(slice => (
-                      <div key={slice.name} className="alloc-bar">
-                        <span className="alloc-bar__label">{slice.name}</span>
-                        <span className="alloc-bar__track">
-                          <span className="alloc-bar__fill" style={{ width: `${slice.pct}%`, background: slice.color }} />
-                        </span>
-                        <span className="alloc-bar__pct">{Number(slice.pct).toFixed(1)}%</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState compact icon="inbox" title="No Assets" description="Set up your assets in Settings." />
-                )}
-              </div>
-
-              {/* Right: top assets list */}
-              <div className="dash-panel">
-                <div className="dash-panel__title">Top Assets</div>
-                {topAssets.length > 0 ? (
-                  <div className="dash-assets">
-                    {topAssets.map(asset => {
-                      const d = summary.by_asset[asset.symbol];
-                      const pnlPct = d.invested > 0 ? (d.value / d.invested - 1) * 100 : 0;
-                      const up = pnlPct >= 0;
-                      return (
-                        <div key={asset.symbol} className="dash-asset">
-                          <span className="dash-asset__dot" style={{ background: allocColor[asset.symbol] || asset.color }} />
-                          <span className="dash-asset__name">{asset.symbol}</span>
-                          <span className="dash-asset__value">{money(d.value)}</span>
-                          <span className={`dash-asset__delta ${up ? 'dash-asset__delta--up' : 'dash-asset__delta--down'}`}>
-                            {up ? '+' : ''}{pnlPct.toFixed(1)}%
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <EmptyState compact icon="inbox" title="No Assets"
-                    description="Add a purchase with the + button at the bottom right to get started." />
-                )}
-              </div>
-            </div>
           </>
         );
       })()}
