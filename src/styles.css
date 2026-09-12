@@ -177,30 +177,42 @@ body::after {
   box-shadow: 1px 0 24px -10px rgba(0,0,0,0.6);
 }
 .sidebar__brand { margin-bottom: 28px; padding: 0 6px; }
+/* The mark paints its own square + hairline (see BrandMark), so these
+   wrappers only do size and spacing — no gradient, no letter, no glow. */
 .sidebar__logo {
   width: 30px; height: 30px;
-  background: linear-gradient(135deg, #8B7BFF, #7C5CFC);
-  border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.85rem; font-weight: 700; color: #fff;
   margin-bottom: 10px;
 }
 .sidebar__title { color: var(--text-1); font-size: 12px; font-weight: 700; letter-spacing: 1.2px; }
 .sidebar__subtitle { color: var(--text-3); font-size: 9px; font-weight: 400; letter-spacing: 0.6px; margin-top: 2px; }
 .sidebar__status { margin-top: 10px; display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--text-3); }
 .sidebar__status-dot { width: 4px; height: 4px; background: var(--green); border-radius: 50%; }
-.sidebar__crosslink {
-  margin-top: 8px;
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 9px; letter-spacing: 0.6px; font-weight: 500;
-  color: var(--text-3); text-decoration: none;
-  padding: 3px 6px; margin-left: -6px;
-  border-radius: var(--radius-sm);
-  transition: color 120ms ease, background-color 120ms ease;
+/* Cross-app link — built from the same materials as the cards: lit-from-
+   above surface, hairline border, inner top edge. */
+.sidebar__section--apps { margin-top: 14px; }
+.applink {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  text-decoration: none;
+  background: var(--bg-card-grad);
+  border: 1px solid var(--border);
+  box-shadow: var(--edge);
+  transition: border-color 160ms var(--ease), background-color 160ms var(--ease), transform 160ms var(--ease);
 }
-.sidebar__crosslink:hover { color: var(--text-1); background: var(--accent-dim); }
-.sidebar__crosslink svg { opacity: 0.6; }
-.sidebar__crosslink:hover svg { opacity: 1; }
+.applink:hover { border-color: var(--border-hover); background: var(--bg-card-2); }
+.applink:active { transform: translateY(1px); }
+.applink__chip {
+  width: 22px; height: 22px; flex: none;
+  border-radius: 6px; display: grid; place-items: center;
+  background: linear-gradient(135deg, #8B7BFF, #7C5CFC);
+  color: #fff; font-size: 11px; font-weight: 700;
+}
+.applink__name {
+  font-size: 11px; letter-spacing: 1px; font-weight: 600; color: var(--text-1);
+}
+.applink__arrow { margin-left: auto; color: var(--text-3); }
+.applink:hover .applink__arrow { color: var(--text-2); }
 
 .sidebar__nav { flex: 1; margin-top: 6px; }
 .sidebar__footer { padding-top: 12px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-3); text-align: center; }
@@ -1203,11 +1215,9 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 }
 .auth-logo {
   width: 52px; height: 52px;
-  background: linear-gradient(135deg, #8B7BFF, #7C5CFC);
-  border-radius: 15px; display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: center;
   margin: 0 auto 20px;
-  box-shadow: 0 8px 28px rgba(139,123,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.45));
 }
 .auth-title { font-size: 23px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; letter-spacing: -0.4px; }
 .auth-subtitle { font-size: 11px; color: var(--text-2); margin-bottom: 28px; letter-spacing: 0.5px; }
@@ -1233,11 +1243,15 @@ textarea.form-input { min-height: 64px; resize: vertical; }
 /* LOADING */
 .loading-logo {
   width: 40px; height: 40px;
-  background: linear-gradient(135deg, #8B7BFF, #7C5CFC);
-  border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; font-weight: 700; color: #fff;
-  animation: glow 2s ease-in-out infinite;
-  box-shadow: 0 8px 28px rgba(139,123,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  /* Breathes instead of pulsing a violet halo: same "something is
+     happening" signal, none of the neon. */
+  animation: markBreathe 2s ease-in-out infinite;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.45));
+}
+@keyframes markBreathe {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
 }
 .loading-text { color: var(--text-2); font-size: 10px; letter-spacing: 2px; font-weight: 500; }
 .loading-error { color: var(--red-soft); font-size: 12px; }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api, removeToken } from '../api.js';
+import BrandMark from './BrandMark';
 
 export default function Sidebar({ username, open = false, onClose }) {
   const location = useLocation();
@@ -44,26 +45,32 @@ export default function Sidebar({ username, open = false, onClose }) {
   return (
     <div className={`sidebar ${open ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
-        <div className="sidebar__logo">W</div>
+        <div className="sidebar__logo"><BrandMark size={30} /></div>
         <div className="sidebar__title">WEALTH</div>
         <div className="sidebar__subtitle">INVESTMENT TRACKER</div>
         <div className="sidebar__status">
           <div className="sidebar__status-dot" />
           {assets.length > 0 ? `${assets.length} ASSETS TRACKED` : '...'}
         </div>
-        {/* Cross-link to the sibling app, same idea as Calendar's
-            "Calendar · Numbers ↗". It sits in the brand block, not in the
-            nav below, so it never reads as a page of THIS app: the arrow
-            and the new tab say "you're leaving Wealth". */}
+      </div>
+
+      {/* Sibling app. Its own APPS section, in the same section rhythm as
+          OVERVIEW / ADD / TRACK below, so it reads as a place rather than a
+          button dropped in the margin — and it's a card, not a line of
+          9px grey text, because it competes with real navigation for the
+          eye. The tinted chip and the ↗ say "another app, new tab". */}
+      <div className="sidebar__section sidebar__section--apps">
+        <div className="sidebar__section-label">APPS</div>
         <a
-          className="sidebar__crosslink"
+          className="applink"
           href="https://personals.scalingcatalyst.com/"
           target="_blank"
           rel="noopener noreferrer"
           title="Open Personals (personal expenses)"
         >
-          PERSONALS
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <span className="applink__chip">P</span>
+          <span className="applink__name">PERSONALS</span>
+          <svg className="applink__arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M7 17L17 7M17 7H8M17 7v9" />
           </svg>
         </a>
