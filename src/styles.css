@@ -189,6 +189,19 @@ body::after {
 .sidebar__subtitle { color: var(--text-3); font-size: 9px; font-weight: 400; letter-spacing: 0.6px; margin-top: 2px; }
 .sidebar__status { margin-top: 10px; display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--text-3); }
 .sidebar__status-dot { width: 4px; height: 4px; background: var(--green); border-radius: 50%; }
+.sidebar__crosslink {
+  margin-top: 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; letter-spacing: 0.6px; font-weight: 500;
+  color: var(--text-3); text-decoration: none;
+  padding: 3px 6px; margin-left: -6px;
+  border-radius: var(--radius-sm);
+  transition: color 120ms ease, background-color 120ms ease;
+}
+.sidebar__crosslink:hover { color: var(--text-1); background: var(--accent-dim); }
+.sidebar__crosslink svg { opacity: 0.6; }
+.sidebar__crosslink:hover svg { opacity: 1; }
+
 .sidebar__nav { flex: 1; margin-top: 6px; }
 .sidebar__footer { padding-top: 12px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-3); text-align: center; }
 

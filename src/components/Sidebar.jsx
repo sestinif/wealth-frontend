@@ -51,6 +51,22 @@ export default function Sidebar({ username, open = false, onClose }) {
           <div className="sidebar__status-dot" />
           {assets.length > 0 ? `${assets.length} ASSETS TRACKED` : '...'}
         </div>
+        {/* Cross-link to the sibling app, same idea as Calendar's
+            "Calendar · Numbers ↗". It sits in the brand block, not in the
+            nav below, so it never reads as a page of THIS app: the arrow
+            and the new tab say "you're leaving Wealth". */}
+        <a
+          className="sidebar__crosslink"
+          href="https://personals.scalingcatalyst.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open Personals (personal expenses)"
+        >
+          PERSONALS
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 17L17 7M17 7H8M17 7v9" />
+          </svg>
+        </a>
       </div>
 
       <nav className="sidebar__nav">
