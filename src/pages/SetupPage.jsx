@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BrandMark from '../components/BrandMark';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import AlertMessage from '../components/AlertMessage';
@@ -41,7 +42,7 @@ export default function SetupPage({ onComplete }) {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <div className="auth-logo">W</div>
+        <div className="auth-logo"><BrandMark size={52} /></div>
         <h1 className="auth-title">Welcome to Wealth</h1>
         <p className="auth-subtitle">Create your account</p>
 

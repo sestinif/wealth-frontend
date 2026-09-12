@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getToken, setToken, removeToken, api } from './api.js';
 import { ToastProvider } from './components/Toast';
 import CommandPalette from './components/CommandPalette';
+import BrandMark from './components/BrandMark';
 import QuickBuyFAB from './components/QuickBuyFAB';
 import LoginPage from './pages/LoginPage';
 import SetupPage from './pages/SetupPage';
@@ -22,7 +23,7 @@ function ProtectedRoute({ children, isAuthenticated, isLoading }) {
 function LoadingScreen({ message = "LOADING..." }) {
   return (
     <div className="loading-screen">
-      <div className="loading-logo">W</div>
+      <div className="loading-logo"><BrandMark size={40} /></div>
       <div className="loading-text">{message}</div>
     </div>
   );
@@ -82,7 +83,7 @@ export default function App() {
   if (backendError) {
     return (
       <div className="loading-screen">
-        <div className="loading-logo">W</div>
+        <div className="loading-logo"><BrandMark size={40} /></div>
         <div className="loading-error">BACKEND UNREACHABLE</div>
         <button className="btn btn--primary" onClick={() => { setIsLoading(true); setBackendError(false); window.location.reload(); }}>
           RETRY
