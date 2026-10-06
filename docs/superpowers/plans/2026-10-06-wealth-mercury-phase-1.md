@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Work in `/Users/seastini_f/Claude Code Projects/Internal/App/Wealth/wealth-frontend-main`. Branch `main`. Commit after each task. **Never push** — the owner pushes.
+- Work in `/Users/seastini_f/Claude Code Projects/Internal/App/Wealth/wealth-frontend-main`. Branch `mercury-phase-1` (already checked out). Commit after each task. **Never push** and never switch branch — the owner merges and pushes.
 - No backend changes. No new npm dependencies.
 - One typeface: Inter, weights 400 and 500 only. No Space Grotesk, no Instrument Serif.
 - No text below 12px in anything this plan creates. No `text-transform: uppercase`, no wide `letter-spacing`.
