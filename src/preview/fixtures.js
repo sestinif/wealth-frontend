@@ -54,7 +54,7 @@ export const networth = {
 export const history = Array.from({ length: 60 }, (_, i) => {
   const d = new Date('2026-10-06T00:00:00Z'); d.setUTCDate(d.getUTCDate() - (59 - i));
   const wobble = Math.sin(i / 4) * 350 - (i > 20 && i < 28 ? 900 : 0);
-  return { date: d.toISOString().slice(0, 10), total: Math.round(31000 + i * 58 + wobble) };
+  return { date: d.toISOString().slice(0, 10), total: Math.round(31000 + i * 58 + wobble), portfolio: Math.round(3000 + i * 9.7 + wobble / 4) };
 });
 
 export const marketInfo = {
@@ -62,3 +62,31 @@ export const marketInfo = {
   AERO: { change_24h: -3.1, change_7d: 6.2, ath_usd: 2.31, ath_change_pct: -63.8, market_cap_usd: 7.4e8, rank: 142 },
   BRETT: { change_24h: 0.4, change_7d: -9.9, ath_usd: 0.23, ath_change_pct: -97.5, market_cap_usd: 5.6e7, rank: 780 },
 };
+
+export const me = { username: 'federico', email: 'federico@example.com', created_at: '2024-03-01T10:00:00Z' };
+
+const reportOf = (rows) => {
+  const by_asset = {};
+  rows.forEach(p => {
+    const d = dashboard.summary.by_asset[p.asset];
+    const share = p.quantity / d.qty;
+    const cur = by_asset[p.asset] || { invested: 0, value: 0, qty: 0, pnl: 0 };
+    cur.invested += p.amount_eur; cur.qty += p.quantity; cur.value += d.value * share;
+    cur.pnl = cur.value - cur.invested;
+    by_asset[p.asset] = cur;
+  });
+  const total_invested = rows.reduce((s, p) => s + p.amount_eur, 0);
+  const total_value = Object.values(by_asset).reduce((s, d) => s + d.value, 0);
+  const pnl = total_value - total_invested;
+  return { total_invested, total_value, pnl, pnl_pct: total_invested > 0 ? (pnl / total_invested) * 100 : 0, by_asset, transactions: rows };
+};
+export const reports = {
+  lifetime: reportOf(purchases),
+  annual: reportOf(purchases.filter(p => p.date.startsWith('2026'))),
+  monthly: reportOf(purchases.filter(p => p.date.startsWith('2026-06'))),
+};
+
+export const searchResults = [
+  { symbol: 'ETH', name: 'Ethereum', asset_type: 'crypto', coingecko_id: 'ethereum', price_usd: 2700.81, thumb: '' },
+  { symbol: 'SOL', name: 'Solana', asset_type: 'crypto', coingecko_id: 'solana', price_usd: 119.99, thumb: '' },
+];

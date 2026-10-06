@@ -4,7 +4,7 @@ import React from 'react';
 // variant "hero": on phones only the first figure stays, big, with `note` under it.
 export default function StatRow({ items, variant = 'row', note }) {
   return (
-    <div className={`m-stats m-stats--${variant}`}>
+    <div className={`m-stats m-stats--${variant} ${items.length === 4 ? 'm-stats--four' : ''}`.trim()}>
       {items.map(it => (
         <div className="m-stat" key={it.label}>
           <div className="m-stat__label">{it.label}</div>

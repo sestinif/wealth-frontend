@@ -15,8 +15,17 @@ import Money from '../components/Money';
 import DiaryView from '../pages/DiaryView';
 import DashboardView from '../pages/DashboardView';
 import * as fixtures from './fixtures';
+import { api } from '../api.js';
+import { installMockApi } from './mockApi';
+import Field from '../components/Field';
+import AmountField from '../components/AmountField';
+import Segmented from '../components/Segmented';
+import Switch from '../components/Switch';
+import Pick from '../components/Pick';
 import '../styles.css';
 import '../mercury.css';
+
+installMockApi(api);
 
 const Frame = ({ title, size, children }) => (
   <PageLayout title={title} username="federico" size={size}>{children}</PageLayout>
@@ -86,6 +95,40 @@ function DashboardDemo({ bare = false }) {
   );
 }
 
+function FormsDemo() {
+  const [amount, setAmount] = React.useState('500');
+  const [dir, setDir] = React.useState('in');
+  const [live, setLive] = React.useState(true);
+  const [cur, setCur] = React.useState('EUR');
+  return (
+    <Frame title="Forms" size="md">
+      <PageHead title="Forms" />
+      <div className="m-form">
+        <Field><Segmented options={[{ key: 'in', label: 'Money in' }, { key: 'out', label: 'Money out' }]} value={dir} onChange={setDir} /></Field>
+        <Field label="Asset" right={<button type="button" className="m-link">New asset</button>}>
+          <select className="form-input"><option>Bitcoin · BTC</option><option>Vanguard FTSE All-World UCITS ETF · VUAA</option></select>
+        </Field>
+        <AmountField label="Amount" right={<Pick options={['EUR', 'USD']} value={cur} onChange={setCur} />}
+          symbol={cur === 'USD' ? '$' : '€'} value={amount} onChange={setAmount} caption="You get 0.00754148 BTC" />
+        <div className="m-g2">
+          <Field label="Quantity"><input className="form-input" type="number" defaultValue="0.00754148" /></Field>
+          <Field label="Price" right={<Pick options={['EUR', 'USD']} value="EUR" onChange={() => {}} disabledKeys={['USD']} />} hint="Live price">
+            <input className="form-input" type="number" defaultValue="66300" disabled={live} />
+          </Field>
+        </div>
+        <Switch label="Use live price" checked={live} onChange={setLive} />
+        <Field label="Note"><input className="form-input" placeholder="Optional" /></Field>
+        <button type="button" className="btn btn--primary btn--lg btn--full">Add purchase</button>
+      </div>
+      <StatRow items={[
+        { label: 'Your average', value: '€57,697.13' }, { label: 'Quantity', value: '0.0208' },
+        { label: 'Market price', value: '€76,000.00' }, { label: 'Unrealized', value: '+31.7%', tone: 'up' },
+      ]} />
+      <LedgerRow date="Oct 5" avatar={<Avatar label="Relay" />} title="Relay" sub="Money in" amount="+$1,000.00" tone="in" />
+    </Frame>
+  );
+}
+
 // Each entry renders one screen. Later tasks add to this map.
 const PAGES = {
   frame: () => (
@@ -111,6 +154,7 @@ const PAGES = {
   'diary-empty': () => <DiaryDemo empty />,
   dashboard: () => <DashboardDemo />,
   'dashboard-bare': () => <DashboardDemo bare />,
+  forms: () => <FormsDemo />,
 };
 
 const key = new URLSearchParams(window.location.search).get('p') || 'frame';

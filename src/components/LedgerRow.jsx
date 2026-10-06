@@ -3,9 +3,11 @@ import Icon from './Icon';
 
 // One ledger line. Desktop: date · avatar · name+detail · amount · dots.
 // Phone: avatar · name+short detail · amount with the date under it.
+// Without onClick it is a plain row: no dots, no pointer.
 export default function LedgerRow({ date, avatar, title, sub, subShort, amount, tone = '', onClick }) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <button type="button" className="m-row" onClick={onClick}>
+    <Tag className={`m-row ${onClick ? '' : 'm-row--static'}`.trim()} {...(onClick ? { type: 'button', onClick } : {})}>
       <span className="m-row__date">{date}</span>
       {avatar}
       <span className="m-row__main">
@@ -17,7 +19,7 @@ export default function LedgerRow({ date, avatar, title, sub, subShort, amount, 
         <span className={`m-row__amount ${tone ? `m-row__amount--${tone}` : ''}`}>{amount}</span>
         <span className="m-row__date-m">{date}</span>
       </span>
-      <span className="m-row__more" aria-hidden="true"><Icon name="dots" size={16} /></span>
-    </button>
+      <span className="m-row__more" aria-hidden="true">{onClick && <Icon name="dots" size={16} />}</span>
+    </Tag>
   );
 }
