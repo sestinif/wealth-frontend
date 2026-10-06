@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  formatEUR, formatUSD, formatPrice, formatPnL,
+  formatEUR, formatUSD, formatPrice,
   formatDay, formatDayLong, formatMonth, moneyParts, pctText, localDay,
 } from './format.js';
 
@@ -29,11 +29,6 @@ test('formatPrice adapts decimals to the size of the price', () => {
   assert.equal(formatPrice(0.0051), '€0.0051');
   assert.equal(formatPrice(0.000012), '€0.000012');
   assert.equal(formatPrice(120.5, 'USD'), '$120.50');
-});
-
-test('formatPnL always shows a sign', () => {
-  assert.equal(formatPnL(342.59), '+€342.59');
-  assert.equal(formatPnL(-5323.86), `${MINUS}€5,323.86`);
 });
 
 test('date helpers do not depend on the local timezone', () => {

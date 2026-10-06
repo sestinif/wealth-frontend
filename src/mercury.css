@@ -63,19 +63,16 @@ body {
 /* ---------- 2. Legacy ornaments off ---------- */
 body::before, body::after { content: none; }
 .page-layout { background-image: none; }
-.card::after, .hero-stats::before, .hero-stats::after, .asset-card::after, .fab::before { content: none; }
+.card::after, .fab::before { content: none; }
 .num--up, .num--down { animation: none; }
 .skeleton { background: var(--bg-elev); background-image: none; animation: pulse 1.4s ease-in-out infinite; }
 /* The legacy page fade leaves a transform on .page-inner, which turns it into the
    containing block of every position:fixed child (dialogs landed off screen). */
 .page-inner { animation: none; }
 
-.card__title, .hero-stat__label, .calc-stat__lbl, .calc-result__lbl,
-.section-header__title, .asset-strip__label, .kpi-card__label,
-.data-table th, .form-label, .donut-center__lbl, .fab-modal__eyebrow {
+.data-table th, .form-label, .fab-modal__eyebrow {
   text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500;
 }
-.collapse-btn { text-transform: none; letter-spacing: 0; }
 .loading-text { font-size: 13px; letter-spacing: 0; }
 
 /* ---------- 3. App frame ---------- */
@@ -119,7 +116,6 @@ body::before, body::after { content: none; }
 .btn--lg { padding: 11px 20px; font-size: 14px; border-radius: 8px; }
 
 .panel, .card { background: var(--bg-card); border: 1px solid var(--border); box-shadow: none; }
-.card--interactive:hover { transform: none; box-shadow: none; }
 
 .currency-toggle { background: transparent; border-radius: 8px; }
 .currency-toggle__btn { font-size: 12px; font-weight: 400; letter-spacing: 0; padding: 5px 10px; border-radius: 6px; color: var(--text-2); }
@@ -132,7 +128,6 @@ body::before, body::after { content: none; }
 .toggle:hover .toggle__slider::before { box-shadow: none; }
 
 .fab, .fab:hover { background: var(--accent); color: var(--bg); box-shadow: 0 8px 24px rgba(0,0,0,0.4); transform: none; }
-.mini-toggle__btn.active { color: var(--bg); }
 .top-progress__bar { background: var(--accent); box-shadow: none; }
 
 /* Sign-in card: flat, same selectors as the legacy rules */

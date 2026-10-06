@@ -27,13 +27,6 @@ export const formatPrice = (value, currency = 'EUR') => {
   return money(currency === 'USD' ? '$' : '€', value, min, max);
 };
 
-export const formatPnL = (value) => `${value >= 0 ? '+' : ''}${formatEUR(value)}`;
-
-export const formatPct = (value) => {
-  const sign = value >= 0 ? '+' : '';
-  return `${sign}${Number(value).toFixed(2)}%`;
-};
-
 // Signed percentage with one decimal and a real minus. A change that rounds to zero has no sign.
 export const pctText = (value) => {
   const digits = Math.abs(Number(value) || 0).toFixed(1);
@@ -78,7 +71,4 @@ export const TOOLTIP_STYLE = {
 };
 export const TOOLTIP_LABEL_STYLE = { color: '#9A9AA8', fontSize: 12, marginBottom: 2 };
 export const TOOLTIP_ITEM_STYLE = { color: '#EDEDF3', fontSize: 13 };
-export const CHART_GRID = { stroke: 'rgba(255,255,255,0.06)', strokeDasharray: '2 4', vertical: false };
 
-// Y-axis €-compact: 1 decimal so a tight range doesn't produce duplicate ticks
-export const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(v));
