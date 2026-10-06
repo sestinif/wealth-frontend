@@ -1,8 +1,15 @@
-export const formatEUR = (value, decimals = 2) =>
-  `${Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })} €`;
+const MINUS = '−';
+const group = (n, min, max = min) =>
+  Math.abs(Number(n)).toLocaleString('en-US', { minimumFractionDigits: min, maximumFractionDigits: max, useGrouping: 'always' });
+// A value that rounds to zero is not negative ("−€0.00" reads as a bug).
+const isNegative = (value, digits) => Number(value) < 0 && /[1-9]/.test(digits);
+const money = (symbol, value, min, max) => {
+  const digits = group(value, min, max);
+  return `${isNegative(value, digits) ? MINUS : ''}${symbol}${digits}`;
+};
 
-export const formatUSD = (value, decimals = 2) =>
-  `$ ${Number(value).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' })}`;
+export const formatEUR = (value, decimals = 2) => money('€', value, decimals);
+export const formatUSD = (value, decimals = 2) => money('$', value, decimals);
 
 export const formatQty = (value, decimals = 2) => {
   const n = Number(value);
@@ -13,29 +20,38 @@ export const formatQty = (value, decimals = 2) => {
   return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: 'always' });
 };
 
+// Adaptive decimals: micro-prices need more digits, without trailing zeros.
 export const formatPrice = (value, currency = 'EUR') => {
-  const n = Number(value);
-  // Adaptive decimals: micro-prices like $0.000012 need many decimals
-  let decimals = 2;
-  if (Math.abs(n) > 0 && Math.abs(n) < 0.01) decimals = 8;
-  else if (Math.abs(n) < 1) decimals = 4;
-  else if (Math.abs(n) < 100) decimals = 2;
-  const num = n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: 'always' });
-  return currency === 'USD' ? `$ ${num}` : `${num} €`;
+  const a = Math.abs(Number(value));
+  const [min, max] = a > 0 && a < 0.01 ? [4, 8] : a < 1 ? [4, 4] : [2, 2];
+  return money(currency === 'USD' ? '$' : '€', value, min, max);
 };
 
-export const formatPnL = (value) => {
-  const sign = value >= 0 ? '+' : '';
-  return `${sign}${formatEUR(value)}`;
-};
+export const formatPnL = (value) => `${value >= 0 ? '+' : ''}${formatEUR(value)}`;
 
 export const formatPct = (value) => {
   const sign = value >= 0 ? '+' : '';
   return `${sign}${Number(value).toFixed(2)}%`;
 };
 
+// Legacy numeric date (dd/mm/yyyy) — still used by pages not yet restyled.
 export const formatDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString('it-IT');
+
+// Calendar dates are stored as YYYY-MM-DD: read them as UTC so the label
+// never slips a day in a negative-offset timezone.
+const calendar = (dateStr, opts) =>
+  new Date(`${String(dateStr).slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-US', { timeZone: 'UTC', ...opts });
+export const formatDay = (dateStr) => calendar(dateStr, { month: 'short', day: 'numeric' });
+export const formatDayLong = (dateStr) => calendar(dateStr, { month: 'short', day: 'numeric', year: 'numeric' });
+export const formatMonth = (dateStr) => calendar(dateStr, { month: 'long', year: 'numeric' });
+
+// Pieces of a money figure, so the view can dim the cents.
+export const moneyParts = (value, currency = 'EUR', decimals = 2) => {
+  const digits = group(value, decimals);
+  const [int, cents = ''] = digits.split('.');
+  return { negative: isNegative(value, digits), symbol: currency === 'USD' ? '$' : '€', int, cents };
+};
 
 export const sortByDate = (array, key = 'date', order = 'desc') => {
   return [...array].sort((a, b) => {
@@ -45,17 +61,16 @@ export const sortByDate = (array, key = 'date', order = 'desc') => {
 };
 
 export const TOOLTIP_STYLE = {
-  background: '#1C1C22',
-  backdropFilter: 'blur(8px)',
-  border: '1px solid rgba(255,255,255,0.10)',
-  borderRadius: '10px',
+  background: '#23232E',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '8px',
   padding: '8px 12px',
   fontFamily: "'Inter', sans-serif",
   fontVariantNumeric: 'tabular-nums',
-  boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+  boxShadow: 'none',
 };
-export const TOOLTIP_LABEL_STYLE = { color: '#7A7880', fontSize: 10, marginBottom: 2 };
-export const TOOLTIP_ITEM_STYLE = { color: '#C9C7C3', fontSize: 12 };
+export const TOOLTIP_LABEL_STYLE = { color: '#9A9AA8', fontSize: 12, marginBottom: 2 };
+export const TOOLTIP_ITEM_STYLE = { color: '#EDEDF3', fontSize: 13 };
 export const CHART_GRID = { stroke: 'rgba(255,255,255,0.06)', strokeDasharray: '2 4', vertical: false };
 
 // Y-axis €-compact: 1 decimal so a tight range doesn't produce duplicate ticks
