@@ -12,6 +12,8 @@ import LedgerRow from '../components/LedgerRow';
 import DetailSheet from '../components/DetailSheet';
 import Avatar from '../components/Avatar';
 import Money from '../components/Money';
+import DiaryView from '../pages/DiaryView';
+import * as fixtures from './fixtures';
 import '../styles.css';
 import '../mercury.css';
 
@@ -52,6 +54,19 @@ function ComponentsDemo() {
   );
 }
 
+// Stateful so that deleting from the sheet really removes the row.
+function DiaryDemo({ empty = false }) {
+  const [purchases, setPurchases] = React.useState(empty ? [] : fixtures.purchases);
+  const [bank, setBank] = React.useState(empty ? [] : fixtures.bankEntries);
+  return (
+    <Frame title="Diary" size="md">
+      <DiaryView purchases={purchases} assets={fixtures.assets} bankEntries={bank} cashPositions={fixtures.cashPositions}
+        onDeletePurchase={(id) => setPurchases(p => p.filter(x => x.id !== id))}
+        onDeleteBankEntry={(id) => setBank(b => b.filter(x => x.id !== id))} />
+    </Frame>
+  );
+}
+
 // Each entry renders one screen. Later tasks add to this map.
 const PAGES = {
   frame: () => (
@@ -73,6 +88,8 @@ const PAGES = {
     </Frame>
   ),
   components: () => <ComponentsDemo />,
+  diary: () => <DiaryDemo />,
+  'diary-empty': () => <DiaryDemo empty />,
 };
 
 const key = new URLSearchParams(window.location.search).get('p') || 'frame';
