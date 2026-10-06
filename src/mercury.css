@@ -87,6 +87,7 @@ body::before, body::after { content: none; }
 .applink__chip { background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 500; }
 .applink__name { font-size: 13px; letter-spacing: 0; font-weight: 400; }
 
+.page-content { min-width: 0; }   /* a wide child must never widen the page */
 .topbar { background: var(--bg); backdrop-filter: none; box-shadow: none; }
 .topbar__title { display: none; }
 .topbar__username, .cmdk-hint { font-size: 12px; }
@@ -260,7 +261,8 @@ select.form-input option { background: var(--bg-elev); color: var(--text-1); }
 .m-amount:focus-within { border-bottom-color: var(--accent); }
 .m-amount__sym { font-size: 34px; letter-spacing: -0.025em; color: var(--text-2); }
 .m-amount__input {
-  flex: 1; min-width: 0; padding: 0; background: none; border: 0; outline: none;
+  /* width 0 + flex: an input's default width would otherwise widen the whole page on phones */
+  flex: 1 1 0; width: 0; min-width: 0; padding: 0; background: none; border: 0; outline: none;
   color: var(--text-1); font: inherit; font-size: 34px; letter-spacing: -0.025em;
   -moz-appearance: textfield; appearance: textfield;
 }
