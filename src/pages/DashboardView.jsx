@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AreaChart, Area, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AnimatedNumber from '../components/AnimatedNumber';
 import StatRow from '../components/StatRow';
 import DetailSheet from '../components/DetailSheet';
@@ -8,14 +8,13 @@ import Money from '../components/Money';
 import Icon from '../components/Icon';
 import MarketOverview from '../components/MarketOverview';
 import {
-  formatEUR, formatUSD, formatQty, formatPrice, formatDayLong,
+  formatEUR, formatUSD, formatQty, formatPrice, formatDayLong, pctText,
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { computeNetWorth, periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
 
 const ownMoney = (amount, currency) =>
   ((currency || 'EUR').toUpperCase() === 'USD' ? formatUSD : formatEUR)(Number(amount) || 0);
-const pctText = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`;
 
 // Pure view of the dashboard: net worth, allocation, three figures, holdings.
 export default function DashboardView({
@@ -136,6 +135,7 @@ export default function DashboardView({
               <div className="m-nw__chart">
                 <ResponsiveContainer width="100%" height={120}>
                   <AreaChart data={trend.series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                    <XAxis dataKey="date" hide />
                     <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                       cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }}
@@ -201,7 +201,7 @@ export default function DashboardView({
         <>
           <div className="m-section">
             <span>Speculative, not included</span>
-            <span>{money(summary.spec_value || 0)}</span>
+            <span>{money(summary.spec_value || 0)} · <span className={(summary.spec_pnl || 0) >= 0 ? 'm-up' : 'm-down'}>{signed(summary.spec_pnl || 0)}</span></span>
           </div>
           {byValue(nw.specAssets).map(a => holding(a, true))}
         </>

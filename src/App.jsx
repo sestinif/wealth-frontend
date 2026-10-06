@@ -20,7 +20,7 @@ function ProtectedRoute({ children, isAuthenticated, isLoading }) {
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
-function LoadingScreen({ message = "LOADING..." }) {
+function LoadingScreen({ message = "Loading..." }) {
   return (
     <div className="loading-screen">
       <div className="loading-logo"><BrandMark size={40} /></div>
@@ -56,37 +56,18 @@ export default function App() {
     checkSetup();
   }, []);
 
-  // Cursor spotlight: track the pointer over cards/hero so a soft radial
-  // light can follow it (purely cosmetic, desktop-only effect).
-  useEffect(() => {
-    let raf = 0;
-    const onMove = (e) => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const el = e.target.closest?.('.card, .hero-stats, .asset-card');
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        el.style.setProperty('--mx', `${e.clientX - r.left}px`);
-        el.style.setProperty('--my', `${e.clientY - r.top}px`);
-      });
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
-
   const handleLogin = (token, username) => { setToken(token); setIsAuthenticated(true); };
   const handleSetupComplete = () => { setSetupRequired(false); };
 
-  if (isLoading) return <LoadingScreen message="CONNECTING TO SERVER..." />;
+  if (isLoading) return <LoadingScreen message="Connecting to server..." />;
 
   if (backendError) {
     return (
       <div className="loading-screen">
         <div className="loading-logo"><BrandMark size={40} /></div>
-        <div className="loading-error">BACKEND UNREACHABLE</div>
+        <div className="loading-error">Backend unreachable</div>
         <button className="btn btn--primary" onClick={() => { setIsLoading(true); setBackendError(false); window.location.reload(); }}>
-          RETRY
+          Retry
         </button>
       </div>
     );

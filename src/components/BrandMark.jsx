@@ -34,18 +34,18 @@ export default function BrandMark({ size = 30, className = '' }) {
       />
       <path
         d="M112 336 L208 240 L288 288 L400 144 L400 376 L112 376 Z"
-        fill="#8B7BFF"
+        fill="#8D9BFF"
         fillOpacity="0.16"
       />
       <path
         d="M112 336 L208 240 L288 288 L400 144"
         fill="none"
-        stroke="#8B7BFF"
+        stroke="#8D9BFF"
         strokeWidth="40"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="400" cy="144" r="34" fill="#8B7BFF" />
+      <circle cx="400" cy="144" r="34" fill="#8D9BFF" />
     </svg>
   );
 }

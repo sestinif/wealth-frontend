@@ -13,7 +13,7 @@ import { PageSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName, setDisplayName as saveDisplayName } from '../utils/user';
-import { formatEUR, formatUSD, formatDayLong } from '../utils/format';
+import { formatEUR, formatUSD, formatPrice, formatDayLong } from '../utils/format';
 
 export default function Settings() {
   const toast = useToast();
@@ -122,7 +122,7 @@ export default function Settings() {
     const isCrypto = asset.asset_type === 'crypto' || asset.asset_type === 'dex_token';
     const val = isCrypto ? (p.usd || p.eur || 0) : (p.eur || 0);
     if (!val || val < 0.000001) return '—';
-    return isCrypto ? formatUSD(val) : formatEUR(val);
+    return formatPrice(val, isCrypto ? 'USD' : 'EUR');
   };
 
   if (loading) return <PageLayout title="Settings" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;

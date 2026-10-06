@@ -59,7 +59,7 @@ test('periodSeries cuts the history to the period and reports the change', () =>
     { date: '2026-09-01', total: 100 }, { date: '2026-09-30', total: 110 },
     { date: '2026-10-05', total: 120 }, { date: '2026-10-06', total: 132 },
   ];
-  const today = new Date('2026-10-06T12:00:00Z');
+  const today = new Date(2026, 9, 6, 12);
   const week = periodSeries(history, [], '1W', today);
   assert.deepEqual(week.series.map(p => p.date), ['2026-09-30', '2026-10-05', '2026-10-06']);
   assert.equal(week.delta, 22);
@@ -71,7 +71,7 @@ test('periodSeries cuts the history to the period and reports the change', () =>
 
 test('periodSeries falls back to the portfolio series while history is short', () => {
   const fallback = [{ date: '2026-10-05', value: 10 }, { date: '2026-10-06', value: 15 }];
-  const r = periodSeries([{ date: '2026-10-06', total: 132 }], fallback, '1M', new Date('2026-10-06T12:00:00Z'));
+  const r = periodSeries([{ date: '2026-10-06', total: 132 }], fallback, '1M', new Date(2026, 9, 6, 12));
   assert.equal(r.usingHistory, false);
   assert.equal(r.series, fallback);
   assert.equal(r.delta, 5);
@@ -85,11 +85,20 @@ test('portfolioSeries30d values holdings at today\'s prices, skipping excluded a
     { date: '2026-09-01', asset: 'MEME', quantity: 1000 },
   ];
   const series = portfolioSeries30d(purchases, { BTC: { eur: 80000 }, MEME: { eur: 1 } },
-    [{ symbol: 'BTC' }, { symbol: 'MEME', include_in_totals: false }], new Date('2026-10-06T12:00:00Z'));
+    [{ symbol: 'BTC' }, { symbol: 'MEME', include_in_totals: false }], new Date(2026, 9, 6, 12));
   assert.equal(series.length, 30);
   assert.equal(series[0].date, '2026-09-07');
   assert.equal(series[0].value, 8000);
   assert.equal(series[29].date, '2026-10-06');
   assert.equal(series[29].value, 16000);
   assert.deepEqual(portfolioSeries30d([], {}, []), []);
+});
+
+test('series and period cut-offs use the local calendar day, also just after midnight', () => {
+  const justAfterMidnight = new Date(2026, 9, 6, 0, 30);   // 6 Oct 2026, 00:30 local time
+  const series = portfolioSeries30d([{ date: '2026-10-06', asset: 'BTC', quantity: 1 }], { BTC: { eur: 100 } }, [{ symbol: 'BTC' }], justAfterMidnight);
+  assert.equal(series[29].date, '2026-10-06');
+  assert.equal(series[29].value, 100);
+  const history = [{ date: '2026-09-29', total: 1 }, { date: '2026-09-30', total: 2 }, { date: '2026-10-06', total: 3 }];
+  assert.deepEqual(periodSeries(history, [], '1W', justAfterMidnight).series.map(p => p.date), ['2026-09-29', '2026-09-30', '2026-10-06']);
 });

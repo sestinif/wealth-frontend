@@ -5,45 +5,26 @@ export function Skel({ w = '100%', h = 12, r = 6, style = {} }) {
   return <span className="skeleton skel" style={{ width: w, height: h, borderRadius: r, ...style }} />;
 }
 
-// Mirrors the real dashboard layout so the load feels instant & intentional,
-// rather than a generic "CARICAMENTO..." flash.
+// Mirrors the new Dashboard (title, two blocks, a row of figures, a list)
+// so the load feels instant and intentional.
 export function DashboardSkeleton() {
   return (
     <>
-      <div className="hero-greeting" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          <Skel w={220} h={22} />
-          <Skel w={300} h={12} />
-        </div>
-        <Skel w={120} h={28} r={7} />
+      <div style={{ marginBottom: 20 }}>
+        <Skel w={200} h={24} />
       </div>
 
-      <div className="skel-hero">
-        {[0, 1, 2].map(i => (
-          <div key={i} className="skel-hero__cell">
-            <Skel w={90} h={9} />
-            <Skel w={160} h={30} />
-            <Skel w={70} h={11} />
-          </div>
-        ))}
+      <div className="m-top">
+        <Skel h={220} r={12} />
+        <Skel h={220} r={12} />
       </div>
 
-      <div className="section-header">
-        <Skel w={180} h={10} />
-        <Skel w={96} h={20} r={6} />
+      <div style={{ display: 'flex', gap: 24, padding: '20px 0' }}>
+        {[0, 1, 2].map(i => <Skel key={i} w={90} h={14} />)}
       </div>
 
-      <div className="skel-strip">
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} className="skel-strip__row">
-            <Skel w={62} h={18} r={5} />
-            <Skel w={80} h={12} />
-            <Skel w={56} h={12} />
-            <Skel w={92} h={12} />
-            <Skel w={70} h={12} />
-            <Skel w={32} h={18} r={9} />
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[0, 1, 2, 3, 4].map(i => <Skel key={i} h={44} r={8} />)}
       </div>
     </>
   );

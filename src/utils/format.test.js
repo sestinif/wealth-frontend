@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   formatEUR, formatUSD, formatPrice, formatPnL,
-  formatDay, formatDayLong, formatMonth, moneyParts,
+  formatDay, formatDayLong, formatMonth, moneyParts, pctText,
 } from './format.js';
 
 const MINUS = '−';
@@ -46,4 +46,11 @@ test('date helpers do not depend on the local timezone', () => {
 test('moneyParts splits a figure for dimmed cents', () => {
   assert.deepEqual(moneyParts(63195.72), { negative: false, symbol: '€', int: '63,195', cents: '72' });
   assert.deepEqual(moneyParts(-5, 'USD'), { negative: true, symbol: '$', int: '5', cents: '00' });
+});
+
+test('pctText: signed, one decimal, real minus, and a plain zero', () => {
+  assert.equal(pctText(31.66), '+31.7%');
+  assert.equal(pctText(-95.3), '−95.3%');
+  assert.equal(pctText(0), '0.0%');
+  assert.equal(pctText(-0.04), '0.0%');
 });

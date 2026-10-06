@@ -8,9 +8,8 @@ import LedgerRow from '../components/LedgerRow';
 import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatQty, formatDay, sortByDate } from '../utils/format';
+import { formatEUR, formatQty, formatDay, sortByDate, pctText } from '../utils/format';
 
-const pctText = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`;
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
 
 export default function Reports() {

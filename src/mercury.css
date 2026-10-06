@@ -65,6 +65,7 @@ body::before, body::after { content: none; }
 .page-layout { background-image: none; }
 .card::after, .hero-stats::before, .hero-stats::after, .asset-card::after, .fab::before { content: none; }
 .num--up, .num--down { animation: none; }
+.skeleton { background: var(--bg-elev); background-image: none; animation: pulse 1.4s ease-in-out infinite; }
 /* The legacy page fade leaves a transform on .page-inner, which turns it into the
    containing block of every position:fixed child (dialogs landed off screen). */
 .page-inner { animation: none; }
@@ -75,6 +76,7 @@ body::before, body::after { content: none; }
   text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500;
 }
 .collapse-btn { text-transform: none; letter-spacing: 0; }
+.loading-text { font-size: 13px; letter-spacing: 0; }
 
 /* ---------- 3. App frame ---------- */
 .sidebar { background: var(--bg); backdrop-filter: none; box-shadow: none; }
@@ -314,8 +316,9 @@ select.form-input option { background: var(--bg-elev); color: var(--text-1); }
 .m-legend__dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; }
 
 .m-dist { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-1); }
+.m-dist__label { display: flex; align-items: baseline; min-width: 0; }
 .m-dist__name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.m-dist__pct { margin-left: 6px; font-size: 12px; color: var(--text-2); }
+.m-dist__pct { flex-shrink: 0; margin-left: 6px; font-size: 12px; color: var(--text-2); }
 .m-dist__bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--bg-elev); }
 .m-dist__fill { display: block; height: 4px; border-radius: 2px; background: var(--accent); }
 

@@ -6,7 +6,7 @@ import Money from '../components/Money';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import {
-  formatEUR, formatPrice, formatDayLong,
+  formatEUR, formatPrice, formatDayLong, pctText,
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
@@ -15,7 +15,6 @@ const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
 const CURSOR = { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 };
 const tooltipProps = { contentStyle: TOOLTIP_STYLE, labelStyle: TOOLTIP_LABEL_STYLE, itemStyle: TOOLTIP_ITEM_STYLE };
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
-const pctText = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`;
 const shareText = (pct) => (pct < 0.1 ? '<0.1' : pct.toFixed(1));
 
 // Prices below €1 (dex tokens) die under Math.round — keep sane precision instead.
@@ -61,12 +60,15 @@ export default function Charts() {
   );
   const lastValue = trend.series.length ? trend.series[trend.series.length - 1].value : (dashboard.summary?.total_value || 0);
 
-  // Growth by market: per day, every asset's value folded into stock or crypto.
+  // Growth by market: per day, every asset that counts toward the totals folded into stock or crypto.
   const isStock = Object.fromEntries(assets.map(a => [a.symbol, a.asset_type === 'stock_etf']));
   const growthData = buildAllocation(dashboard, assets, 30).map(day => {
     let stock = 0, crypto = 0;
-    assets.forEach(a => { if (isStock[a.symbol]) stock += day[a.symbol] || 0; else crypto += day[a.symbol] || 0; });
-    return { date: day.date, label: day.label, stock, crypto };
+    assets.forEach(a => {
+      if (dashboard.summary?.by_asset?.[a.symbol]?.include_in_totals === false) return;
+      if (isStock[a.symbol]) stock += day[a.symbol] || 0; else crypto += day[a.symbol] || 0;
+    });
+    return { date: day.date, stock, crypto };
   });
 
   // Distribution: held assets that count toward the totals, largest first.
@@ -150,7 +152,7 @@ export default function Charts() {
             const pct = (h.value / heldTotal) * 100;
             return (
               <div className="m-dist" key={h.symbol}>
-                <span className="m-dist__name">{h.name}<span className="m-dist__pct">{shareText(pct)}%</span></span>
+                <span className="m-dist__label"><span className="m-dist__name">{h.name}</span><span className="m-dist__pct">{shareText(pct)}%</span></span>
                 <span>{formatEUR(h.value)}</span>
                 <span className="m-dist__bar"><span className="m-dist__fill" style={{ width: `${Math.max(pct, 1)}%` }} /></span>
               </div>

@@ -15,6 +15,9 @@ export function toEur(amount, currency, rate) {
   return (currency || 'EUR').toUpperCase() === 'USD' && rate ? n / rate : n;
 }
 
+// YYYY-MM-DD of a Date in LOCAL time (toISOString would give the UTC day).
+const localDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 const isCrypto = (a) => a.asset_type === 'crypto' || a.asset_type === 'dex_token';
 
 export function computeNetWorth({ summary, assets = [], prices = {}, networth, cashPositions = [] }) {
@@ -47,7 +50,7 @@ export function portfolioSeries30d(purchases = [], prices = {}, assets = [], tod
   const days = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
+    const ds = localDay(d);
     const qty = {};
     sorted.filter(p => String(p.date).slice(0, 10) <= ds).forEach(p => { qty[p.asset] = (qty[p.asset] || 0) + p.quantity; });
     let total = 0;
@@ -72,7 +75,7 @@ export const PERIODS = [
 export function periodSeries(history = [], fallback = [], period = '1M', today = new Date()) {
   const [, days, label] = PERIODS.find(p => p[0] === period) || PERIODS[1];
   const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const cutoffStr = localDay(cutoff);
   const hist = history.filter(h => h.date >= cutoffStr).map(h => ({ date: h.date, value: h.total || 0 }));
   const usingHistory = hist.length >= 2;
   const series = usingHistory ? hist : fallback;

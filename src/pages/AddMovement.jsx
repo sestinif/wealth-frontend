@@ -448,7 +448,7 @@ export default function AddMovement() {
                   const isUsd = (p.currency || 'EUR').toUpperCase() === 'USD';
                   return (
                     <LedgerRow key={p.id} date="" avatar={<Avatar label={p.label} />} title={p.label}
-                      sub={isUsd ? `About ${formatEUR(toEur(p.amount_eur, 'USD'))}` : 'Uninvested cash'}
+                      sub={isUsd && eurUsdRate ? `About ${formatEUR(toEur(p.amount_eur, 'USD'))}` : 'Uninvested cash'}
                       amount={curFmt(p.currency)(p.amount_eur)} onClick={() => setCashSel(p.id)} />
                   );
                 })}

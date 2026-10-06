@@ -34,9 +34,12 @@ export const formatPct = (value) => {
   return `${sign}${Number(value).toFixed(2)}%`;
 };
 
-// Legacy numeric date (dd/mm/yyyy) — still used by pages not yet restyled.
-export const formatDate = (dateStr) =>
-  new Date(dateStr).toLocaleDateString('it-IT');
+// Signed percentage with one decimal and a real minus. A change that rounds to zero has no sign.
+export const pctText = (value) => {
+  const digits = Math.abs(Number(value) || 0).toFixed(1);
+  if (digits === '0.0') return '0.0%';
+  return `${value >= 0 ? '+' : '−'}${digits}%`;
+};
 
 // Calendar dates are stored as YYYY-MM-DD: read them as UTC so the label
 // never slips a day in a negative-offset timezone.
@@ -75,28 +78,3 @@ export const CHART_GRID = { stroke: 'rgba(255,255,255,0.06)', strokeDasharray: '
 
 // Y-axis €-compact: 1 decimal so a tight range doesn't produce duplicate ticks
 export const yEur = (v) => '€' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : Math.round(v));
-
-// Curated categorical palette for charts — all muted at a similar saturation
-// so slices never clash, regardless of the per-asset brand colors. Largest
-// holding gets the first colour. Sub-threshold holdings collapse into "Altri".
-export const CHART_COLORS = ['#8B7BFF', '#34D399', '#FBBF24', '#FB7185', '#60A5FA', '#C88AE6', '#5EEAD4', '#F59E0B'];
-export const CHART_OTHER = '#7A7880';
-
-// value-ranked { symbol -> palette colour } map (consistent across donut/stacked)
-export const rankedColors = (assets, valueOf) => {
-  const m = {};
-  [...assets].sort((a, b) => (valueOf(b) || 0) - (valueOf(a) || 0))
-    .forEach((a, i) => { m[a.symbol] = CHART_COLORS[i % CHART_COLORS.length]; });
-  return m;
-};
-
-// build donut/pie data: sort desc, collapse <minPct into "Altri", assign palette
-export const allocationSlices = (items, minPct = 0.01) => {
-  const total = items.reduce((s, i) => s + i.value, 0) || 1;
-  const sorted = [...items].filter(i => i.value > 0).sort((a, b) => b.value - a.value);
-  const big = []; let other = 0;
-  sorted.forEach(i => { (i.value / total >= minPct ? big.push(i) : (other += i.value)); });
-  const out = big.map((i, idx) => ({ name: i.name, value: i.value, color: CHART_COLORS[idx % CHART_COLORS.length], pct: (i.value / total * 100).toFixed(1) }));
-  if (other > 0) out.push({ name: 'Altri', value: other, color: CHART_OTHER, pct: (other / total * 100).toFixed(1) });
-  return out;
-};

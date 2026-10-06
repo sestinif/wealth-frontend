@@ -9,7 +9,7 @@ export const coinIconUrl = (symbol) => {
 // Real coin logos (via cryptocurrency-icons CDN) in a tidy circular chip,
 // with a graceful colored-initial fallback for stocks/ETFs/unknowns.
 // Backward compatible: same { asset, color } props used everywhere.
-export default function AssetBadge({ asset, color = '#8B7BFF', showSymbol = true }) {
+export default function AssetBadge({ asset, color = '#9A9AA8', showSymbol = true }) {
   const [err, setErr] = useState(false);
   const sym = String(asset || '');
   const url = coinIconUrl(sym);
