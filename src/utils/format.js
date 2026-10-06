@@ -41,6 +41,10 @@ export const pctText = (value) => {
   return `${value >= 0 ? '+' : '−'}${digits}%`;
 };
 
+// YYYY-MM-DD of a Date in LOCAL time (toISOString would give the UTC day).
+export const localDay = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 // Calendar dates are stored as YYYY-MM-DD: read them as UTC so the label
 // never slips a day in a negative-offset timezone.
 const calendar = (dateStr, opts) =>

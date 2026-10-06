@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { useToast } from './Toast';
 import AssetBadge from './AssetBadge';
 import Icon from './Icon';
-import { formatPrice } from '../utils/format';
+import { formatPrice, localDay } from '../utils/format';
 
 export default function QuickBuyFAB() {
   const toast = useToast();
@@ -71,7 +71,7 @@ export default function QuickBuyFAB() {
     }
     setSubmitting(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = localDay();
       const usd = (currentAsset?.asset_type === 'crypto') ? parseFloat(priceUsd) || 0 : 0;
       await api.addPurchase(today, asset, parsedAmount, parsedPrice, notes, usd);
       toast(`${asset} purchase recorded`, 'success');

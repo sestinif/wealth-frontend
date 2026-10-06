@@ -173,7 +173,7 @@ export default function Settings() {
                   : <Avatar label={r.symbol} />}
                 <span className="m-row__main">
                   <span className="m-row__title">{r.name || r.symbol}</span>
-                  <span className="m-row__sub">{r.symbol}</span>
+                  <span className="m-row__sub">{[r.symbol, r.coingecko_id].filter(Boolean).join(' · ')}</span>
                 </span>
                 <span className="m-setrow__price">
                   {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   formatEUR, formatUSD, formatPrice, formatPnL,
-  formatDay, formatDayLong, formatMonth, moneyParts, pctText,
+  formatDay, formatDayLong, formatMonth, moneyParts, pctText, localDay,
 } from './format.js';
 
 const MINUS = '−';
@@ -53,4 +53,10 @@ test('pctText: signed, one decimal, real minus, and a plain zero', () => {
   assert.equal(pctText(-95.3), '−95.3%');
   assert.equal(pctText(0), '0.0%');
   assert.equal(pctText(-0.04), '0.0%');
+});
+
+test('localDay is the calendar day in local time, also just after midnight', () => {
+  assert.equal(localDay(new Date(2026, 9, 6, 0, 30)), '2026-10-06');
+  assert.equal(localDay(new Date(2026, 0, 5, 23, 59)), '2026-01-05');
+  assert.match(localDay(), /^\d{4}-\d{2}-\d{2}$/);
 });

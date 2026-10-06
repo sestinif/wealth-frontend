@@ -1,4 +1,5 @@
 // Pure net-worth maths, shared by the Dashboard view and the daily snapshot.
+import { localDay } from './format.js';
 
 export function eurUsdRate(prices = {}) {
   for (const sym of Object.keys(prices)) {
@@ -14,9 +15,6 @@ export function toEur(amount, currency, rate) {
   const n = Number(amount) || 0;
   return (currency || 'EUR').toUpperCase() === 'USD' && rate ? n / rate : n;
 }
-
-// YYYY-MM-DD of a Date in LOCAL time (toISOString would give the UTC day).
-const localDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const isCrypto = (a) => a.asset_type === 'crypto' || a.asset_type === 'dex_token';
 

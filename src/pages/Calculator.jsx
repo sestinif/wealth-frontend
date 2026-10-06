@@ -6,7 +6,7 @@ import StatRow from '../components/StatRow';
 import Field from '../components/Field';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatPrice } from '../utils/format';
+import { formatPrice, pctText } from '../utils/format';
 
 export default function Calculator() {
   const [user, setUser] = useState(null);
@@ -101,7 +101,7 @@ export default function Calculator() {
             { label: 'Your average', value: fmt(dca) },
             { label: 'Quantity', value: qtyFmt(qty) },
             { label: 'Market price', value: fmt(curPrice) },
-            { label: 'Unrealized', value: `${pnlPct >= 0 ? '+' : '−'}${Math.abs(pnlPct).toFixed(1)}%`, tone: pnlPct >= 0 ? 'up' : 'down' },
+            { label: 'Unrealized', value: pctText(pnlPct), tone: pnlPct >= 0 ? 'up' : 'down' },
           ]} />
 
           <div className="m-g2 m-g2--cards">

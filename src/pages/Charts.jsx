@@ -6,7 +6,7 @@ import Money from '../components/Money';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import {
-  formatEUR, formatPrice, formatDayLong, pctText,
+  formatEUR, formatPrice, formatDayLong, pctText, localDay,
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
@@ -122,7 +122,10 @@ export default function Charts() {
 
       <div className="m-g2 m-g2--cards">
         <div className="m-card">
-          <div className="m-label">Growth by market</div>
+          <div className="m-nw__head">
+            <div className="m-label">Growth by market</div>
+            <div className="m-label">Last 30 days, at today's prices</div>
+          </div>
           {growthData.length > 1 ? (
             <>
               <div className="m-nw__chart">
@@ -226,7 +229,7 @@ function buildAllocation(d, assets, days) {
   const s = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
   return Array.from({ length: days }, (_, i) => {
     const dt = new Date(); dt.setDate(dt.getDate() - (days - 1 - i));
-    const ds = dt.toISOString().split('T')[0];
+    const ds = localDay(dt);
     const q = {}; s.filter(p => p.date <= ds).forEach(p => { q[p.asset] = (q[p.asset] || 0) + p.quantity; });
     const e = { date: ds, label: `${dt.getDate()}/${dt.getMonth() + 1}` };
     assets.forEach(a => { e[a.symbol] = Math.round((q[a.symbol] || 0) * ((prices[a.symbol] || {}).eur || 0)); });

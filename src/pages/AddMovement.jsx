@@ -15,7 +15,7 @@ import AddAssetModal from '../components/AddAssetModal';
 import { useToast } from '../components/Toast';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong } from '../utils/format';
+import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong, localDay } from '../utils/format';
 
 const TABS = [
   { key: 'buy', label: 'Purchase' },
@@ -39,7 +39,7 @@ export default function AddMovement() {
   const [bankEntries, setBankEntries] = useState([]);
 
   // --- Buy asset form ---
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(localDay());
   const [asset, setAsset] = useState('');
   const [amountEur, setAmountEur] = useState('');
   const [priceEur, setPriceEur] = useState('');
@@ -60,7 +60,7 @@ export default function AddMovement() {
   const [beDirection, setBeDirection] = useState('in');
   const [beAmount, setBeAmount] = useState('');
   const [beCurrency, setBeCurrency] = useState('USD');
-  const [beDate, setBeDate] = useState(new Date().toISOString().split('T')[0]);
+  const [beDate, setBeDate] = useState(localDay());
   const [beNote, setBeNote] = useState('');
   const [beSubmitting, setBeSubmitting] = useState(false);
   const [bankSel, setBankSel] = useState(null);   // bank entry id open in the sheet
@@ -227,7 +227,7 @@ export default function AddMovement() {
       }
 
       setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes(''); setFundedFrom('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(localDay());
       setError('');
       toast(`${asset} purchase added`, 'success');
     } catch (err) { setError(err.message); }

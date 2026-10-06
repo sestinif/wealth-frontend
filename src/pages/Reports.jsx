@@ -66,7 +66,7 @@ export default function Reports() {
     const profitPct = d.invested > 0 ? (d.value / d.invested - 1) * 100 : 0;
     const tone = d.pnl >= 0 ? 'm-up' : 'm-down';
     return (
-      <div key={d.asset} className="m-table__row" style={{ cursor: 'default' }}>
+      <div key={d.asset} className="m-table__row m-table__row--static">
         <span className="m-table__name">
           <span className="m-row__title">{getName(d.asset)}</span>
           <span className="m-table__sub">{formatQty(d.qty, getDecimals(d.asset))} {d.asset}</span>

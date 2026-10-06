@@ -99,6 +99,6 @@ test('series and period cut-offs use the local calendar day, also just after mid
   const series = portfolioSeries30d([{ date: '2026-10-06', asset: 'BTC', quantity: 1 }], { BTC: { eur: 100 } }, [{ symbol: 'BTC' }], justAfterMidnight);
   assert.equal(series[29].date, '2026-10-06');
   assert.equal(series[29].value, 100);
-  const history = [{ date: '2026-09-29', total: 1 }, { date: '2026-09-30', total: 2 }, { date: '2026-10-06', total: 3 }];
+  const history = [{ date: '2026-09-28', total: 9 }, { date: '2026-09-29', total: 1 }, { date: '2026-09-30', total: 2 }, { date: '2026-10-06', total: 3 }];
   assert.deepEqual(periodSeries(history, [], '1W', justAfterMidnight).series.map(p => p.date), ['2026-09-29', '2026-09-30', '2026-10-06']);
 });
