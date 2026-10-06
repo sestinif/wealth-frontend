@@ -147,3 +147,15 @@ Ogni passo è un commit a sé, così si può tornare indietro pagina per pagina.
 ## 11. Rilascio
 
 Il deploy parte da solo con il push su `main` (Vercel). Il token GitHub salvato nel repo è scaduto: finché non c'è quello nuovo, il push lo lancia Federico.
+
+## 12. Collegamenti a banche e broker (aggiunta del 06/10/2026)
+
+Richiesta di Federico: i link di login di broker e banche dentro Wealth. Approvata la variante A del mockup.
+
+- **Dove:** un pulsante con l'icona della banca nella barra in alto, a destra, su ogni pagina (desktop e telefono). Apre la scheda «Accounts» (`DetailSheet`: dal basso sul telefono, a destra su desktop).
+- **Contenuto:** due gruppi, Banks (Mercury, Relay, Revolut Business, Wise) e Brokers (DeGiro, Bybit). Ogni riga: logo, nome, dominio, saldo se Wealth lo conosce (Mercury e Relay, da `/networth`), freccia. Tutta la riga è il link.
+- **Comportamento:** ogni riga apre la pagina di login in una scheda nuova (`target="_blank" rel="noopener noreferrer"`). Sono solo collegamenti: nessuna credenziale passa da Wealth.
+- **Indirizzi:** in un solo file, `src/utils/accounts.js`. Per aggiungere o togliere un conto si tocca solo quello.
+- **Loghi:** servizio favicon di Google per dominio, senza referrer; se l'immagine non arriva restano le iniziali grigie.
+- **Ricerca veloce (⌘K):** una voce «Open <nome>» per ogni conto.
+- **Fuori:** niente modifica dell'elenco dall'app, niente saldi per i conti che Wealth non traccia.
