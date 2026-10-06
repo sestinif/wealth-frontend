@@ -973,7 +973,7 @@ git commit -m "Mercury dark foundations: tokens, flat surfaces, one typeface, pr
 - Consumes: `moneyParts` from `src/utils/format.js` (Task 1); `PAGES` registry in `src/preview/main.jsx` (Task 2).
 - Produces (default exports, props):
   - `Money({ value, currency = 'EUR', sign = false, className = '' })`
-  - `Avatar({ asset, color, label })` — pass `asset` (symbol) for a logo, or `label` for initials
+  - `Avatar({ asset, label })` — pass `asset` (symbol) for a logo, or `label` for initials
   - `PageHead({ title, action, children })` — `action` is `{ to, label }`
   - `StatRow({ items, variant = 'row', note })` — `items` is `[{ label, value, tone }]`, `tone` is `'up' | 'down' | undefined`, `variant` is `'row' | 'hero'`, `note` is a string shown only on phones in the `hero` variant
   - `Tabs({ tabs, value, onChange, right })` — `tabs` is `[{ key, label }]`
@@ -1499,7 +1499,7 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
       const a = assetOf(p.asset);
       const from = brokerOf(p);
       return {
-        avatar: <Avatar asset={p.asset} color={a.color} />,
+        avatar: <Avatar asset={p.asset} />,
         title: a.name || p.asset,
         sub: `${qty(p.quantity, 8)} ${p.asset} at ${formatPrice(p.price_eur)}${from ? ` · from ${from}` : ''}`,
         subShort: `${qty(p.quantity, 5)} ${p.asset} · ${p.price_eur >= 100 ? formatEUR(p.price_eur, 0) : formatPrice(p.price_eur)}`,
@@ -2051,7 +2051,7 @@ export default function DashboardView({
       </div>
 
       <DetailSheet open={!!sd} onClose={() => setSheetSym(null)}
-        avatar={sheetAsset && <Avatar asset={sheetAsset.symbol} color={sheetAsset.color} />}
+        avatar={sheetAsset && <Avatar asset={sheetAsset.symbol} />}
         title={sheetAsset ? (sheetAsset.name || sheetAsset.symbol) : ''}
         subtitle={sheetAsset?.symbol}
         amount={sd && <Money value={sd.value * fx} currency={cur} />}
