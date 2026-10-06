@@ -1,0 +1,126 @@
+/* ================================================================
+   WEALTH — Mercury dark
+   Loaded after styles.css. Same variable names, new values; legacy
+   ornaments off; every new component lives under the m- prefix.
+   ================================================================ */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  --bg: #14141B;
+  --bg-card: #1B1B24;
+  --bg-card-grad: #1B1B24;
+  --bg-elev: #23232E;
+  --bg-card-2: #23232E;
+  --bg-input: #23232E;
+  --bg-hover: #262632;
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(255,255,255,0.16);
+  --border-focus: rgba(141,155,255,0.6);
+  --highlight: 0 0 0 0 transparent;
+  --edge: 0 0 0 0 transparent;
+  --inset: 0 0 0 0 transparent;
+  --accent: #8D9BFF;
+  --accent-2: #8D9BFF;
+  --accent-soft: #8D9BFF;
+  --accent-strong: #8D9BFF;
+  --accent-dim: rgba(141,155,255,0.12);
+  --accent-bg: rgba(141,155,255,0.12);
+  --accent-rgb: 141,155,255;
+  --text-1: #EDEDF3;
+  --text-2: #9A9AA8;
+  --text-3: #9A9AA8;
+  --green: #4FD1A1;
+  --green-soft: #4FD1A1;
+  --green-bg: rgba(79,209,161,0.12);
+  --green-rgb: 79,209,161;
+  --red: #F58A9B;
+  --red-soft: #F58A9B;
+  --red-bg: rgba(245,138,155,0.12);
+  --red-rgb: 245,138,155;
+  --stock: #8D9BFF;
+  --stock-bg: rgba(141,155,255,0.12);
+  --cash: #5F69B8;
+  --cash-bg: rgba(95,105,184,0.14);
+  --crypto: #3D4272;
+  --dry: #6B6B7B;
+  --dry-bg: rgba(255,255,255,0.04);
+  --font-num: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --elev-1: 0 0 0 0 transparent;
+  --elev-2: 0 0 0 0 transparent;
+  --elev-3: 0 16px 48px rgba(0,0,0,0.5);
+}
+
+body {
+  background: var(--bg);
+  /* Only 400 and 500 are loaded: never fake a bolder weight. */
+  font-synthesis: none;
+  font-feature-settings: "tnum" 1, "cv05" 1, "ss01" 1;
+}
+
+/* ---------- 2. Legacy ornaments off ---------- */
+body::before, body::after { content: none; }
+.page-layout { background-image: none; }
+.card::after, .hero-stats::before, .hero-stats::after, .asset-card::after, .fab::before { content: none; }
+.num--up, .num--down { animation: none; }
+
+.card__title, .hero-stat__label, .calc-stat__lbl, .calc-result__lbl,
+.section-header__title, .asset-strip__label, .kpi-card__label,
+.data-table th, .form-label, .donut-center__lbl, .fab-modal__eyebrow {
+  text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500;
+}
+.collapse-btn { text-transform: none; letter-spacing: 0; }
+
+/* ---------- 3. App frame ---------- */
+.sidebar { background: var(--bg); backdrop-filter: none; box-shadow: none; }
+.sidebar__title { font-size: 14px; font-weight: 500; letter-spacing: 0; }
+.sidebar__section-label { font-size: 12px; letter-spacing: 0; opacity: 1; color: var(--text-2); }
+.sidebar__footer, .sidebar__user, .sidebar__logout { font-size: 12px; }
+.nav-item { font-size: 14px; font-weight: 400; }
+.nav-item:hover { background: var(--bg-card); }
+.nav-item.active { font-weight: 500; background: var(--bg-elev); }
+.nav-item.active::before { content: none; }
+.nav-item.active .nav-item__icon, .nav-item--accent .nav-item__icon { color: inherit; }
+.applink { background: transparent; box-shadow: none; }
+.applink__chip { background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 500; }
+.applink__name { font-size: 13px; letter-spacing: 0; font-weight: 400; }
+
+.topbar { background: var(--bg); backdrop-filter: none; box-shadow: none; }
+.topbar__title { display: none; }
+.topbar__username, .cmdk-hint { font-size: 12px; }
+
+.page-head__title { font-size: 26px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; }
+
+@media (max-width: 768px) {
+  .sidebar { box-shadow: none; border-right: 1px solid var(--border); }
+  .nav-backdrop { backdrop-filter: none; background: rgba(8,8,12,0.62); }
+}
+
+/* ---------- 4. Base controls ---------- */
+.btn {
+  font-size: 13px; font-weight: 500; text-transform: none; letter-spacing: 0;
+  padding: 8px 14px; border-radius: 8px;
+}
+.btn:hover, .btn:active { transform: none; }
+.btn--primary, .btn--primary:hover { background: var(--accent); color: var(--bg); box-shadow: none; }
+.btn--primary:hover { background: #A3AEFF; }
+.btn--ghost.active { background: var(--bg-elev); border-color: var(--border-hover); color: var(--text-1); }
+.btn--sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+.btn--lg { font-size: 14px; border-radius: 8px; }
+
+.panel, .card { background: var(--bg-card); border: 1px solid var(--border); box-shadow: none; }
+.card--interactive:hover { transform: none; box-shadow: none; }
+
+.currency-toggle { background: transparent; border-radius: 8px; }
+.currency-toggle__btn { font-size: 12px; font-weight: 400; letter-spacing: 0; padding: 5px 10px; border-radius: 6px; color: var(--text-2); }
+.currency-toggle__btn.active { background: var(--bg-elev); color: var(--text-1); box-shadow: none; }
+
+.toggle__slider { background: #2A2A36; }
+.toggle__slider::before { background: var(--text-1); }
+.toggle__slider::before,
+.toggle input:checked + .toggle__slider::before,
+.toggle:hover .toggle__slider::before { box-shadow: none; }
+
+.fab, .fab:hover { background: var(--accent); color: var(--bg); box-shadow: 0 8px 24px rgba(0,0,0,0.4); transform: none; }

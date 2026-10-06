@@ -1,38 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { api, removeToken } from '../api.js';
+import { removeToken } from '../api.js';
 import BrandMark from './BrandMark';
 
 export default function Sidebar({ username, open = false, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [assets, setAssets] = useState([]);
-
-  useEffect(() => {
-    api.getAssets().then(setAssets).catch(() => {});
-  }, []);
-
   const sections = [
     {
-      label: 'OVERVIEW',
-      items: [{ path: '/dashboard', label: 'DASHBOARD', icon: <DashboardIcon /> }],
+      label: 'Overview',
+      items: [{ path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon /> }],
     },
     {
-      label: 'ADD',
-      items: [{ path: '/add', label: 'ADD MOVEMENT', icon: <PlusIcon />, accent: true }],
+      label: 'Add',
+      items: [{ path: '/add', label: 'Add movement', icon: <PlusIcon />, accent: true }],
     },
     {
-      label: 'TRACK',
+      label: 'Track',
       items: [
-        { path: '/diary', label: 'DIARY', icon: <DiaryIcon /> },
+        { path: '/diary', label: 'Diary', icon: <DiaryIcon /> },
         { path: '/dca', label: 'DCA', icon: <DcaIcon /> },
       ],
     },
     {
-      label: 'ANALYZE',
+      label: 'Analyze',
       items: [
-        { path: '/reports', label: 'REPORTS', icon: <ReportIcon /> },
-        { path: '/charts', label: 'CHARTS', icon: <ChartIcon /> },
+        { path: '/reports', label: 'Reports', icon: <ReportIcon /> },
+        { path: '/charts', label: 'Charts', icon: <ChartIcon /> },
       ],
     },
   ];
@@ -46,12 +40,7 @@ export default function Sidebar({ username, open = false, onClose }) {
     <div className={`sidebar ${open ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
         <div className="sidebar__logo"><BrandMark size={30} /></div>
-        <div className="sidebar__title">WEALTH</div>
-        <div className="sidebar__subtitle">INVESTMENT TRACKER</div>
-        <div className="sidebar__status">
-          <div className="sidebar__status-dot" />
-          {assets.length > 0 ? `${assets.length} ASSETS TRACKED` : '...'}
-        </div>
+        <div className="sidebar__title">Wealth</div>
       </div>
 
       {/* Sibling app. Its own APPS section, in the same section rhythm as
@@ -60,7 +49,7 @@ export default function Sidebar({ username, open = false, onClose }) {
           9px grey text, because it competes with real navigation for the
           eye. The tinted chip and the ↗ say "another app, new tab". */}
       <div className="sidebar__section sidebar__section--apps">
-        <div className="sidebar__section-label">APPS</div>
+        <div className="sidebar__section-label">Apps</div>
         <a
           className="applink"
           href="https://personals.scalingcatalyst.com/"
@@ -69,7 +58,7 @@ export default function Sidebar({ username, open = false, onClose }) {
           title="Open Personals (personal expenses)"
         >
           <span className="applink__chip">P</span>
-          <span className="applink__name">PERSONALS</span>
+          <span className="applink__name">Personals</span>
           <svg className="applink__arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M7 17L17 7M17 7H8M17 7v9" />
           </svg>
@@ -102,7 +91,7 @@ export default function Sidebar({ username, open = false, onClose }) {
           className={`nav-item nav-item--compact ${location.pathname === '/settings' ? 'active' : ''}`}
         >
           <div className="nav-item__icon"><SettingsIcon /></div>
-          SETTINGS
+          Settings
         </Link>
         <div className="sidebar__footer-row">
           <span className="sidebar__user">{username}</span>
