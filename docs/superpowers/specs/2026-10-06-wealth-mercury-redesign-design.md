@@ -41,7 +41,7 @@ Regola di lavoro: **i nomi delle variabili CSS restano gli stessi, cambiano i va
 | `--stock` | ambra | indaco pieno `#8D9BFF` |
 | `--cash` | blu | indaco medio `#5F69B8` |
 | categoria crypto (oggi `--accent`) | viola | indaco scuro `#3D4272` (nuova `--crypto`) |
-| `--dry` | verde acqua | grigio `#2A2A36` |
+| `--dry` | verde acqua | grigio `#6B6B7B` (visibile nella barretta quando ha un valore) |
 
 Il colore porta un solo significato: verde = guadagno o entrata, rosa = perdita. Tutto il resto è indaco o grigio.
 
@@ -75,7 +75,7 @@ Sidebar e barra in alto prendono gli stessi materiali: fondo `--bg`, filetto 1px
 | `PageHead` | Titolo 26px a sinistra, azione principale a destra (bottone con testo su desktop, tondo «+» sul telefono) | ogni pagina |
 | `StatRow` | Fila di 3 indicatori senza scatola: etichetta 12px sopra, cifra sotto. Sul telefono ha due forme: nel Diary la prima cifra diventa grande (32px) e le altre due vanno in una riga di testo; nella Dashboard, dove la cifra grande è già il patrimonio, restano tre affiancate a 16px | Diary, Dashboard |
 | `Tabs` | Linguette con sottolineatura indaco sulla voce attiva | Diary, Add Movement (al posto di `seg-tabs`) |
-| `LedgerRow` | Riga di registro a griglia fissa: data · tondo con sigla · nome + dettaglio · importo. Sul telefono: tondo · nome + dettaglio · importo con data sotto | Diary, posizioni della Dashboard |
+| `LedgerRow` | Riga di registro a griglia fissa: data · tondo con logo o sigla · nome + dettaglio · importo. Sul telefono: tondo · nome + dettaglio · importo con data sotto | Diary |
 | `DetailSheet` | Scheda dei dettagli. Sul telefono (≤640px) sale dal basso; su desktop è un pannello a destra. Si chiude con tocco fuori, tasto Esc o trascinamento. Contiene le righe etichetta/valore e, in fondo, l'azione distruttiva | Diary, Dashboard |
 
 Un solo meccanismo per le azioni: **si tocca la riga, si apre la scheda**. Su desktop i tre puntini compaiono al passaggio del mouse solo come segnale che la riga è cliccabile.
@@ -103,7 +103,7 @@ La cancellazione chiede conferma dentro la scheda: «Delete purchase» al primo 
 - **Card patrimonio (a sinistra, larga):** etichetta «Net worth», cifra grande, una riga con la variazione del periodo scelto, e sotto il grafico a linea sottile indaco senza riempimento. Il selettore 1W / 1M / 1Y / All sta in alto a destra della card. Il grafico oggi è un blocco a parte: entra qui.
 - **Card ripartizione (a destra):** barretta sottile a segmenti + lista delle 4 categorie (Stock market, Cash, Crypto market, Dry powder) con percentuale e valore. Sostituisce ciambella, barra grande e quattro tessere. Toccando una categoria la lista dei suoi asset o conti si apre sotto la riga, come oggi.
 - **Indicatori:** Profit · Return · Invested. («Invested» prende il posto di «Assets», che è un conteggio poco utile.)
-- **Posizioni:** tabella Holdings · Price · Value · Profit. Nome in chiaro, quantità sotto; profitto in euro con la percentuale sotto. Sul telefono due linee per riga e la colonna prezzo sparisce.
+- **Posizioni:** tabella a sé (non usa `LedgerRow`, ha quattro colonne) Holdings · Price · Value · Profit. Nome in chiaro, quantità sotto; profitto in euro con la percentuale sotto. Sul telefono due linee per riga e la colonna prezzo sparisce.
 - **Scheda posizione:** prezzo, prezzo medio, variazione 24h, quantità, investito, profitto, e l'interruttore «Include in totals» (oggi sta nella riga).
 - **Speculative · Not included:** stessa tabella, sotto, in grigio.
 - **Market overview:** resta chiuso di default, con i nuovi materiali.
