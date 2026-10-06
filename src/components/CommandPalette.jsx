@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ACCOUNT_GROUPS } from '../utils/accounts';
 
 const COMMANDS = [
   { label: 'Dashboard', path: '/dashboard', keys: 'D' },
@@ -9,6 +10,10 @@ const COMMANDS = [
   { label: 'Charts', path: '/charts', keys: 'G' },
   { label: 'Settings — manage assets', path: '/settings', keys: 'S' },
 ];
+
+// One "Open …" entry per bank and broker: opens the provider's login page in a new tab.
+const LINKS = ACCOUNT_GROUPS.flatMap(g => g.items.map(it => ({ label: `Open ${it.name}`, url: it.url })));
+const ALL_COMMANDS = [...COMMANDS, ...LINKS];
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -37,12 +42,13 @@ export default function CommandPalette() {
 
   if (!open) return null;
 
-  const filtered = COMMANDS.filter(c =>
+  const filtered = ALL_COMMANDS.filter(c =>
     c.label.toLowerCase().includes(query.toLowerCase())
   );
 
   const handleSelect = (cmd) => {
-    navigate(cmd.path);
+    if (cmd.url) window.open(cmd.url, '_blank', 'noopener,noreferrer');
+    else navigate(cmd.path);
     setOpen(false);
   };
 
@@ -77,7 +83,7 @@ export default function CommandPalette() {
           <div style={{ padding: '6px 6px', maxHeight: 280, overflowY: 'auto' }}>
             {filtered.map((cmd, i) => (
               <div
-                key={cmd.path}
+                key={cmd.label}
                 onClick={() => handleSelect(cmd)}
                 style={{
                   padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
@@ -90,9 +96,11 @@ export default function CommandPalette() {
                 <span style={{ fontSize: 14, color: i === selected ? 'var(--text-1)' : 'var(--text-2)', fontWeight: i === selected ? 500 : 400 }}>
                   {cmd.label}
                 </span>
-                <span style={{ fontSize: 12, color: 'var(--text-2)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
-                  {cmd.keys}
-                </span>
+                {cmd.keys && (
+                  <span style={{ fontSize: 12, color: 'var(--text-2)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
+                    {cmd.keys}
+                  </span>
+                )}
               </div>
             ))}
             {filtered.length === 0 && (

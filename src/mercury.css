@@ -340,6 +340,26 @@ select.form-input option { background: var(--bg-elev); color: var(--text-1); }
 .m-overlay { position: fixed; inset: 0; z-index: 9998; background: rgba(8,8,12,0.62); animation: fadeIn 0.15s ease; }
 .m-dialog { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
 
+/* Accounts launcher */
+.m-topbtn {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 34px; height: 34px; background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text-2); cursor: pointer;
+}
+.m-topbtn:hover { color: var(--text-1); border-color: var(--border-hover); }
+.m-sheet__group { padding: 14px 0 6px; font-size: 12px; color: var(--text-2); }
+.m-acct {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto 16px; gap: 12px; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--border); color: var(--text-1); font-size: 14px; text-decoration: none;
+}
+.m-acct:hover { background: rgba(255,255,255,0.02); }
+.m-acct__main { min-width: 0; }
+.m-acct__name, .m-acct__domain { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-acct__domain { font-size: 12px; color: var(--text-2); }
+.m-acct__bal { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+.m-acct__go { display: flex; color: var(--text-2); }
+.m-avatar img { border-radius: 4px; }
+
 /* Dashboard */
 .m-greet { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 .m-greet__title { font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; color: var(--text-1); min-width: 0; }

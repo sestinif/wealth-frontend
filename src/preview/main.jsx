@@ -176,6 +176,7 @@ const PAGES = {
   login: () => <LoginPage onLogin={() => {}} />,
   setup: () => <SetupPage onComplete={() => {}} />,
   overlays: () => <Frame title="Overlays"><PageHead title="Overlays" /><QuickBuyFAB /><CommandPalette /></Frame>,
+  accounts: () => <Frame title="Accounts"><PageHead title="Accounts" /></Frame>,
   'asset-modal': () => <Frame title="Asset modal"><AddAssetModal existingAssets={fixtures.assets} onClose={() => {}} onAdded={() => {}} /></Frame>,
 };
 

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { coinIconUrl } from './AssetBadge';
 
-// 32px round mark: the asset's logo, or two grey initials when there is no logo.
-// Pass `asset` (a symbol) for an asset, or `label` for anything else (a bank).
-export default function Avatar({ asset, label }) {
-  // Remember which symbol failed, so a different asset on the same instance tries its own logo.
-  const [failedAsset, setFailedAsset] = useState(null);
-  if (asset && failedAsset !== asset) {
+// 32px round mark: a logo, or two grey initials when there is none.
+// Pass `asset` (a symbol) for a coin logo, `src` for any other logo, `label` for the initials.
+export default function Avatar({ asset, label, src }) {
+  const image = src || (asset ? coinIconUrl(asset) : null);
+  // Remember which image failed, so a different one on the same instance still gets its try.
+  const [failed, setFailed] = useState(null);
+  if (image && failed !== image) {
     return (
       <span className="m-avatar">
-        <img src={coinIconUrl(asset)} alt="" loading="lazy" decoding="async" onError={() => setFailedAsset(asset)} />
+        <img src={image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(image)} />
       </span>
     );
   }
