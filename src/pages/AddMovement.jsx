@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/PageLayout';
-import FormInput from '../components/FormInput';
+import PageHead from '../components/PageHead';
+import Tabs from '../components/Tabs';
+import Field from '../components/Field';
+import AmountField from '../components/AmountField';
+import Segmented from '../components/Segmented';
+import Switch from '../components/Switch';
+import Pick from '../components/Pick';
+import LedgerRow from '../components/LedgerRow';
+import DetailSheet from '../components/DetailSheet';
+import Avatar from '../components/Avatar';
 import AlertMessage from '../components/AlertMessage';
 import AddAssetModal from '../components/AddAssetModal';
 import { useToast } from '../components/Toast';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatUSD, formatDate } from '../utils/format';
+import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong } from '../utils/format';
 
 const TABS = [
-  { key: 'buy', label: 'Buy Asset' },
-  { key: 'bank', label: 'Bank Cash' },
-  { key: 'dry', label: 'Dry Powder' },
+  { key: 'buy', label: 'Purchase' },
+  { key: 'bank', label: 'Bank' },
+  { key: 'dry', label: 'Dry powder' },
 ];
 
 export default function AddMovement() {
   const toast = useToast();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('buy');
+  const [tab, setTab] = useState(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    return ['buy', 'bank', 'dry'].includes(t) ? t : 'buy';
+  });
 
   // Shared data
   const [prices, setPrices] = useState({});
@@ -51,7 +63,7 @@ export default function AddMovement() {
   const [beDate, setBeDate] = useState(new Date().toISOString().split('T')[0]);
   const [beNote, setBeNote] = useState('');
   const [beSubmitting, setBeSubmitting] = useState(false);
-  const [beDelId, setBeDelId] = useState(null);
+  const [bankSel, setBankSel] = useState(null);   // bank entry id open in the sheet
 
   // --- Dry powder form ---
   const [cpLabel, setCpLabel] = useState('');
@@ -59,7 +71,7 @@ export default function AddMovement() {
   const [cpCurrency, setCpCurrency] = useState('EUR');
   const [cpEditId, setCpEditId] = useState(null);
   const [cpSubmitting, setCpSubmitting] = useState(false);
-  const [cpDeleteConfirm, setCpDeleteConfirm] = useState(null);
+  const [cashSel, setCashSel] = useState(null);   // broker id open in the sheet
 
   useEffect(() => {
     const fetchData = async () => {
@@ -253,7 +265,6 @@ export default function AddMovement() {
   const handleBankEntryDelete = async (id) => {
     try {
       await api.deleteBankEntry(id);
-      setBeDelId(null);
       setBankEntries(await api.getBankEntries());
     } catch (err) { toast(err.message, 'error'); }
   };
@@ -288,7 +299,6 @@ export default function AddMovement() {
     try {
       await api.deleteCashPosition(id);
       setCashPositions(prev => prev.filter(p => p.id !== id));
-      setCpDeleteConfirm(null);
       if (cpEditId === id) resetCpForm();
       toast('Dry powder removed', 'success');
     } catch (err) { toast(err.message, 'error'); }
@@ -296,285 +306,204 @@ export default function AddMovement() {
 
   const dryPowderTotal = cashPositions.reduce((s, p) => s + toEur(Number(p.amount_eur) || 0, p.currency), 0);
 
-  if (loading) return <PageLayout title="Add Movement" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
+  if (loading) return <PageLayout title="Add movement" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Failed to load</div></div>;
 
-  const assetOptions = assets.map(a => ({ value: a.symbol, label: a.symbol }));
-  const selectedAssetName = assets.find(a => a.symbol === asset)?.name || '';
+  const curFmt = (cur) => ((cur || 'EUR').toUpperCase() === 'USD' ? formatUSD : formatEUR);
+  const bankSheetEntry = bankEntries.find(en => en.id === bankSel) || null;
+  const cashSheetPos = cashPositions.find(p => p.id === cashSel) || null;
+  const bankIn = bankSheetEntry ? Number(bankSheetEntry.amount) >= 0 : false;
 
   return (
-    <PageLayout title="Add Movement" username={user.username} size="md">
+    <PageLayout title="Add movement" username={user.username} size="md">
+      <PageHead title="Add movement" />
+      <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
-      <div className="page-head animate-in">
-        <div className="page-head__title">Add Movement</div>
-        <div className="page-head__sub">One place for every manual entry</div>
-      </div>
+      <div className="m-form" style={{ marginTop: 22 }}>
 
-      {/* Type selector */}
-      <div className="seg-tabs animate-in-1">
-        {TABS.map(t => (
-          <button
-            key={t.key} type="button"
-            className={`seg-tabs__btn ${tab === t.key ? 'active' : ''}`}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+        {/* === PURCHASE === */}
+        {tab === 'buy' && (
+          <form onSubmit={handleBuySubmit}>
+            <Field label="Asset" right={<button type="button" className="m-link" onClick={() => setShowAddAsset(true)}>New asset</button>}>
+              <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)}>
+                {assets.map(a => <option key={a.symbol} value={a.symbol}>{`${a.name || a.symbol} · ${a.symbol}`}</option>)}
+              </select>
+            </Field>
 
-      {/* === BUY ASSET === */}
-      {tab === 'buy' && (
-        <div className="panel animate-in-2 add-panel">
-          <div className="diary-card__head"><span className="diary-card__dot" style={{ background: 'var(--accent)' }} />Buy Asset</div>
-          <form onSubmit={handleBuySubmit} className="diary-form">
-            <div className="form-grid">
-              <FormInput label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
-              <div className="form-group">
-                <label className="form-label">Asset</label>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)} style={{ flex: 1, fontWeight: 600 }}>
-                    {assetOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            <AmountField label="Amount" symbol="€" value={amountEur} onChange={handleAmountChange}
+              caption={parseFloat(qty) > 0 ? `You get ${qty} ${asset}` : 'Fill in the amount or the quantity. The other is computed.'} />
+
+            <div className="m-g2">
+              <Field label="Quantity">
+                <input className="form-input" type="number" step="any" placeholder="0.00" value={qty} onChange={e => handleQtyChange(e.target.value)} />
+              </Field>
+              <Field label="Price"
+                right={<Pick options={['EUR', 'USD']} value={priceCurrency} onChange={setPriceCurrency} disabledKeys={hasUsdRate ? [] : ['USD']} />}
+                hint={priceCurrency === 'USD' && priceEur ? `About ${formatPrice(parseFloat(priceEur))}` : undefined}>
+                <input className="form-input" type="number" step="any" placeholder="0.00"
+                  value={currentPriceInput} onChange={e => handlePriceInputChange(e.target.value)} disabled={useLivePrice} />
+              </Field>
+            </div>
+
+            <Switch label="Use live price" checked={useLivePrice} onChange={setUseLivePrice} />
+
+            {cashPositions.length > 0 ? (
+              <div className="m-g2">
+                <Field label="Date">
+                  <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+                </Field>
+                <Field label="Funded from" hint={fundedFrom ? 'Deducted from this broker’s dry powder.' : undefined}>
+                  <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
+                    <option value="">None</option>
+                    {cashPositions.map(p => (
+                      <option key={p.id} value={p.id}>{`${p.label} (${curFmt(p.currency)(p.amount_eur)})`}</option>
+                    ))}
                   </select>
-                  <button type="button" className="icon-btn" onClick={() => setShowAddAsset(true)} title="Add new asset" aria-label="Add asset">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                  </button>
-                </div>
-                {selectedAssetName && <div className="form-hint" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedAssetName}</div>}
+                </Field>
               </div>
-              <div className="form-group">
-                <label className="form-label">
-                  Price {asset}
-                  <span className="mini-toggle" style={{ float: 'right' }}>
-                    {['EUR', 'USD'].map(c => (
-                      <button
-                        key={c} type="button"
-                        className={`mini-toggle__btn ${priceCurrency === c ? 'active' : ''}`}
-                        onClick={() => setPriceCurrency(c)}
-                        disabled={c === 'USD' && !hasUsdRate}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </span>
-                </label>
-                <input
-                  type="number" step="any" className="form-input"
-                  value={currentPriceInput}
-                  onChange={e => handlePriceInputChange(e.target.value)}
-                  placeholder="0.00" disabled={useLivePrice}
-                />
-                {priceCurrency === 'USD' && priceEur && (
-                  <div className="form-hint">≈ {parseFloat(priceEur).toLocaleString('en-US', { minimumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 2, maximumFractionDigits: parseFloat(priceEur) < 0.01 ? 8 : 4, useGrouping: 'always' })} €</div>
-                )}
-              </div>
-              <FormInput label="Amount EUR" type="number" step="any" value={amountEur} onChange={e => handleAmountChange(e.target.value)} placeholder="0.00" />
-              <FormInput label={`Quantity ${asset || ''}`} type="number" step="any" value={qty} onChange={e => handleQtyChange(e.target.value)} placeholder="0.00" />
-            </div>
-
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
-              Fill in <strong style={{ color: 'var(--text-2)' }}>Amount EUR</strong> or <strong style={{ color: 'var(--text-2)' }}>Quantity</strong> — the other is computed automatically
-            </div>
-
-            <div className="form-row">
-              <label className="checkbox-wrapper">
-                <input type="checkbox" checked={useLivePrice} onChange={e => setUseLivePrice(e.target.checked)} />
-                <span className="checkbox-label">Use live price</span>
-              </label>
-            </div>
-
-            {cashPositions.length > 0 && (
-              <div className="form-group">
-                <label className="form-label">Funded From <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>(optional)</span></label>
-                <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
-                  <option value="">— Don’t touch dry powder —</option>
-                  {cashPositions.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.label} ({(p.currency || 'EUR').toUpperCase() === 'USD' ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)})
-                    </option>
-                  ))}
-                </select>
-                <div className="form-hint">The invested amount is deducted from this broker’s dry powder.</div>
-              </div>
+            ) : (
+              <Field label="Date">
+                <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+              </Field>
             )}
 
-            <FormInput label="Notes" type="textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add a note..." />
+            <Field label="Note">
+              <input className="form-input" type="text" placeholder="Optional" value={notes} onChange={e => setNotes(e.target.value)} />
+            </Field>
+
             <AlertMessage type="error" message={error} />
-
-            <div className="diary-form__foot">
-              <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
-                {submitting ? 'Adding...' : 'Add Purchase'}
-              </button>
-            </div>
+            <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
+              {submitting ? 'Adding…' : 'Add purchase'}
+            </button>
           </form>
-        </div>
-      )}
+        )}
 
-      {/* === BANK CASH === */}
-      {tab === 'bank' && (
-        <div className="panel animate-in-2 add-panel">
-          <div className="diary-card__head">
-            <span className="diary-card__dot" style={{ background: 'var(--cash)' }} />Bank Cash
-            {activeBank && !isNewBank && (
-              <span className="diary-card__total">
-                {beCurrency === 'USD' ? formatUSD(bankBalance) : formatEUR(bankBalance)}
-              </span>
-            )}
-          </div>
-          <form onSubmit={handleBankSubmit} className="diary-form">
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Bank</label>
-                <select className="form-input" value={bank} onChange={e => setBank(e.target.value)} style={{ fontWeight: 600 }}>
+        {/* === BANK === */}
+        {tab === 'bank' && (
+          <>
+            <form onSubmit={handleBankSubmit}>
+              <Field>
+                <Segmented options={[{ key: 'in', label: 'Money in' }, { key: 'out', label: 'Money out' }]}
+                  value={beDirection} onChange={setBeDirection} />
+              </Field>
+
+              <Field label="Bank"
+                right={activeBank && !isNewBank ? <span>Balance {curFmt(beCurrency)(bankBalance)}</span> : null}>
+                <select className="form-input" value={bank} onChange={e => setBank(e.target.value)}>
                   {ledgerBanks.map(b => <option key={b} value={b}>{b}</option>)}
-                  <option value="__new__">+ New bank…</option>
+                  <option value="__new__">New bank…</option>
                 </select>
-              </div>
+              </Field>
+
               {isNewBank && (
-                <FormInput label="Bank Name" type="text" value={newBank} onChange={e => setNewBank(e.target.value)} placeholder="e.g. Wise" />
+                <Field label="Bank name">
+                  <input className="form-input" type="text" placeholder="Wise" value={newBank} onChange={e => setNewBank(e.target.value)} />
+                </Field>
               )}
-              <div className="form-group">
-                <label className="form-label">Direction</label>
-                <div className="dir-toggle">
-                  <button type="button" className={`dir-toggle__btn ${beDirection === 'in' ? 'active dir-toggle__btn--in' : ''}`} onClick={() => setBeDirection('in')}>Money In</button>
-                  <button type="button" className={`dir-toggle__btn ${beDirection === 'out' ? 'active dir-toggle__btn--out' : ''}`} onClick={() => setBeDirection('out')}>Money Out</button>
-                </div>
+
+              <AmountField label="Amount" right={<Pick options={['USD', 'EUR']} value={beCurrency} onChange={setBeCurrency} />}
+                symbol={beCurrency === 'USD' ? '$' : '€'} value={beAmount} onChange={setBeAmount}
+                caption={beCurrency === 'USD' && parseFloat(beAmount) > 0 && eurUsdRate ? `About ${formatEUR(parseFloat(beAmount) / eurUsdRate)}` : undefined} />
+
+              <div className="m-g2">
+                <Field label="Date">
+                  <input className="form-input" type="date" value={beDate} onChange={e => setBeDate(e.target.value)} />
+                </Field>
+                <Field label="Note">
+                  <input className="form-input" type="text" placeholder="Optional" value={beNote} onChange={e => setBeNote(e.target.value)} />
+                </Field>
               </div>
-              <div className="form-group">
-                <label className="form-label">
-                  Amount
-                  <span className="mini-toggle" style={{ float: 'right' }}>
-                    {['USD', 'EUR'].map(c => (
-                      <button
-                        key={c} type="button"
-                        className={`mini-toggle__btn ${beCurrency === c ? 'active' : ''}`}
-                        onClick={() => setBeCurrency(c)}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </span>
-                </label>
-                <input type="number" step="any" min="0" className="form-input" value={beAmount} onChange={e => setBeAmount(e.target.value)} placeholder="0.00" />
-                {beCurrency === 'USD' && parseFloat(beAmount) > 0 && eurUsdRate && (
-                  <div className="form-hint">≈ {formatEUR(parseFloat(beAmount) / eurUsdRate)}</div>
-                )}
-              </div>
-              <FormInput label="Date" type="date" value={beDate} onChange={e => setBeDate(e.target.value)} />
-              <FormInput label="Note (optional)" type="text" value={beNote} onChange={e => setBeNote(e.target.value)} placeholder="e.g. Client payment" />
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
-              The bank’s balance is the running sum of its movements. It shows up in the dashboard’s Cash panel automatically.
-            </div>
-            <div className="diary-form__foot">
+
               <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={beSubmitting}>
-                {beSubmitting ? 'Saving...' : beDirection === 'out' ? 'Add Money Out' : 'Add Money In'}
+                {beSubmitting ? 'Saving…' : beDirection === 'out' ? 'Add money out' : 'Add money in'}
               </button>
-            </div>
-          </form>
+            </form>
 
-          {bankRecent.length > 0 && (
-            <div className="bank-recent">
-              <div className="bank-recent__title">Recent · {activeBank}</div>
-              {bankRecent.map(en => {
-                const enFmt = ((en.currency || 'USD').toUpperCase() === 'USD') ? formatUSD : formatEUR;
-                const isIn = Number(en.amount) >= 0;
-                return (
-                  <div key={en.id} className="cash-entry">
-                    <span className="cash-entry__date">{formatDate(en.date)}</span>
-                    <span className={`cash-entry__amount ${isIn ? 'cash-entry__amount--in' : 'cash-entry__amount--out'}`}>
-                      {isIn ? '+' : '−'}{enFmt(Math.abs(Number(en.amount) || 0))}
-                    </span>
-                    {en.note ? <span className="cash-entry__note">{en.note}</span> : <span className="cash-entry__note" />}
-                    <button type="button" className="cash-entry__del"
-                      onClick={() => beDelId === en.id ? handleBankEntryDelete(en.id) : setBeDelId(en.id)}>
-                      {beDelId === en.id ? 'Sure?' : '×'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+            {bankRecent.length > 0 && (
+              <>
+                <div className="m-section"><span>Recent in {activeBank}</span></div>
+                {bankRecent.map(en => {
+                  const enFmt = curFmt(en.currency || 'USD');
+                  const isIn = Number(en.amount) >= 0;
+                  const kind = isIn ? 'Money in' : 'Money out';
+                  return (
+                    <LedgerRow key={en.id} date={formatDay(en.date)} avatar={<Avatar label={en.bank} />}
+                      title={en.note || kind} sub={kind}
+                      amount={`${isIn ? '+' : '−'}${enFmt(Math.abs(Number(en.amount) || 0))}`}
+                      tone={isIn ? 'in' : ''} onClick={() => setBankSel(en.id)} />
+                  );
+                })}
+              </>
+            )}
+          </>
+        )}
 
-      {/* === DRY POWDER === */}
-      {tab === 'dry' && (
-        <div className="panel animate-in-2 add-panel">
-          <div className="diary-card__head">
-            <span className="diary-card__dot" style={{ background: 'var(--dry)' }} />Dry Powder
-            <span className="diary-card__total">{formatEUR(dryPowderTotal)}</span>
-          </div>
-          {cashPositions.length > 0 && (
-            <div className="dry-list">
-              {cashPositions.map(p => {
-                const isUsd = (p.currency || 'EUR').toUpperCase() === 'USD';
-                return (
-                  <div key={p.id} className="dry-row" style={{ opacity: cpEditId === p.id ? 0.5 : 1 }}>
-                    <span className="dry-row__dot" />
-                    <span className="dry-row__label">{p.label}</span>
-                    <span className="dry-row__amount">
-                      {isUsd ? formatUSD(p.amount_eur) : formatEUR(p.amount_eur)}
-                      {isUsd && eurUsdRate && <span className="dry-row__sub">≈ {formatEUR(toEur(p.amount_eur, 'USD'))}</span>}
-                    </span>
-                    {cpDeleteConfirm === p.id ? (
-                      <span className="dry-row__actions">
-                        <button className="btn btn--danger btn--sm" onClick={() => handleCashDelete(p.id)}>Yes</button>
-                        <button className="btn btn--ghost btn--sm" onClick={() => setCpDeleteConfirm(null)}>No</button>
-                      </span>
-                    ) : (
-                      <span className="dry-row__actions">
-                        <button className="btn btn--ghost btn--sm" onClick={() => handleCashEdit(p)}>Edit</button>
-                        <button className="btn btn--danger btn--sm" onClick={() => setCpDeleteConfirm(p.id)}>Delete</button>
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        {/* === DRY POWDER === */}
+        {tab === 'dry' && (
+          <>
+            {cashPositions.length > 0 && (
+              <>
+                <div className="m-section"><span>Brokers</span><span>{formatEUR(dryPowderTotal)}</span></div>
+                {cashPositions.map(p => {
+                  const isUsd = (p.currency || 'EUR').toUpperCase() === 'USD';
+                  return (
+                    <LedgerRow key={p.id} date="" avatar={<Avatar label={p.label} />} title={p.label}
+                      sub={isUsd ? `About ${formatEUR(toEur(p.amount_eur, 'USD'))}` : 'Uninvested cash'}
+                      amount={curFmt(p.currency)(p.amount_eur)} onClick={() => setCashSel(p.id)} />
+                  );
+                })}
+              </>
+            )}
 
-          <form onSubmit={handleCashSubmit} className={`diary-form ${cashPositions.length > 0 ? 'dry-form' : ''}`}>
-            <div className="form-grid">
-              <FormInput label="Broker" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} placeholder="e.g. Trade Republic" />
-              <div className="form-group">
-                <label className="form-label">
-                  Amount
-                  <span className="mini-toggle" style={{ float: 'right' }}>
-                    {['EUR', 'USD'].map(c => (
-                      <button
-                        key={c} type="button"
-                        className={`mini-toggle__btn ${cpCurrency === c ? 'active' : ''}`}
-                        onClick={() => setCpCurrency(c)}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </span>
-                </label>
-                <input type="number" step="any" className="form-input" value={cpAmount} onChange={e => setCpAmount(e.target.value)} placeholder="0.00" />
-                {cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate && (
-                  <div className="form-hint">≈ {formatEUR(parseFloat(cpAmount) / eurUsdRate)}</div>
-                )}
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -6, marginBottom: 12 }}>
-              {cpEditId ? 'Edit this broker’s parked cash.' : 'Cash parked on a broker, waiting to be invested. Drops automatically when you fund a purchase from it.'}
-            </div>
-            <div className="diary-form__foot">
+            <div className="m-section"><span>{cpEditId ? 'Edit broker' : 'Add a broker'}</span></div>
+            <form onSubmit={handleCashSubmit}>
+              <Field label="Broker">
+                <input className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
+              </Field>
+              <AmountField label="Amount" right={<Pick options={['EUR', 'USD']} value={cpCurrency} onChange={setCpCurrency} />}
+                symbol={cpCurrency === 'USD' ? '$' : '€'} value={cpAmount} onChange={setCpAmount}
+                caption={cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate
+                  ? `About ${formatEUR(parseFloat(cpAmount) / eurUsdRate)}`
+                  : 'Cash parked on a broker, waiting to be invested.'} />
               {cpEditId && (
-                <button type="button" className="btn btn--ghost btn--lg btn--full" onClick={resetCpForm}>Cancel</button>
+                <button type="button" className="btn btn--ghost btn--lg btn--full" style={{ marginBottom: 8 }} onClick={resetCpForm}>Cancel</button>
               )}
               <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
-                {cpSubmitting ? 'Saving...' : cpEditId ? 'Save Changes' : 'Add Broker'}
+                {cpSubmitting ? 'Saving…' : cpEditId ? 'Save changes' : 'Add broker'}
               </button>
-            </div>
-          </form>
-        </div>
-      )}
+            </form>
+          </>
+        )}
+      </div>
+
+      <DetailSheet open={!!bankSheetEntry} onClose={() => setBankSel(null)}
+        avatar={bankSheetEntry ? <Avatar label={bankSheetEntry.bank} /> : null}
+        title={bankSheetEntry?.bank} subtitle="Bank movement"
+        amount={bankSheetEntry ? `${bankIn ? '+' : '−'}${curFmt(bankSheetEntry.currency || 'USD')(Math.abs(Number(bankSheetEntry.amount) || 0))}` : null}
+        rows={bankSheetEntry ? [
+          { label: 'Date', value: formatDayLong(bankSheetEntry.date) },
+          { label: 'Type', value: bankIn ? 'Money in' : 'Money out' },
+          { label: 'Note', value: bankSheetEntry.note },
+        ] : []}
+        danger={bankSheetEntry ? {
+          label: 'Delete movement',
+          onConfirm: async () => { await handleBankEntryDelete(bankSheetEntry.id); setBankSel(null); },
+        } : undefined} />
+
+      <DetailSheet open={!!cashSheetPos} onClose={() => setCashSel(null)}
+        avatar={cashSheetPos ? <Avatar label={cashSheetPos.label} /> : null}
+        title={cashSheetPos?.label} subtitle="Broker"
+        amount={cashSheetPos ? curFmt(cashSheetPos.currency)(cashSheetPos.amount_eur) : null}
+        rows={cashSheetPos ? [{ label: 'Currency', value: (cashSheetPos.currency || 'EUR').toUpperCase() }] : []}
+        danger={cashSheetPos ? {
+          label: 'Delete broker',
+          onConfirm: async () => { await handleCashDelete(cashSheetPos.id); setCashSel(null); },
+        } : undefined}>
+        {cashSheetPos && (
+          <button type="button" className="btn btn--ghost btn--full" style={{ marginTop: 14 }}
+            onClick={() => { handleCashEdit(cashSheetPos); setCashSel(null); }}>Edit amount</button>
+        )}
+      </DetailSheet>
 
       {showAddAsset && (
         <AddAssetModal
