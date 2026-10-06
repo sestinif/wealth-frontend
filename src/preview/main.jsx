@@ -34,17 +34,17 @@ function ComponentsDemo() {
         value={tab} onChange={setTab}
         right={<select className="m-select" aria-label="Filter by asset"><option>All assets</option><option>BTC</option></select>} />
       <div className="m-month"><span>September 2026</span><span>€483.59 invested</span></div>
-      <LedgerRow date="Sep 11" avatar={<Avatar asset="BTC" color="#F7931A" />} title="Bitcoin"
+      <LedgerRow date="Sep 11" avatar={<Avatar asset="BTC" />} title="Bitcoin"
         sub="0.00729397 BTC at €66,300.00" subShort="0.00729 BTC · €66,300" amount="€483.59" onClick={() => setOpen(true)} />
       <LedgerRow date="Sep 10" avatar={<Avatar label="Relay" />} title="Relay" sub="Money in" amount="+$3,498.00" tone="in" onClick={() => setOpen(true)} />
-      <LedgerRow date="Sep 2" avatar={<Avatar asset="VUAA" color="#00BCD4" />} title="Vanguard FTSE All-World UCITS ETF"
+      <LedgerRow date="Sep 2" avatar={<Avatar asset="VUAA" />} title="Vanguard FTSE All-World UCITS ETF"
         sub="28.99721699 VUAA at €111.39 · from Degiro" subShort="28.99722 VUAA · €111" amount="€3,230.00" onClick={() => setOpen(true)} />
       <StatRow items={[
         { label: 'Profit', value: <Money value={19883.56} sign />, tone: 'up' },
         { label: 'Return', value: '−95.3%', tone: 'down' },
         { label: 'Invested', value: <Money value={63195.72} /> },
       ]} />
-      <DetailSheet open={open} onClose={() => setOpen(false)} avatar={<Avatar asset="BTC" color="#F7931A" />}
+      <DetailSheet open={open} onClose={() => setOpen(false)} avatar={<Avatar asset="BTC" />}
         title="Bitcoin" subtitle="Purchase" amount={<Money value={483.59} />}
         rows={[{ label: 'Date', value: 'Sep 11, 2026' }, { label: 'Quantity', value: '0.00729397 BTC' }, { label: 'Price', value: '€66,300.00' }, { label: 'Note', value: '' }]}
         danger={{ label: 'Delete purchase', onConfirm: () => setOpen(false) }} />

@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 
+// Coin logo from the cryptocurrency-icons CDN. Unknown symbols 404, and the caller falls back.
+export const coinIconUrl = (symbol) => {
+  const slug = String(symbol || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${slug}.svg`;
+};
+
 // Real coin logos (via cryptocurrency-icons CDN) in a tidy circular chip,
 // with a graceful colored-initial fallback for stocks/ETFs/unknowns.
 // Backward compatible: same { asset, color } props used everywhere.
 export default function AssetBadge({ asset, color = '#8B7BFF', showSymbol = true }) {
   const [err, setErr] = useState(false);
   const sym = String(asset || '');
-  const slug = sym.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const url = `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${slug}.svg`;
+  const url = coinIconUrl(sym);
 
   return (
     <span className="asset-badge">

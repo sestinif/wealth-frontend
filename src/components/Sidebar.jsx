@@ -95,7 +95,7 @@ export default function Sidebar({ username, open = false, onClose }) {
         </Link>
         <div className="sidebar__footer-row">
           <span className="sidebar__user">{username}</span>
-          <button type="button" className="sidebar__logout" onClick={handleLogout}>Log Out</button>
+          <button type="button" className="sidebar__logout" onClick={handleLogout}>Log out</button>
         </div>
       </div>
     </div>
