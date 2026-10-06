@@ -130,6 +130,24 @@ body::before, body::after { content: none; }
 .mini-toggle__btn.active { color: var(--bg); }
 .top-progress__bar { background: var(--accent); box-shadow: none; }
 
+/* Sign-in card: flat, same selectors as the legacy rules */
+.auth-card { padding: 32px 28px; border: 1px solid var(--border); border-radius: 12px; box-shadow: none; }
+.auth-logo { filter: none; }
+.auth-title { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 24px; }
+.auth-subtitle { margin: -18px 0 24px; font-size: 13px; letter-spacing: 0; color: var(--text-2); }
+.req-item { font-size: 12px; }
+
+/* Quick buy: flat panel, no blur, no coloured glow */
+.fab-overlay { background: rgba(8,8,12,0.62); backdrop-filter: none; }
+.fab-modal { background: var(--bg-card); backdrop-filter: none; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+.fab-modal__eyebrow { color: var(--text-2); }
+.fab-modal__title { font-weight: 500; letter-spacing: 0; }
+.fab-asset-chip.active { border-color: var(--accent); background: var(--accent-dim); box-shadow: none; }
+.fab-asset-chip .asset-badge__icon { font-size: 12px; font-weight: 500; }
+.fab-asset-chip .asset-badge__sym { font-weight: 500; letter-spacing: 0; }
+.fab-price-display { font-weight: 500; letter-spacing: 0; }
+.checkbox-wrapper input[type="checkbox"]:checked::after { border-color: var(--bg); }
+
 /* ---------- 5. Components ---------- */
 .m-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
 .m-label { font-size: 12px; color: var(--text-2); }
@@ -302,6 +320,24 @@ select.form-input option { background: var(--bg-elev); color: var(--text-1); }
 .m-result__value { margin: 2px 0 4px; font-size: 24px; letter-spacing: -0.02em; color: var(--text-1); }
 .m-result__meta { font-size: 13px; color: var(--text-2); }
 .m-result__warn { margin-top: 6px; font-size: 13px; color: var(--red); }
+
+/* Settings, search results, overlays */
+.m-setrow {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; gap: 12px; align-items: center;
+  padding: 11px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--text-1);
+}
+.m-setrow__price { font-size: 13px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.m-after { margin: -10px 0 14px; }   /* a hint that belongs to the input above it */
+.m-color {
+  width: 32px; height: 24px; padding: 0; flex-shrink: 0; cursor: pointer;
+  background: none; border: 1px solid var(--border-hover); border-radius: 6px;
+  appearance: none; -webkit-appearance: none;
+}
+.m-color::-webkit-color-swatch-wrapper { padding: 0; }
+.m-color::-webkit-color-swatch { border: 0; border-radius: 5px; }
+.m-color::-moz-color-swatch { border: 0; border-radius: 5px; }
+.m-overlay { position: fixed; inset: 0; z-index: 9998; background: rgba(8,8,12,0.62); animation: fadeIn 0.15s ease; }
+.m-dialog { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
 
 /* Dashboard */
 .m-greet { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }

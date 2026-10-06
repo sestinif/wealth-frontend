@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api.js';
-import FormInput from './FormInput';
 import Icon from './Icon';
+import Segmented from './Segmented';
+import Avatar from './Avatar';
 import EmptyState from './EmptyState';
 import { formatUSD, formatEUR } from '../utils/format';
 
@@ -49,34 +50,25 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
 
   return (
     <>
-      <div onClick={onClose} style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-        backdropFilter: 'blur(6px)', zIndex: 9998, animation: 'fadeIn 0.15s ease',
-      }} />
+      <div onClick={onClose} className="m-overlay" />
       <div style={{
-        position: 'fixed', top: '12%', left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', top: '12%', left: 0, right: 0, margin: '0 auto',
         width: '92%', maxWidth: 500, zIndex: 9999,
         animation: 'fadeUp 0.25s cubic-bezier(0.16,1,0.3,1)',
       }}>
-        <div style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 14, overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,123,255,0.1)',
-        }}>
+        <div className="m-dialog">
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Add New Asset</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>Search on CoinGecko or Yahoo Finance</div>
+              <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-1)' }}>Add new asset</div>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Search on CoinGecko or Yahoo Finance</div>
             </div>
             <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Close"><Icon name="x" size={14} /></button>
           </div>
 
           <div style={{ padding: 20 }}>
-            <div className="search-tabs">
-              {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
-                <button key={k} className={`btn btn--ghost btn--sm ${type === k ? 'active' : ''}`}
-                  onClick={() => { setType(k); setResults([]); setQuery(''); }}>{l}</button>
-              ))}
+            <div style={{ marginBottom: 12 }}>
+              <Segmented options={[{ key: 'crypto', label: 'Crypto' }, { key: 'dex', label: 'DEX and meme' }, { key: 'stock', label: 'Stocks and ETFs' }]}
+                value={type} onChange={(k) => { setType(k); setResults([]); setQuery(''); }} />
             </div>
 
             <input
@@ -84,51 +76,47 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               type="text"
               className="form-input form-input--lg"
               placeholder={
-                type === 'crypto' ? 'e.g. bitcoin, ethereum, solana...'
-                : type === 'dex' ? 'e.g. brett, pepe, wif, bonk...'
-                : 'e.g. VUAA, SPY, AAPL...'
+                type === 'crypto' ? 'Try bitcoin, ethereum or solana'
+                : type === 'dex' ? 'Try brett, pepe or wif'
+                : 'Try VUAA, SPY or AAPL'
               }
               value={query}
               onChange={e => setQuery(e.target.value)}
               style={{ marginBottom: 12 }}
             />
 
-            {loading && <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center', padding: 12 }}>Searching...</div>}
+            {loading && <div style={{ fontSize: 12, color: 'var(--text-2)', textAlign: 'center', padding: 12 }}>Searching…</div>}
 
-            <div style={{ maxHeight: 380, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ maxHeight: 380, overflowY: 'auto' }}>
               {results.map(r => (
-                <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="search-result">
-                  {r.thumb ? (
-                    <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(139,123,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#B3A8FF', fontWeight: 600, flexShrink: 0 }}>
-                      {r.symbol?.slice(0, 2)}
-                    </div>
-                  )}
-                  <div className="search-result__info" style={{ minWidth: 0 }}>
-                    <div className="search-result__symbol">
-                      {r.symbol}
-                      {r.chain && <span style={{ fontSize: 9, marginLeft: 6, padding: '1px 5px', borderRadius: 3, background: 'rgba(139,123,255,0.15)', color: '#B3A8FF', textTransform: 'uppercase' }}>{r.chain}</span>}
-                    </div>
-                    <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {r.name}
-                      {r.liquidity_usd ? <span style={{ opacity: 0.5, marginLeft: 4 }}>· Liq ${r.liquidity_usd >= 1e6 ? (r.liquidity_usd / 1e6).toFixed(1) + 'M' : (r.liquidity_usd / 1e3).toFixed(0) + 'K'}</span>
-                        : r.coingecko_id && type === 'crypto' ? <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span> : null}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 500, fontFamily: 'var(--font-num)', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
+                <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="m-setrow">
+                  {r.thumb
+                    ? <span className="m-avatar"><img src={r.thumb} alt="" /></span>
+                    : <Avatar label={r.symbol} />}
+                  <span className="m-row__main">
+                    <span className="m-row__title">{r.name || r.symbol}</span>
+                    <span className="m-row__sub">
+                      {[
+                        r.symbol,
+                        r.chain,
+                        r.liquidity_usd ? `Liquidity ${formatUSD(r.liquidity_usd, 0)}`
+                          : r.coingecko_id && type === 'crypto' ? r.coingecko_id : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                  <span className="m-setrow__price">
                     {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
-                  </div>
+                  </span>
                   <button className="btn btn--primary btn--sm" disabled={adding === r.symbol} onClick={() => handleAdd(r)}>
-                    {adding === r.symbol ? '...' : 'Add'}
+                    {adding === r.symbol ? '…' : 'Add'}
                   </button>
                 </div>
               ))}
               {!loading && query.length >= 2 && results.length === 0 && (
-                <EmptyState compact icon="search" title="No Results" description={`Nothing found for "${query}". Try another name or symbol.`} />
+                <EmptyState compact icon="search" title="No results" description={`Nothing found for "${query}". Try another name or symbol.`} />
               )}
               {!loading && query.length < 2 && (
-                <EmptyState compact icon="search" title="Search for an Asset" description="Type at least 2 characters to start searching." />
+                <EmptyState compact icon="search" title="Search for an asset" description="Type at least 2 characters to start searching." />
               )}
             </div>
           </div>

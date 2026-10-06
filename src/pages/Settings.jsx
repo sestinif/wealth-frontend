@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PageLayout from '../components/PageLayout';
+import PageHead from '../components/PageHead';
+import Tabs from '../components/Tabs';
+import Segmented from '../components/Segmented';
+import Field from '../components/Field';
 import FormInput from '../components/FormInput';
 import AlertMessage from '../components/AlertMessage';
-import AssetBadge from '../components/AssetBadge';
-import Icon from '../components/Icon';
+import LedgerRow from '../components/LedgerRow';
+import DetailSheet from '../components/DetailSheet';
+import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName, setDisplayName as saveDisplayName } from '../utils/user';
-import { formatEUR, formatUSD } from '../utils/format';
+import { formatEUR, formatUSD, formatDayLong } from '../utils/format';
 
 export default function Settings() {
   const toast = useToast();
@@ -21,7 +26,10 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const [tab, setTab] = useState('portfolio'); // portfolio | account
+  const [tab, setTab] = useState(() => (
+    new URLSearchParams(window.location.search).get('tab') === 'account' ? 'account' : 'portfolio'
+  )); // portfolio | account
+  const [assetSel, setAssetSel] = useState(null);   // asset symbol open in the sheet
   const [nameInput, setNameInput] = useState(() => getDisplayName(''));
 
   const handleSaveName = () => {
@@ -120,149 +128,115 @@ export default function Settings() {
   if (loading) return <PageLayout title="Settings" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
+  const typeLabel = (t) => (t === 'crypto' ? 'Crypto' : t === 'dex_token' ? 'DEX token' : 'Stock or ETF');
+  const sheetAsset = assets.find(a => a.symbol === assetSel) || null;
+
   return (
     <PageLayout title="Settings" username={user.username} size="md">
-
-      {/* Header */}
-      <div className="page-head animate-in">
-        <div className="page-head__title">Settings</div>
-        <div className="page-head__sub">Manage Portfolio and Account</div>
-      </div>
-
-      {/* Tabs */}
-      <div className="tab-bar animate-in-1">
-        {[['portfolio', 'Portfolio'], ['account', 'Account & Security']].map(([k, l]) => (
-          <button key={k} className={`btn btn--ghost ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>
-            {l}
-          </button>
-        ))}
-      </div>
+      <PageHead title="Settings" />
+      <Tabs tabs={[{ key: 'portfolio', label: 'Portfolio' }, { key: 'account', label: 'Account' }]}
+        value={tab} onChange={setTab} />
 
       {/* === PORTFOLIO TAB === */}
       {tab === 'portfolio' && (
-        <div className="animate-in-2">
+        <div>
           <AlertMessage type="error" message={assetError} />
           <AlertMessage type="success" message={assetSuccess} />
 
-          <div className="section-header">
-            <div className="section-header__title">Tracked Assets · {assets.length}</div>
-          </div>
+          <div className="m-section"><span>Tracked assets</span><span>{assets.length}</span></div>
+          {assets.map(asset => (
+            <LedgerRow key={asset.symbol} date="" avatar={<Avatar asset={asset.symbol} />}
+              title={asset.name || asset.symbol} sub={asset.name ? asset.symbol : ''}
+              amount={getPrice(asset)} onClick={() => setAssetSel(asset.symbol)} />
+          ))}
 
-          <div className="asset-list mb-24">
-            {assets.map(asset => (
-              <div key={asset.symbol} className="asset-row">
-                <AssetBadge asset={asset.symbol} color={asset.color} />
-                <div className="asset-row__price">{getPrice(asset)}</div>
-                <input type="color" className="asset-row__color" value={asset.color} onChange={e => handleColorChange(asset.symbol, e.target.value)} title="Change Color" />
-                <button className="asset-row__remove" onClick={() => handleRemoveAsset(asset.symbol)} title="Remove" aria-label="Remove"><Icon name="trash" size={14} /></button>
+          <div className="m-section"><span>Add an asset</span></div>
+          <div className="m-form">
+            <Field>
+              <Segmented options={[{ key: 'crypto', label: 'Crypto' }, { key: 'dex', label: 'DEX and meme' }, { key: 'stock', label: 'Stocks and ETFs' }]}
+                value={searchType}
+                onChange={(k) => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }} />
+            </Field>
+            <FormInput
+              placeholder={
+                searchType === 'crypto' ? 'Search crypto (ethereum, solana…)'
+                : searchType === 'dex' ? 'Search meme coins (brett, pepe, wif…)'
+                : 'Search stocks or ETFs (spy, aapl…)'
+              }
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searching && <div className="m-caption">Searching…</div>}
+            {searchResults.map(r => (
+              <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="m-setrow">
+                {r.thumb
+                  ? <span className="m-avatar"><img src={r.thumb} alt="" /></span>
+                  : <Avatar label={r.symbol} />}
+                <span className="m-row__main">
+                  <span className="m-row__title">{r.name || r.symbol}</span>
+                  <span className="m-row__sub">{r.symbol}</span>
+                </span>
+                <span className="m-setrow__price">
+                  {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
+                </span>
+                <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Add</button>
               </div>
             ))}
           </div>
 
-          <div className="section-header">
-            <div className="section-header__title">Add New Asset</div>
-          </div>
-
-          <div className="panel">
-            <div className="search-tabs">
-              {[['crypto', 'Crypto'], ['dex', 'DEX / Meme'], ['stock', 'Stock & ETF']].map(([k, l]) => (
-                <button key={k} className={`btn btn--ghost btn--sm ${searchType === k ? 'active' : ''}`}
-                  onClick={() => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }}>{l}</button>
-              ))}
-            </div>
-            <FormInput
-              placeholder={
-                searchType === 'crypto' ? 'Search crypto (ethereum, solana...)'
-                : searchType === 'dex' ? 'Search meme coin (brett, pepe, wif...)'
-                : 'Search ETF/stock (SPY, AAPL...)'
-              }
-              value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-            />
-            {searching && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>Searching...</div>}
-            {searchResults.length > 0 && (
-              <div className="asset-list" style={{ marginTop: 8 }}>
-                {searchResults.map(r => (
-                  <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="search-result">
-                    {r.thumb ? (
-                      <img src={r.thumb} alt={r.symbol} style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
-                    ) : (
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(139,123,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#B3A8FF', fontWeight: 600, flexShrink: 0 }}>
-                        {r.symbol?.slice(0, 2)}
-                      </div>
-                    )}
-                    <div className="search-result__info" style={{ minWidth: 0 }}>
-                      <div className="search-result__symbol">{r.symbol}</div>
-                      <div className="search-result__name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {r.name}
-                        {r.coingecko_id && <span style={{ opacity: 0.5, marginLeft: 4 }}>· {r.coingecko_id}</span>}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 12, color: (r.price_usd || r.price_eur) ? 'var(--text-1)' : 'var(--text-3)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', marginRight: 8, minWidth: 70, textAlign: 'right' }}>
-                      {r.price_usd ? formatUSD(r.price_usd) : r.price_eur ? formatEUR(r.price_eur) : '—'}
-                    </div>
-                    <button className="btn btn--primary btn--sm" onClick={() => handleAddAsset(r)}>Add</button>
-                  </div>
-                ))}
+          <DetailSheet open={!!sheetAsset} onClose={() => setAssetSel(null)}
+            avatar={sheetAsset ? <Avatar asset={sheetAsset.symbol} /> : null}
+            title={sheetAsset ? (sheetAsset.name || sheetAsset.symbol) : ''}
+            subtitle={sheetAsset && sheetAsset.name ? sheetAsset.symbol : undefined}
+            rows={sheetAsset ? [
+              { label: 'Price', value: getPrice(sheetAsset) },
+              { label: 'Type', value: typeLabel(sheetAsset.asset_type) },
+            ] : []}
+            danger={sheetAsset ? {
+              label: 'Remove asset',
+              onConfirm: async () => { await handleRemoveAsset(sheetAsset.symbol); setAssetSel(null); },
+            } : undefined}>
+            {sheetAsset && (
+              <div className="m-sheet__row">
+                <span>Colour</span>
+                <input type="color" className="m-color" value={sheetAsset.color}
+                  onChange={e => handleColorChange(sheetAsset.symbol, e.target.value)} aria-label="Colour" />
               </div>
             )}
-          </div>
+          </DetailSheet>
         </div>
       )}
 
       {/* === ACCOUNT TAB === */}
       {tab === 'account' && (
-        <div className="animate-in-2">
-          <div className="section-header">
-            <div className="section-header__title">Account</div>
-          </div>
-          <div className="panel" style={{ marginBottom: 20 }}>
-            <FormInput label="Display Name" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
-            <div className="form-hint" style={{ marginBottom: 12 }}>How you'd like to be greeted on the dashboard (e.g. Federico)</div>
-            <button className="btn btn--primary btn--sm" onClick={handleSaveName} style={{ marginBottom: 20 }}>Save Name</button>
-            <FormInput label="Username" value={user.username} disabled />
-            <FormInput label="Email" type="email" value={user.email} disabled />
-            <div className="info-text" style={{ marginTop: 4, fontSize: 11 }}>
-              Member since {new Date(user.created_at).toLocaleDateString('en-US')}
-            </div>
-          </div>
+        <div className="m-form">
+          <div className="m-section"><span>Account</span></div>
+          <FormInput label="Display name" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
+          <div className="form-hint m-after">How you'd like to be greeted on the dashboard (for example Federico)</div>
+          <button className="btn btn--primary" onClick={handleSaveName} style={{ marginBottom: 20 }}>Save name</button>
+          <FormInput label="Username" value={user.username} disabled />
+          <FormInput label="Email" type="email" value={user.email} disabled />
+          <div className="m-caption">Member since {formatDayLong(user.created_at)}</div>
 
-          <div className="section-header">
-            <div className="section-header__title">Security · Change Password</div>
-          </div>
-          <div className="panel" style={{ marginBottom: 20 }}>
-            <form onSubmit={handleChangePassword}>
-              <FormInput label="Current Password" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
-              <FormInput label="New Password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-              <FormInput label="Confirm" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-              <AlertMessage type="error" message={error} />
-              <AlertMessage type="success" message={success} />
-              <button type="submit" className="btn btn--primary btn--full" disabled={submitting}>
-                {submitting ? 'Saving...' : 'Update Password'}
-              </button>
-            </form>
-          </div>
-
-          <div className="section-header">
-            <div className="section-header__title">Security · Sessions</div>
-          </div>
-          <div className="panel" style={{ marginBottom: 20 }}>
-            <div className="info-text" style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-2)' }}>
-              Logs out this and all other devices. You'll need to sign in again.
-            </div>
-            <button className="btn btn--danger btn--sm" onClick={() => api.logoutAll()}>
-              Log Out All Devices
+          <div className="m-section"><span>Password</span></div>
+          <form onSubmit={handleChangePassword}>
+            <FormInput label="Current password" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
+            <FormInput label="New password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+            <FormInput label="Confirm password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <AlertMessage type="error" message={error} />
+            <AlertMessage type="success" message={success} />
+            <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
+              {submitting ? 'Saving…' : 'Update password'}
             </button>
-          </div>
+          </form>
 
-          <div className="section-header">
-            <div className="section-header__title">App Info</div>
+          <div className="m-section"><span>Sessions</span></div>
+          <div className="m-caption" style={{ marginTop: 0, marginBottom: 12 }}>
+            Logs out this and all other devices. You'll need to sign in again.
           </div>
-          <div className="panel">
-            <div className="info-text">
-              <div><span className="info-label">Wealth</span> · v3.0</div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>Multi-Asset Investment Tracker</div>
-            </div>
-          </div>
+          <button className="btn btn--danger" onClick={() => api.logoutAll()}>Log out all devices</button>
+
+          <div className="m-section"><span>About</span></div>
+          <div className="m-caption" style={{ marginTop: 0 }}>Wealth 3.0</div>
         </div>
       )}
 

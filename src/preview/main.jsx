@@ -18,6 +18,12 @@ import AddMovement from '../pages/AddMovement';
 import Charts from '../pages/Charts';
 import Reports from '../pages/Reports';
 import Calculator from '../pages/Calculator';
+import Settings from '../pages/Settings';
+import LoginPage from '../pages/LoginPage';
+import SetupPage from '../pages/SetupPage';
+import QuickBuyFAB from '../components/QuickBuyFAB';
+import CommandPalette from '../components/CommandPalette';
+import AddAssetModal from '../components/AddAssetModal';
 import * as fixtures from './fixtures';
 import { api } from '../api.js';
 import { installMockApi } from './mockApi';
@@ -165,6 +171,12 @@ const PAGES = {
   add: () => <AddMovement />,
   'add-bank': () => <AddMovement />,
   'add-dry': () => <AddMovement />,
+  settings: () => <Settings />,
+  'settings-account': () => <Settings />,
+  login: () => <LoginPage onLogin={() => {}} />,
+  setup: () => <SetupPage onComplete={() => {}} />,
+  overlays: () => <Frame title="Overlays"><PageHead title="Overlays" /><QuickBuyFAB /><CommandPalette /></Frame>,
+  'asset-modal': () => <Frame title="Asset modal"><AddAssetModal existingAssets={fixtures.assets} onClose={() => {}} onAdded={() => {}} /></Frame>,
 };
 
 const key = new URLSearchParams(window.location.search).get('p') || 'frame';

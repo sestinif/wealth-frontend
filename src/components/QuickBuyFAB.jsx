@@ -42,7 +42,6 @@ export default function QuickBuyFAB() {
   }, [open]);
 
   const currentAsset = assets.find(a => a.symbol === asset);
-  const getColor = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
 
   const handleAmount = (v) => {
     setAmountEur(v); setLastEdited('amount');
@@ -91,8 +90,8 @@ export default function QuickBuyFAB() {
       <button
         className="fab"
         onClick={() => setOpen(true)}
-        title="Quick Buy"
-        aria-label="Quick Buy"
+        title="Quick buy"
+        aria-label="Quick buy"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" />
@@ -103,11 +102,11 @@ export default function QuickBuyFAB() {
       {open && (
         <>
           <div className="fab-overlay" onClick={() => setOpen(false)} />
-          <div className="fab-modal" role="dialog" aria-label="Quick Buy">
+          <div className="fab-modal" role="dialog" aria-label="Quick buy">
             <div className="fab-modal__header">
               <div>
-                <div className="fab-modal__eyebrow">Quick Buy</div>
-                <div className="fab-modal__title">Record a New Purchase</div>
+                <div className="fab-modal__eyebrow">Quick buy</div>
+                <div className="fab-modal__title">Record a new purchase</div>
               </div>
               <button className="fab-modal__close" onClick={() => setOpen(false)} aria-label="Close"><Icon name="x" size={16} /></button>
             </div>
@@ -122,15 +121,15 @@ export default function QuickBuyFAB() {
                       className={`fab-asset-chip ${asset === a.symbol ? 'active' : ''}`}
                       onClick={() => setAsset(a.symbol)}
                     >
-                      <AssetBadge asset={a.symbol} color={a.color} />
+                      <AssetBadge asset={a.symbol} color="#9A9AA8" />
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              <div className="form-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
                 <div className="form-group">
-                  <label className="form-label">Amount EUR</label>
+                  <label className="form-label">Amount in EUR</label>
                   <input
                     type="number" step="any" className="form-input"
                     value={amountEur} onChange={e => handleAmount(e.target.value)}
@@ -138,7 +137,7 @@ export default function QuickBuyFAB() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">{asset} Quantity</label>
+                  <label className="form-label">{asset} quantity</label>
                   <input
                     type="number" step="any" className="form-input"
                     value={qty} onChange={e => handleQty(e.target.value)}
@@ -163,7 +162,7 @@ export default function QuickBuyFAB() {
 
               {!useLivePrice && (
                 <div className="form-group">
-                  <label className="form-label">Price EUR</label>
+                  <label className="form-label">Price in EUR</label>
                   <input
                     type="number" step="any" className="form-input"
                     value={priceEur}
@@ -197,7 +196,7 @@ export default function QuickBuyFAB() {
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
                 <button type="button" className="btn btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
                 <button type="submit" className="btn btn--primary" disabled={submitting}>
-                  {submitting ? 'Adding...' : 'Record Purchase'}
+                  {submitting ? 'Adding…' : 'Record purchase'}
                 </button>
               </div>
             </form>

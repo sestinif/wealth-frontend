@@ -43,7 +43,7 @@ export default function SetupPage({ onComplete }) {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-logo"><BrandMark size={52} /></div>
-        <h1 className="auth-title">Welcome to Wealth</h1>
+        <h1 className="auth-title">Wealth</h1>
         <p className="auth-subtitle">Create your account</p>
 
         <form onSubmit={handleSubmit}>
@@ -71,7 +71,7 @@ export default function SetupPage({ onComplete }) {
           <AlertMessage type="error" message={error} />
 
           <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading || !allMet} style={{ opacity: allMet && !loading ? 1 : 0.5 }}>
-            {loading ? 'CREATING...' : 'CREATE ACCOUNT'}
+            {loading ? 'Creating…' : 'Create account'}
           </button>
         </form>
       </div>

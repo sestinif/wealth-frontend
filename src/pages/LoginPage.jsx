@@ -26,8 +26,7 @@ export default function LoginPage({ onLogin }) {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-logo"><BrandMark size={52} /></div>
-        <h1 className="auth-title">WEALTH</h1>
-        <p className="auth-subtitle">INVESTMENT TRACKER</p>
+        <h1 className="auth-title">Wealth</h1>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -48,7 +47,7 @@ export default function LoginPage({ onLogin }) {
           <AlertMessage type="error" message={error} />
 
           <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading}>
-            {loading ? 'SIGNING IN...' : 'SIGN IN'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </div>

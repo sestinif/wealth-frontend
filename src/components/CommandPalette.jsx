@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 const COMMANDS = [
   { label: 'Dashboard', path: '/dashboard', keys: 'D' },
-  { label: 'Add Movement', path: '/add', keys: 'A' },
-  { label: 'Diary — History', path: '/diary', keys: 'H' },
+  { label: 'Add movement', path: '/add', keys: 'A' },
+  { label: 'Diary — history', path: '/diary', keys: 'H' },
   { label: 'Reports', path: '/reports', keys: 'R' },
   { label: 'Charts', path: '/charts', keys: 'G' },
-  { label: 'Settings — Manage Assets', path: '/settings', keys: 'S' },
+  { label: 'Settings — manage assets', path: '/settings', keys: 'S' },
 ];
 
 export default function CommandPalette() {
@@ -54,28 +54,20 @@ export default function CommandPalette() {
 
   return (
     <>
-      <div onClick={() => setOpen(false)} style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(4px)', zIndex: 9998,
-        animation: 'fadeIn 0.15s ease',
-      }} />
+      <div onClick={() => setOpen(false)} className="m-overlay" />
       <div style={{
-        position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', top: '20%', left: 0, right: 0, margin: '0 auto',
         width: '100%', maxWidth: 440, zIndex: 9999,
         animation: 'fadeUp 0.2s cubic-bezier(0.16,1,0.3,1)',
       }}>
-        <div style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 14, overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,123,255,0.1)',
-        }}>
+        <div className="m-dialog">
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
             <input
               ref={inputRef}
               value={query}
               onChange={e => { setQuery(e.target.value); setSelected(0); }}
               onKeyDown={handleKeyDown}
-              placeholder="Search or navigate..."
+              placeholder="Search or navigate…"
               style={{
                 width: '100%', background: 'none', border: 'none', outline: 'none',
                 color: 'var(--text-1)', fontSize: 14, fontFamily: 'inherit',
@@ -95,24 +87,24 @@ export default function CommandPalette() {
                 }}
                 onMouseEnter={() => setSelected(i)}
               >
-                <span style={{ fontSize: 13, color: i === selected ? 'var(--text-1)' : 'var(--text-2)', fontWeight: i === selected ? 500 : 400 }}>
+                <span style={{ fontSize: 14, color: i === selected ? 'var(--text-1)' : 'var(--text-2)', fontWeight: i === selected ? 500 : 400 }}>
                   {cmd.label}
                 </span>
-                <span style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-2)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
                   {cmd.keys}
                 </span>
               </div>
             ))}
             {filtered.length === 0 && (
-              <div style={{ padding: '16px 12px', fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>
+              <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-2)', textAlign: 'center' }}>
                 No results
               </div>
             )}
           </div>
           <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↑↓ navigate</span>
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>↵ select</span>
-            <span style={{ fontSize: 10, color: 'var(--text-3)' }}>esc close</span>
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>↑↓ navigate</span>
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>↵ select</span>
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>esc close</span>
           </div>
         </div>
       </div>
