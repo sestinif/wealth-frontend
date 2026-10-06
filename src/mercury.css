@@ -86,7 +86,6 @@ body::before, body::after { content: none; }
 .nav-item.active::before { content: none; }
 .nav-item.active .nav-item__icon, .nav-item--accent .nav-item__icon { color: inherit; }
 .applink { background: transparent; box-shadow: none; }
-.applink__chip { background: var(--accent); color: var(--bg); font-size: 12px; font-weight: 500; }
 .applink__name { font-size: 13px; letter-spacing: 0; font-weight: 400; }
 
 .page-content { min-width: 0; }   /* a wide child must never widen the page */

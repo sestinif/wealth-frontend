@@ -47,7 +47,7 @@ export default function Sidebar({ username, open = false, onClose }) {
           OVERVIEW / ADD / TRACK below, so it reads as a place rather than a
           button dropped in the margin — and it's a card, not a line of
           9px grey text, because it competes with real navigation for the
-          eye. The tinted chip and the ↗ say "another app, new tab". */}
+          eye. Its own mark and the ↗ say "another app, new tab". */}
       <div className="sidebar__section sidebar__section--apps">
         <div className="sidebar__section-label">Apps</div>
         <a
@@ -57,7 +57,13 @@ export default function Sidebar({ username, open = false, onClose }) {
           rel="noopener noreferrer"
           title="Open Personals (personal expenses)"
         >
-          <span className="applink__chip">P</span>
+          {/* Personals' own mark — the same drawing as its tab icon. */}
+          <svg className="applink__mark" width="22" height="22" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7.5" fill="#1B1B24" />
+            <rect x="0.9" y="0.9" width="30.2" height="30.2" rx="6.7" fill="none" stroke="#FFFFFF" strokeOpacity="0.30" strokeWidth="1.6" />
+            <rect x="7" y="10.5" width="18" height="12.5" rx="3.4" fill="none" stroke="#FFC24B" strokeWidth="3" />
+            <circle cx="20.6" cy="16.8" r="2.1" fill="#FFC24B" />
+          </svg>
           <span className="applink__name">Personals</span>
           <svg className="applink__arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M7 17L17 7M17 7H8M17 7v9" />
