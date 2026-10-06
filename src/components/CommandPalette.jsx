@@ -20,6 +20,7 @@ export default function CommandPalette() {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
   const inputRef = useRef(null);
+  const listRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,6 +40,11 @@ export default function CommandPalette() {
   useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
+
+  // The list is taller than its box: follow the highlighted row with the arrow keys.
+  useEffect(() => {
+    listRef.current?.querySelector('[data-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [selected, open]);
 
   if (!open) return null;
 
@@ -80,10 +86,11 @@ export default function CommandPalette() {
               }}
             />
           </div>
-          <div style={{ padding: '6px 6px', maxHeight: 280, overflowY: 'auto' }}>
+          <div ref={listRef} style={{ padding: '6px 6px', maxHeight: 280, overflowY: 'auto' }}>
             {filtered.map((cmd, i) => (
               <div
                 key={cmd.label}
+                data-selected={i === selected}
                 onClick={() => handleSelect(cmd)}
                 style={{
                   padding: '10px 12px', borderRadius: 8, cursor: 'pointer',

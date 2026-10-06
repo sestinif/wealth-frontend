@@ -25,13 +25,15 @@ export const logoUrl = (domain) => `https://www.google.com/s2/favicons?domain=${
 
 // One figure for an account, from the external balances Wealth tracks
 // ([{ name, currency, balance }]). Null when there is no match, or when the
-// matches are in different currencies (no single honest total).
+// matches are in different currencies (no single honest total), or in a
+// currency the app cannot format (it only knows EUR and USD).
 export function balanceFor(match, externalAccounts) {
   if (!match || !Array.isArray(externalAccounts)) return null;
   const key = String(match).toLowerCase();
   const hits = externalAccounts.filter(a => String(a.name || '').toLowerCase().includes(key));
   if (hits.length === 0) return null;
   const currency = (hits[0].currency || 'EUR').toUpperCase();
+  if (currency !== 'EUR' && currency !== 'USD') return null;
   if (hits.some(a => (a.currency || 'EUR').toUpperCase() !== currency)) return null;
   const amount = Math.round(hits.reduce((s, a) => s + (Number(a.balance) || 0), 0) * 100) / 100;
   return { amount, currency };

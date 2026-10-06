@@ -20,6 +20,7 @@ test('balanceFor gives nothing when it cannot give one honest figure', () => {
   assert.equal(balanceFor('bybit', external), null);       // not tracked
   assert.equal(balanceFor(undefined, external), null);     // no key
   assert.equal(balanceFor('mercury', undefined), null);    // nothing loaded
+  assert.equal(balanceFor('monzo', [{ name: 'Monzo', currency: 'GBP', balance: 5 }]), null);   // a currency the app cannot format
 });
 
 test('every account has a name, an https login url and a domain', () => {
@@ -28,7 +29,8 @@ test('every account has a name, an https login url and a domain', () => {
   for (const it of items) {
     assert.ok(it.name && it.domain, it.name);
     assert.match(it.url, /^https:\/\//);
-    assert.ok(new URL(it.url).hostname.endsWith(it.domain.replace(/^www\./, '')), `${it.name}: url and domain disagree`);
+    const host = new URL(it.url).hostname;
+    assert.ok(host === it.domain || host.endsWith(`.${it.domain}`), `${it.name}: ${host} is not on ${it.domain}`);
   }
 });
 
