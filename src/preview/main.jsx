@@ -116,7 +116,11 @@ const PAGES = {
 const key = new URLSearchParams(window.location.search).get('p') || 'frame';
 const Page = PAGES[key] || (() => <pre style={{ color: '#EDEDF3', padding: 24 }}>Unknown page. Try: {Object.keys(PAGES).join(', ')}</pre>);
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// Hot reloads re-run this module: keep one root per page load.
+const container = document.getElementById('root');
+const root = container.__previewRoot || (container.__previewRoot = ReactDOM.createRoot(container));
+
+root.render(
   <React.StrictMode>
     <MemoryRouter initialEntries={['/diary']}>
       <ToastProvider><Page /></ToastProvider>

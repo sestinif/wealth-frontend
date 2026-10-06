@@ -143,7 +143,7 @@ export default function DashboardView({
                       labelFormatter={(l) => formatDayLong(l)} />
                     <Area type="monotone" dataKey="value" stroke="#8D9BFF" strokeWidth={1.5} strokeLinecap="round" fill="none"
                       dot={false} activeDot={{ r: 3.5, fill: '#8D9BFF', stroke: '#1B1B24', strokeWidth: 1.5 }}
-                      animationDuration={500} animationEasing="ease-out" />
+                      isAnimationActive={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
