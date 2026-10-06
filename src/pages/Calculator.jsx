@@ -85,7 +85,7 @@ export default function Calculator() {
       <PageHead title="DCA calculator">
         {heldAssets.length > 0 && (
           <select className="m-select" aria-label="Asset" value={symbol} onChange={e => setSymbol(e.target.value)}>
-            {heldAssets.map(a => <option key={a.symbol} value={a.symbol}>{`${a.name || a.symbol} · ${a.symbol}`}</option>)}
+            {heldAssets.map(a => <option key={a.symbol} value={a.symbol}>{a.symbol}</option>)}
           </select>
         )}
       </PageHead>

@@ -100,11 +100,11 @@ export default function Reports() {
 
   return (
     <PageLayout title="Report" username={user.username} size="md">
-      <PageHead title="Reports" />
+      <PageHead title="Reports">{filters}</PageHead>
 
       <Tabs
         tabs={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'annual', label: 'Annual' }, { key: 'monthly', label: 'Monthly' }]}
-        value={tab} onChange={setTab} right={filters} />
+        value={tab} onChange={setTab} />
 
       {report && (
         <>

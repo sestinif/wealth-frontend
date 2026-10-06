@@ -147,7 +147,7 @@ body::before, body::after { content: none; }
 /* Page head */
 .m-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
 .m-head__title { font-size: 26px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; color: var(--text-1); }
-.m-head__side { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.m-head__side { display: flex; align-items: center; gap: 14px; flex-shrink: 0; min-width: 0; }
 .m-head__cta { text-decoration: none; }
 .m-head__cta-icon { display: none; }
 
@@ -175,6 +175,7 @@ body::before, body::after { content: none; }
   padding: 0 18px 0 0; font: inherit; font-size: 13px; color: var(--text-2);
   background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239A9AA8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") right center no-repeat;
 }
+.m-select { max-width: 100%; }
 .m-select option { background: var(--bg-elev); color: var(--text-1); }
 
 /* Ledger */
