@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import PageLayout from '../components/PageLayout';
+import PageHead from '../components/PageHead';
+import StatRow from '../components/StatRow';
+import Field from '../components/Field';
 import { PageSkeleton } from '../components/Skeleton';
-import AssetBadge from '../components/AssetBadge';
-import EmptyState from '../components/EmptyState';
 import { api } from '../api.js';
 import { formatPrice } from '../utils/format';
 
@@ -69,8 +71,8 @@ export default function Calculator() {
   const tPrice = parseFloat(targetPrice) || curPrice;
   let tNeed = 0, tAddQty = 0, tReason = '';
   if (tDca > 0 && tPrice > 0) {
-    if (tDca >= dca) tReason = 'Target must be below your current DCA — buying can only lower it.';
-    else if (tPrice >= tDca) tReason = `Impossible at ${fmt(tPrice)}: you can’t pull the DCA below the price you buy at.`;
+    if (tDca >= dca) tReason = 'Target must be below your current average — buying can only lower it.';
+    else if (tPrice >= tDca) tReason = `Impossible at ${fmt(tPrice)}: you can’t pull the average below the price you buy at.`;
     else {
       tNeed = qty * (dca - tDca) / (tDca / tPrice - 1);
       tAddQty = tNeed / tPrice;
@@ -79,104 +81,62 @@ export default function Calculator() {
   const tValid = tDca > 0 && tPrice > 0 && !tReason;
 
   return (
-    <PageLayout title="DCA Calculator" username={user.username} size="md">
+    <PageLayout title="DCA calculator" username={user.username} size="md">
+      <PageHead title="DCA calculator">
+        {heldAssets.length > 0 && (
+          <select className="m-select" aria-label="Asset" value={symbol} onChange={e => setSymbol(e.target.value)}>
+            {heldAssets.map(a => <option key={a.symbol} value={a.symbol}>{`${a.name || a.symbol} · ${a.symbol}`}</option>)}
+          </select>
+        )}
+      </PageHead>
 
-      <div className="page-head animate-in">
-        <div className="page-head__title">DCA Calculator</div>
-        <div className="page-head__sub">Plan how a buy moves your average cost</div>
-      </div>
-
-      {/* Asset selector */}
       {heldAssets.length === 0 ? (
-        <div className="panel animate-in-1">
-          <EmptyState compact icon="inbox" title="No Holdings" description="Log a purchase in the Diary first, then plan your averaging here." />
+        <div className="m-empty">
+          <div>No holdings yet</div>
+          <Link to="/add" className="btn btn--primary">Add movement</Link>
         </div>
       ) : (
         <>
-          <div className="calc-assets animate-in-1">
-            {heldAssets.map(a => (
-              <button key={a.symbol} type="button"
-                className={`calc-asset ${symbol === a.symbol ? 'active' : ''}`}
-                onClick={() => setSymbol(a.symbol)}>
-                <AssetBadge asset={a.symbol} color={a.color} />
-              </button>
-            ))}
-          </div>
+          <StatRow items={[
+            { label: 'Your average', value: fmt(dca) },
+            { label: 'Quantity', value: qtyFmt(qty) },
+            { label: 'Market price', value: fmt(curPrice) },
+            { label: 'Unrealized', value: `${pnlPct >= 0 ? '+' : '−'}${Math.abs(pnlPct).toFixed(1)}%`, tone: pnlPct >= 0 ? 'up' : 'down' },
+          ]} />
 
-          {/* Current position */}
-          <div className="panel section-gap animate-in-1">
-            <div className="diary-card__head"><span className="diary-card__dot" style={{ background: asset?.color || 'var(--accent)' }} />Current Position · {symbol}</div>
-            <div className="calc-stats">
-              <div className="calc-stat">
-                <div className="calc-stat__lbl">Your DCA</div>
-                <div className="calc-stat__val">{fmt(dca)}</div>
-              </div>
-              <div className="calc-stat">
-                <div className="calc-stat__lbl">Quantity</div>
-                <div className="calc-stat__val">{qtyFmt(qty)}</div>
-              </div>
-              <div className="calc-stat">
-                <div className="calc-stat__lbl">Market Price</div>
-                <div className="calc-stat__val">{fmt(curPrice)}</div>
-              </div>
-              <div className="calc-stat">
-                <div className="calc-stat__lbl">Unrealized</div>
-                <div className="calc-stat__val" style={{ color: pnlPct >= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
-                  {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Two calculators */}
-          <div className="diary-top">
-            {/* What-if buy */}
-            <div className="panel">
-              <div className="diary-card__head"><span className="diary-card__dot" style={{ background: 'var(--accent)' }} />What-If Buy</div>
-              <div className="form-group">
-                <label className="form-label">Amount ({ccy})</label>
+          <div className="m-g2 m-g2--cards">
+            <div className="m-card">
+              <div className="m-label" style={{ marginBottom: 14 }}>What-if buy</div>
+              <Field label={`Amount (${ccy})`}>
                 <input type="number" step="any" className="form-input" value={buyAmount} onChange={e => setBuyAmount(e.target.value)} placeholder="1000" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Buy Price ({ccy})</label>
+              </Field>
+              <Field label={`Buy price (${ccy})`} hint="Leave empty to use the market price.">
                 <input type="number" step="any" className="form-input" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
-                <div className="form-hint">Leave empty to use the current market price.</div>
-              </div>
-              <div className="calc-result">
-                <div className="calc-result__lbl">New DCA</div>
-                <div className="calc-result__val">{bValid ? fmt(bNewDca) : '—'}</div>
+              </Field>
+              <div className="m-result">
+                <div className="m-label">New average</div>
+                <div className="m-result__value">{bValid ? fmt(bNewDca) : '—'}</div>
                 {bValid && (
-                  <div className="calc-result__meta">
-                    <span style={{ color: bDelta <= 0 ? 'var(--green)' : 'var(--red-soft)' }}>
-                      {bDelta <= 0 ? '▼ ' : '▲ '}{fmt(Math.abs(bDelta))}
-                    </span>
-                    <span style={{ color: 'var(--text-3)' }}> · +{qtyFmt(bAddQty)} {symbol} → {qtyFmt(bNewQty)} total</span>
+                  <div className="m-result__meta">
+                    <span className={bDelta <= 0 ? 'm-up' : 'm-down'}>{bDelta <= 0 ? '−' : '+'}{fmt(Math.abs(bDelta))}</span> · +{qtyFmt(bAddQty)} {symbol}, {qtyFmt(bNewQty)} in total
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Target DCA */}
-            <div className="panel">
-              <div className="diary-card__head"><span className="diary-card__dot" style={{ background: 'var(--dry)' }} />Reach a Target DCA</div>
-              <div className="form-group">
-                <label className="form-label">Target DCA ({ccy})</label>
+            <div className="m-card">
+              <div className="m-label" style={{ marginBottom: 14 }}>Reach a target average</div>
+              <Field label={`Target average (${ccy})`}>
                 <input type="number" step="any" className="form-input" value={targetDca} onChange={e => setTargetDca(e.target.value)} placeholder={dca ? String(Math.round(dca * 0.9)) : '0'} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Buy Price ({ccy})</label>
+              </Field>
+              <Field label={`Buy price (${ccy})`} hint="Leave empty to use the market price.">
                 <input type="number" step="any" className="form-input" value={targetPrice} onChange={e => setTargetPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
-                <div className="form-hint">Leave empty to use the current market price.</div>
-              </div>
-              <div className="calc-result">
-                <div className="calc-result__lbl">You Need to Invest</div>
-                <div className="calc-result__val">{tValid ? fmt(tNeed) : '—'}</div>
-                {tValid && (
-                  <div className="calc-result__meta">
-                    <span style={{ color: 'var(--text-3)' }}>+{qtyFmt(tAddQty)} {symbol} at {fmt(tPrice)}</span>
-                  </div>
-                )}
-                {tReason && <div className="calc-result__warn">{tReason}</div>}
+              </Field>
+              <div className="m-result">
+                <div className="m-label">You need to invest</div>
+                <div className="m-result__value">{tValid ? fmt(tNeed) : '—'}</div>
+                {tValid && <div className="m-result__meta">+{qtyFmt(tAddQty)} {symbol} at {fmt(tPrice)}</div>}
+                {tReason && <div className="m-result__warn">{tReason}</div>}
               </div>
             </div>
           </div>

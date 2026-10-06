@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/PageLayout';
-import DataTable from '../components/DataTable';
-import AssetBadge from '../components/AssetBadge';
-import FormInput from '../components/FormInput';
-import AnimatedNumber from '../components/AnimatedNumber';
-import Icon from '../components/Icon';
+import PageHead from '../components/PageHead';
+import Tabs from '../components/Tabs';
+import StatRow from '../components/StatRow';
+import Money from '../components/Money';
+import LedgerRow from '../components/LedgerRow';
+import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatQty, formatPnL, formatPct, formatDate } from '../utils/format';
+import { formatEUR, formatQty, formatDay, sortByDate } from '../utils/format';
+
+const pctText = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`;
+const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
 
 export default function Reports() {
   const [user, setUser] = useState(null);
@@ -43,8 +47,8 @@ export default function Reports() {
   if (loading) return <PageLayout title="Report" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Failed to load</div></div>;
 
-  const getColor = (sym) => assets.find(a => a.symbol === sym)?.color || '#8B7BFF';
   const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
+  const getName = (sym) => assets.find(a => a.symbol === sym)?.name || sym;
 
   const yearOptions = Array.from({ length: new Date().getFullYear() - 2023 }, (_, i) => ({
     value: 2024 + i, label: String(2024 + i)
@@ -54,114 +58,87 @@ export default function Reports() {
     [7, 'July'], [8, 'August'], [9, 'September'], [10, 'October'], [11, 'November'], [12, 'December']
   ].map(([v, l]) => ({ value: v, label: l }));
 
-  const assetColumns = [
-    { key: 'asset', label: 'Asset', render: (v) => <AssetBadge asset={v} color={getColor(v)} /> },
-    { key: 'invested', label: 'Invested', align: 'right', muted: true, render: v => formatEUR(v) },
-    { key: 'value', label: 'Value', align: 'right', render: v => formatEUR(v) },
-    { key: 'qty', label: 'Quantity', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
-    { key: 'pnl', label: 'P&L', align: 'right', render: v => <span className={v >= 0 ? 'pnl-positive' : 'pnl-negative'}>{formatPnL(v)}</span> },
-  ];
+  const assetData = report
+    ? Object.entries(report.by_asset || {}).map(([asset, d]) => ({ asset, ...d })).sort((a, b) => b.value - a.value)
+    : [];
+  const transactions = report?.transactions ? sortByDate(report.transactions, 'date', 'desc') : [];
 
-  const txColumns = [
-    { key: 'date', label: 'Date', sortable: true, render: v => formatDate(v) },
-    { key: 'asset', label: 'Asset', render: v => <AssetBadge asset={v} color={getColor(v)} /> },
-    { key: 'amount_eur', label: 'Amount', align: 'right', sortable: true, render: v => formatEUR(v) },
-    { key: 'quantity', label: 'Quantity', align: 'right', muted: true, render: (v, row) => formatQty(v, getDecimals(row.asset)) },
-  ];
+  const breakdownRow = (d) => {
+    const profitPct = d.invested > 0 ? (d.value / d.invested - 1) * 100 : 0;
+    const tone = d.pnl >= 0 ? 'm-up' : 'm-down';
+    return (
+      <div key={d.asset} className="m-table__row" style={{ cursor: 'default' }}>
+        <span className="m-table__name">
+          <span className="m-row__title">{getName(d.asset)}</span>
+          <span className="m-table__sub">{formatQty(d.qty, getDecimals(d.asset))} {d.asset}</span>
+        </span>
+        <span className="m-table__price m-muted">{formatEUR(d.invested)}</span>
+        <span>
+          {formatEUR(d.value)}
+          <span className={`m-table__sub m-table__phone ${tone}`}>{signedEUR(d.pnl)}</span>
+        </span>
+        <span className="m-table__profit">
+          <span className={tone}>{signedEUR(d.pnl)}</span>
+          <span className="m-table__sub">{pctText(profitPct)}</span>
+        </span>
+      </div>
+    );
+  };
 
-  const assetData = report ? Object.entries(report.by_asset).map(([asset, d]) => ({ asset, ...d })) : [];
-  const pnlC = report && report.pnl >= 0 ? 'var(--green)' : 'var(--red)';
-
-  const periodLabel = tab === 'monthly'
-    ? `${monthOptions.find(m => m.value === month)?.label} ${year}`
-    : tab === 'annual' ? `Year ${year}`
-    : 'Lifetime';
+  const filters = tab === 'lifetime' ? null : (
+    <div style={{ display: 'flex', gap: 14 }}>
+      <select className="m-select" aria-label="Year" value={year} onChange={e => setYear(parseInt(e.target.value))}>
+        {yearOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      {tab === 'monthly' && (
+        <select className="m-select" aria-label="Month" value={month} onChange={e => setMonth(parseInt(e.target.value))}>
+          {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      )}
+    </div>
+  );
 
   return (
     <PageLayout title="Report" username={user.username} size="md">
+      <PageHead title="Reports" />
 
-      {/* Header */}
-      <div className="page-head animate-in">
-        <div className="page-head__title">{periodLabel} Report</div>
-        <div className="page-head__sub">Periodic analysis of your portfolio</div>
-      </div>
-
-      {/* Tab + filters */}
-      <div className="tab-bar animate-in-1">
-        {[['lifetime', 'Lifetime'], ['annual', 'Annual'], ['monthly', 'Monthly']].map(([key, label]) => (
-          <button key={key} className={`btn btn--ghost ${tab === key ? 'active' : ''}`} onClick={() => setTab(key)}>
-            {label}
-          </button>
-        ))}
-        {(tab === 'monthly' || tab === 'annual') && (
-          <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-            <div style={{ width: 100 }}>
-              <select className="form-input" value={year} onChange={e => setYear(parseInt(e.target.value))} style={{ padding: '7px 12px' }}>
-                {yearOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-            {tab === 'monthly' && (
-              <div style={{ width: 130 }}>
-                <select className="form-input" value={month} onChange={e => setMonth(parseInt(e.target.value))} style={{ padding: '7px 12px' }}>
-                  {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <Tabs
+        tabs={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'annual', label: 'Annual' }, { key: 'monthly', label: 'Monthly' }]}
+        value={tab} onChange={setTab} right={filters} />
 
       {report && (
         <>
-          {/* Stat band for the period */}
-          <div className="stat-band animate-in-2">
-            <div className="stat-cell">
-              <div className="stat-cell__label">Invested in Period</div>
-              <AnimatedNumber value={report.total_invested} suffix="€" className="stat-cell__value stat-cell__value--muted" />
-              <div className="stat-cell__sub">&nbsp;</div>
-            </div>
-            <div className="stat-cell">
-              <div className="stat-cell__label">Current Value</div>
-              <AnimatedNumber value={report.total_value} suffix="€" className="stat-cell__value" />
-              <div className="stat-cell__sub">&nbsp;</div>
-            </div>
-            <div className="stat-cell">
-              <div className="stat-cell__label">Profit / Loss</div>
-              <AnimatedNumber value={Math.abs(report.pnl)} prefix={report.pnl >= 0 ? '+' : '-'} suffix="€" className={`stat-cell__value ${report.pnl >= 0 ? 'stat-cell__value--green' : 'stat-cell__value--red'}`} />
-              <div className="stat-cell__sub" style={{ color: pnlC }}>{formatPct(report.pnl_pct)}</div>
-            </div>
+          <div style={{ paddingTop: 20 }}>
+            <StatRow items={[
+              { label: 'Invested', value: <Money value={report.total_invested} /> },
+              { label: 'Current value', value: <Money value={report.total_value} /> },
+              { label: `Profit · ${pctText(report.pnl_pct)}`, value: <Money value={report.pnl} sign />, tone: report.pnl >= 0 ? 'up' : 'down' },
+            ]} />
           </div>
 
-          {/* Asset breakdown */}
-          <div className="animate-in-3" style={{ marginBottom: 24 }}>
-            <div className="section-header">
-              <div className="section-header__title">Breakdown by Asset</div>
-              <div className="section-header__meta">{assetData.length} assets</div>
-            </div>
-            <div className="panel panel--flush overflow-auto">
-              <DataTable columns={assetColumns} data={assetData} />
-            </div>
-          </div>
-
-          {/* Transactions (collapsible) */}
-          {report.transactions && report.transactions.length > 0 && (
-            <div className="animate-in-4" style={{ marginBottom: 24 }}>
-              <div className="section-header">
-                <div className="section-header__title">Transactions in Period</div>
-                <div className="section-header__actions">
-                  <span className="section-header__meta">{report.transactions.length} purchases</span>
-                  <button className={`collapse-btn ${showTx ? 'expanded' : ''}`} onClick={() => setShowTx(!showTx)}>
-                    {showTx ? 'Hide' : 'Show'}
-                    <Icon name="chevron" size={13} className="collapse-btn__arrow" />
-                  </button>
-                </div>
+          {assetData.length === 0 ? (
+            <div className="m-empty">Nothing in this period</div>
+          ) : (
+            <>
+              <div className="m-table__head">
+                <span>Breakdown by asset</span><span>Invested</span><span>Value</span><span>Profit</span>
               </div>
-              {showTx && (
-                <div className="panel panel--flush overflow-auto">
-                  <DataTable columns={txColumns} data={report.transactions} defaultSort={{ key: 'date', direction: 'desc' }} />
-                </div>
-              )}
-            </div>
+              {assetData.map(breakdownRow)}
+            </>
+          )}
+
+          {transactions.length > 0 && (
+            <>
+              <div className="m-section">
+                <span>Transactions in period · {transactions.length}</span>
+                <button type="button" className="m-link" onClick={() => setShowTx(!showTx)}>{showTx ? 'Hide' : 'Show'}</button>
+              </div>
+              {showTx && transactions.map((p, i) => (
+                <LedgerRow key={p.id ?? i} date={formatDay(p.date)} avatar={<Avatar asset={p.asset} />}
+                  title={getName(p.asset)} sub={`${formatQty(p.quantity, getDecimals(p.asset))} ${p.asset}`}
+                  amount={formatEUR(p.amount_eur)} />
+              ))}
+            </>
           )}
         </>
       )}

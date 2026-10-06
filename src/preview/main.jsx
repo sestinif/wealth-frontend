@@ -16,6 +16,8 @@ import DiaryView from '../pages/DiaryView';
 import DashboardView from '../pages/DashboardView';
 import AddMovement from '../pages/AddMovement';
 import Charts from '../pages/Charts';
+import Reports from '../pages/Reports';
+import Calculator from '../pages/Calculator';
 import * as fixtures from './fixtures';
 import { api } from '../api.js';
 import { installMockApi } from './mockApi';
@@ -158,6 +160,8 @@ const PAGES = {
   'dashboard-bare': () => <DashboardDemo bare />,
   forms: () => <FormsDemo />,
   charts: () => <Charts />,
+  reports: () => <Reports />,
+  dca: () => <Calculator />,
   add: () => <AddMovement />,
   'add-bank': () => <AddMovement />,
   'add-dry': () => <AddMovement />,
