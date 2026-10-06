@@ -1,34 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import PageLayout from '../components/PageLayout';
-import FormInput from '../components/FormInput';
-import AssetBadge from '../components/AssetBadge';
-import EmptyState from '../components/EmptyState';
+import PageHead from '../components/PageHead';
+import Money from '../components/Money';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatUSD, formatPct, allocationSlices, rankedColors, yEur } from '../utils/format';
+import {
+  formatEUR, formatPrice, formatDayLong,
+  TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
+} from '../utils/format';
+import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
 
-// Swiss-instrument chart chrome: flat surfaces, hairline solid grid,
-// tabular numerals — no gradients, no glow, no blur.
-const TT = {
-  background: '#17171B',
-  border: '0.5px solid rgba(255,255,255,0.12)',
-  borderRadius: 8, padding: '7px 11px',
-  fontSize: 12, fontFamily: "'Space Grotesk', 'Inter', sans-serif",
-  fontVariantNumeric: 'tabular-nums',
-  boxShadow: 'none',
-};
-const TT_ITEM = { color: '#C9C7C3', fontSize: 12 };
-const AXIS = { fill: '#6E6C74', fontSize: 10, fontFamily: "'Space Grotesk', 'Inter', sans-serif" };
-const GRID = { stroke: 'rgba(255,255,255,0.05)', vertical: false };
-const ANIM = { animationDuration: 700, animationEasing: 'ease-out' };
-const LEGEND = { fontSize: 11, paddingTop: 8, fontFamily: "'Inter', sans-serif" };
-
-// Solid endpoint marker on the most recent point — a fixed instrument tick, no halo.
-const lastDot = (len, color) => (p) =>
-  p.index === len - 1 && p.cx != null
-    ? <circle key="last" cx={p.cx} cy={p.cy} r={3} fill={color} stroke="#131316" strokeWidth={1.5} />
-    : <g key={p.index} />;
+const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
+const CURSOR = { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 };
+const tooltipProps = { contentStyle: TOOLTIP_STYLE, labelStyle: TOOLTIP_LABEL_STYLE, itemStyle: TOOLTIP_ITEM_STYLE };
+const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
+const pctText = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`;
+const shareText = (pct) => (pct < 0.1 ? '<0.1' : pct.toFixed(1));
 
 // Prices below €1 (dex tokens) die under Math.round — keep sane precision instead.
 const px = (v) => {
@@ -44,7 +32,7 @@ export default function Charts() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dcaAsset, setDcaAsset] = useState('');
-  const [timeRange, setTimeRange] = useState('30d');
+  const [period, setPeriod] = useState('1M');
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -65,213 +53,169 @@ export default function Charts() {
   if (loading) return <PageLayout title="Charts" username=""><PageSkeleton rows={6} /></PageLayout>;
   if (!user || !dashboard) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
-  const days = timeRange === '7d' ? 7 : timeRange === '14d' ? 14 : 30;
+  // Portfolio value: recorded history when it is long enough, else the reconstruction.
+  const trend = periodSeries(
+    (history || []).map(h => ({ date: h.date, total: h.portfolio || 0 })).filter(h => h.total > 0),
+    portfolioSeries30d(dashboard.purchases, dashboard.prices, assets),
+    period,
+  );
+  const lastValue = trend.series.length ? trend.series[trend.series.length - 1].value : (dashboard.summary?.total_value || 0);
 
-  // Prefer REAL recorded history (daily snapshots) over reconstruction —
-  // the reconstruction prices past days at TODAY's prices, so it only moves
-  // on purchase dates. Fall back to it (clearly labeled) until history accrues.
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
-  const histSeries = (history || [])
-    .filter(h => h.date >= cutoffStr && (h.portfolio || 0) > 0)
-    .map(h => {
-      const dt = new Date(h.date);
-      return { date: h.date, label: `${dt.getDate()}/${dt.getMonth() + 1}`, value: Math.round(h.portfolio) };
-    });
-  const usingHistory = histSeries.length >= 2;
-  const portfolioData = usingHistory ? histSeries : buildPortfolio(dashboard, days);
-  const allocData = buildAllocation(dashboard, assets, days);
+  // Growth by market: per day, every asset's value folded into stock or crypto.
+  const isStock = Object.fromEntries(assets.map(a => [a.symbol, a.asset_type === 'stock_etf']));
+  const growthData = buildAllocation(dashboard, assets, 30).map(day => {
+    let stock = 0, crypto = 0;
+    assets.forEach(a => { if (isStock[a.symbol]) stock += day[a.symbol] || 0; else crypto += day[a.symbol] || 0; });
+    return { date: day.date, label: day.label, stock, crypto };
+  });
+
+  // Distribution: held assets that count toward the totals, largest first.
+  const by = dashboard.summary?.by_asset || {};
+  const held = Object.entries(by)
+    .filter(([, d]) => d && d.include_in_totals !== false && d.value > 0)
+    .map(([symbol, d]) => ({ symbol, name: assets.find(a => a.symbol === symbol)?.name || symbol, value: d.value }))
+    .sort((a, b) => b.value - a.value);
+  const heldTotal = held.reduce((s, h) => s + h.value, 0);
+
   const monthlyData = buildMonthly(dashboard);
   const dcaData = buildDCA(dashboard, dcaAsset);
-  const pieData = buildPie(dashboard, assets);
-  // value-ranked curated colours, shared by the stacked area & legends
-  const allocColor = rankedColors(assets, (a) => dashboard.summary?.by_asset?.[a.symbol]?.value);
-
-  // Summary stats for charts
-  const firstVal = portfolioData[0]?.value || 0;
-  const lastVal = portfolioData[portfolioData.length - 1]?.value || 0;
-  const portfolioChange = firstVal > 0 ? ((lastVal - firstVal) / firstVal * 100) : 0;
-  const gc = (s) => assets.find(a => a.symbol === s)?.color || '#8B7BFF';
+  const lastDca = dcaData[dcaData.length - 1];
 
   return (
     <PageLayout title="Charts" username={user.username}>
+      <PageHead title="Charts" />
 
-      {/* Header */}
-      <div className="page-head animate-in">
-        <div className="page-head__title">Charts & Analytics</div>
-        <div className="page-head__sub">Your portfolio performance over time</div>
-      </div>
-
-      {/* Portfolio Value — Full Width */}
-      <div className="panel section-gap animate-in-1">
-        <div className="panel__head">
-          <div>
-            <h3 className="panel__title">Portfolio Value</h3>
-            <div className="panel__metric">
-              <span className="panel__metric-value">{formatEUR(lastVal)}</span>
-              <span className={`panel__metric-delta ${portfolioChange >= 0 ? 'panel__metric-delta--up' : 'panel__metric-delta--down'}`}>
-                {portfolioChange >= 0 ? '+' : ''}{portfolioChange.toFixed(2)}% ({days}d)
-              </span>
-            </div>
-            <span className="panel__sub">{usingHistory ? 'Recorded daily' : 'Reconstructed at today’s prices · building history'}</span>
-          </div>
-          <div className="filter-bar">
-            {['7d', '14d', '30d'].map(r => (
-              <button key={r} className={`btn btn--ghost btn--sm ${timeRange === r ? 'active' : ''}`} onClick={() => setTimeRange(r)}>{r}</button>
+      <div className="m-card">
+        <div className="m-nw__head">
+          <div className="m-label">Portfolio value</div>
+          <div className="m-periods">
+            {PERIODS.map(([k]) => (
+              <button key={k} type="button" className={`m-periods__btn ${period === k ? 'is-active' : ''}`} onClick={() => setPeriod(k)}>{k}</button>
             ))}
           </div>
         </div>
-        {portfolioData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={portfolioData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid {...GRID} />
-              <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
-              <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} domain={[(min) => min * 0.985, (max) => max * 1.01]}
-                tickFormatter={yEur} />
-              <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Value']} labelStyle={{ color: '#6E6C74', fontSize: 10 }}
-                cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }} />
-              <Area type="monotone" dataKey="value" {...ANIM}
-                stroke="#8B7BFF"
-                strokeWidth={1.5} strokeLinecap="round" fill="#8B7BFF" fillOpacity={0.06}
-                dot={lastDot(portfolioData.length, '#8B7BFF')}
-                activeDot={{ r: 3.5, fill: '#8B7BFF', stroke: '#131316', strokeWidth: 1.5 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        ) : <EmptyState compact icon="chart" title="No data" description="Record purchases to build your portfolio history." />}
+        <div className="m-nw__value"><Money value={lastValue} /></div>
+        {trend.series.length > 1 ? (
+          <>
+            <div className="m-nw__delta">
+              <span className={trend.delta >= 0 ? 'm-up' : 'm-down'}>{signedEUR(trend.delta)} ({pctText(trend.deltaPct)})</span> · {trend.label}
+            </div>
+            <div className="m-nw__chart">
+              <ResponsiveContainer width="100%" height={140}>
+                <AreaChart data={trend.series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                  <XAxis dataKey="date" hide />
+                  <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
+                  <Tooltip {...tooltipProps} cursor={CURSOR}
+                    formatter={(v) => [formatEUR(v), 'Portfolio']}
+                    labelFormatter={(l) => formatDayLong(l)} />
+                  <Area type="monotone" dataKey="value" stroke="#8D9BFF" strokeWidth={1.5} strokeLinecap="round" fill="none"
+                    dot={false} activeDot={{ r: 3.5, fill: '#8D9BFF', stroke: '#1B1B24', strokeWidth: 1.5 }}
+                    isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        ) : <div className="m-empty">Record purchases to build your portfolio history</div>}
       </div>
 
-      {/* Allocation + Pie */}
-      <div className="grid-2col section-gap animate-in-2">
-        <div className="panel">
-          <div className="panel__head">
-            <h3 className="panel__title">Holdings Growth</h3>
-            <span className="panel__sub">Quantity held × today’s price · stacked EUR</span>
-          </div>
-          {allocData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={allocData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid {...GRID} />
-                <XAxis dataKey="label" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
-                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false}
-                  tickFormatter={yEur} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => formatEUR(v)} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
-                {assets.map(a => (
-                  <Area key={a.symbol} type="monotone" dataKey={a.symbol} {...ANIM}
-                    stackId="1" stroke={allocColor[a.symbol]} fill={allocColor[a.symbol]} fillOpacity={0.4} strokeWidth={1} />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : <EmptyState compact icon="chart" title="No data" description="Allocation will appear after your first purchases." />}
-        </div>
-
-        <div className="panel">
-          <div className="panel__head">
-            <h3 className="panel__title">Current Distribution</h3>
-            <span className="panel__sub">Weight % in EUR</span>
-          </div>
-          {pieData.length > 0 ? (
+      <div className="m-g2 m-g2--cards">
+        <div className="m-card">
+          <div className="m-label">Growth by market</div>
+          {growthData.length > 1 ? (
             <>
-              <div className="donut-wrap">
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={106} paddingAngle={2} cornerRadius={2} dataKey="value"
-                      stroke="none" strokeWidth={0} {...ANIM}>
-                      {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                    </Pie>
-                    <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v), 'Value']} />
-                  </PieChart>
+              <div className="m-nw__chart">
+                <ResponsiveContainer width="100%" height={120}>
+                  <AreaChart data={growthData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                    <XAxis dataKey="date" hide />
+                    <YAxis hide />
+                    <Tooltip {...tooltipProps} cursor={CURSOR}
+                      formatter={(v, name) => [formatEUR(v), name]}
+                      labelFormatter={(l) => formatDayLong(l)} />
+                    <Area type="monotone" dataKey="stock" name="Stock market" stackId="m" stroke="none" fill="#8D9BFF" fillOpacity={1} isAnimationActive={false} />
+                    <Area type="monotone" dataKey="crypto" name="Crypto market" stackId="m" stroke="none" fill="#3D4272" fillOpacity={1} isAnimationActive={false} />
+                  </AreaChart>
                 </ResponsiveContainer>
-                <div className="donut-center">
-                  <div className="donut-center__val">{formatEUR(pieData.reduce((s, e) => s + (e.value || 0), 0))}</div>
-                  <div className="donut-center__lbl">Total</div>
-                </div>
               </div>
-              <div className="pie-legend">
-                {pieData.map(item => (
-                  <div key={item.name} className="pie-legend__row">
-                    <div className="pie-legend__dot" style={{ background: item.color }} />
-                    <span className="pie-legend__name">{item.name}</span>
-                    <span className="pie-legend__value">{formatEUR(item.value)}</span>
-                    <span className="pie-legend__pct">{item.pct}%</span>
-                  </div>
-                ))}
+              <div className="m-legend">
+                <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Stock market</span>
+                <span><span className="m-legend__dot" style={{ background: '#3D4272' }} />Crypto market</span>
               </div>
             </>
-          ) : <EmptyState compact icon="inbox" title="No data" description="No assets with value to distribute." />}
+          ) : <div className="m-empty">Growth will appear after your first purchases</div>}
+        </div>
+
+        <div className="m-card">
+          <div className="m-label">Distribution</div>
+          {held.length > 0 ? held.map(h => {
+            const pct = (h.value / heldTotal) * 100;
+            return (
+              <div className="m-dist" key={h.symbol}>
+                <span className="m-dist__name">{h.name}<span className="m-dist__pct">{shareText(pct)}%</span></span>
+                <span>{formatEUR(h.value)}</span>
+                <span className="m-dist__bar"><span className="m-dist__fill" style={{ width: `${Math.max(pct, 1)}%` }} /></span>
+              </div>
+            );
+          }) : <div className="m-empty">Nothing held yet</div>}
         </div>
       </div>
 
-      {/* Monthly + DCA */}
-      <div className="grid-2col animate-in-3">
-        <div className="panel">
-          <div className="panel__head">
-            <h3 className="panel__title">Monthly Investments {new Date().getFullYear()}</h3>
-            <span className="panel__sub">Invested vs value · EUR</span>
-          </div>
+      <div className="m-g2 m-g2--cards">
+        <div className="m-card">
+          <div className="m-label">Monthly investments {new Date().getFullYear()}</div>
           {monthlyData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={monthlyData} barGap={5} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid {...GRID} />
-                <XAxis dataKey="month" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
-                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={48} tickFormatter={yEur} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelStyle={{ color: '#7A7880', fontSize: 10 }}
-                  cursor={{ fill: 'rgba(139,123,255,0.06)' }} />
-                <Legend wrapperStyle={LEGEND} iconType="circle" iconSize={8} />
-                <Bar dataKey="invested" name="Invested" fill="#8B7BFF" radius={[2, 2, 0, 0]} barSize={14} {...ANIM} />
-                <Bar dataKey="value" name="Current value" fill="#34D399" radius={[2, 2, 0, 0]} barSize={14} {...ANIM} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : <EmptyState compact icon="chart" title="No investments" description="This year's monthly investments will appear here." />}
+            <>
+              <div className="m-nw__chart">
+                <ResponsiveContainer width="100%" height={140}>
+                  <BarChart data={monthlyData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                    <XAxis dataKey="month" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip {...tooltipProps} cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                      formatter={(v, name) => [formatEUR(v), name]} />
+                    <Bar dataKey="invested" name="Invested" fill="#8D9BFF" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="value" name="Current value" fill="#5F69B8" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="m-legend">
+                <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Invested</span>
+                <span><span className="m-legend__dot" style={{ background: '#5F69B8' }} />Current value</span>
+              </div>
+            </>
+          ) : <div className="m-empty">No purchases this year yet</div>}
         </div>
 
-        <div className="panel">
-          <div className="panel__head" style={{ alignItems: 'center' }}>
-            <div>
-              <h3 className="panel__title">DCA vs Market Price</h3>
-              {dcaData.length > 0 && (
-                <div className="panel__sub" style={{ marginTop: 4 }}>
-                  {dcaData.length} purchases · Average: {formatEUR(dcaData[dcaData.length - 1]?.dca || 0)}
-                </div>
-              )}
-            </div>
-            <div style={{ width: 90 }}>
-              <FormInput type="select" value={dcaAsset} onChange={e => setDcaAsset(e.target.value)}
-                options={assets.map(a => ({ value: a.symbol, label: a.symbol }))} />
-            </div>
+        <div className="m-card">
+          <div className="m-nw__head">
+            <div className="m-label">Average price vs market</div>
+            <select className="m-select" aria-label="Asset" value={dcaAsset} onChange={e => setDcaAsset(e.target.value)}>
+              {assets.map(a => <option key={a.symbol} value={a.symbol}>{a.symbol}</option>)}
+            </select>
           </div>
-          {dcaData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={dcaData} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid {...GRID} />
-                <XAxis dataKey="n" stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} minTickGap={30} />
-                <YAxis stroke="transparent" tick={AXIS} axisLine={false} tickLine={false} width={52}
-                  tickFormatter={(v) => v >= 1 ? yEur(v) : '€' + Number(v).toFixed(4)}
-                  domain={[(min) => min * 0.985, (max) => max * 1.015]} />
-                <Tooltip contentStyle={TT} itemStyle={TT_ITEM} formatter={(v) => [formatEUR(v)]} labelFormatter={(n) => `Purchase #${n}`} labelStyle={{ color: '#7A7880', fontSize: 10 }} />
-                <Legend wrapperStyle={LEGEND} iconType="plainline" iconSize={16} />
-                <Line type="monotone" dataKey="market" name="Current price" stroke="#6E6C74" strokeWidth={1} dot={false} strokeDasharray="4 4" {...ANIM} />
-                <Line type="monotone" dataKey="dca" name="Your DCA" stroke="#8B7BFF" strokeWidth={1.5} strokeLinecap="round" {...ANIM}
-                  dot={lastDot(dcaData.length, '#8B7BFF')} activeDot={{ r: 3.5, fill: '#8B7BFF', stroke: '#131316', strokeWidth: 1.5 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : <EmptyState compact icon="inbox" title={`No ${dcaAsset} purchases`} description="Select an asset with recorded purchases." />}
+          {dcaData.length > 1 ? (
+            <>
+              <div className="m-nw__chart">
+                <ResponsiveContainer width="100%" height={120}>
+                  <LineChart data={dcaData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                    <XAxis dataKey="n" hide />
+                    <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.015]} />
+                    <Tooltip {...tooltipProps} cursor={CURSOR}
+                      formatter={(v, name) => [formatPrice(v), name]}
+                      labelFormatter={(n) => `Purchase #${n}`} />
+                    <Line type="monotone" dataKey="market" name="Market" stroke="#9A9AA8" strokeWidth={1} strokeDasharray="4 4" dot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="dca" name="Your average" stroke="#8D9BFF" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="m-legend">
+                <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Your average {formatPrice(lastDca.dca)}</span>
+                <span><span className="m-legend__dot" style={{ background: '#9A9AA8' }} />Market {formatPrice(lastDca.market)}</span>
+              </div>
+            </>
+          ) : <div className="m-empty">Not enough purchases yet</div>}
         </div>
       </div>
     </PageLayout>
   );
-}
-
-function buildPortfolio(d, days) {
-  if (!d?.purchases?.length) return [];
-  const { prices, purchases } = d;
-  const s = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
-  return Array.from({ length: days }, (_, i) => {
-    const dt = new Date(); dt.setDate(dt.getDate() - (days - 1 - i));
-    const ds = dt.toISOString().split('T')[0];
-    const q = {}; s.filter(p => p.date <= ds).forEach(p => { q[p.asset] = (q[p.asset] || 0) + p.quantity; });
-    let v = 0; for (const [sym, qty] of Object.entries(q)) v += qty * ((prices[sym] || {}).eur || 0);
-    return { date: ds, label: `${dt.getDate()}/${dt.getMonth() + 1}`, value: Math.round(v) };
-  });
 }
 
 function buildAllocation(d, assets, days) {
@@ -313,13 +257,4 @@ function buildDCA(d, asset) {
     ti += p.amount_eur; tq += p.quantity;
     return { n: i + 1, dca: px(ti / tq), market: px(pi.eur || 0) };
   });
-}
-
-function buildPie(d, assets) {
-  if (!d?.summary?.by_asset) return [];
-  return allocationSlices(
-    assets
-      .filter(a => d.summary.by_asset[a.symbol]?.value > 0)
-      .map(a => ({ name: a.symbol, value: d.summary.by_asset[a.symbol].value }))
-  );
 }
