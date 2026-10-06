@@ -13,6 +13,7 @@ import DetailSheet from '../components/DetailSheet';
 import Avatar from '../components/Avatar';
 import Money from '../components/Money';
 import DiaryView from '../pages/DiaryView';
+import DashboardView from '../pages/DashboardView';
 import * as fixtures from './fixtures';
 import '../styles.css';
 import '../mercury.css';
@@ -67,6 +68,24 @@ function DiaryDemo({ empty = false }) {
   );
 }
 
+function DashboardDemo({ bare = false }) {
+  const [data, setData] = React.useState(fixtures.dashboard);
+  const toggle = (symbol, included) => setData(d => ({
+    ...d,
+    summary: { ...d.summary, by_asset: { ...d.summary.by_asset, [symbol]: { ...d.summary.by_asset[symbol], include_in_totals: !included } } },
+  }));
+  return (
+    <Frame title="Dashboard">
+      <DashboardView displayName="Federico" data={data} assets={fixtures.assets}
+        networth={bare ? null : fixtures.networth}
+        cashPositions={bare ? [] : fixtures.cashPositions}
+        history={bare ? [] : fixtures.history}
+        marketInfo={fixtures.marketInfo} cacheAge={240} refreshing={false}
+        onRefresh={() => {}} onToggleTracking={toggle} />
+    </Frame>
+  );
+}
+
 // Each entry renders one screen. Later tasks add to this map.
 const PAGES = {
   frame: () => (
@@ -90,6 +109,8 @@ const PAGES = {
   components: () => <ComponentsDemo />,
   diary: () => <DiaryDemo />,
   'diary-empty': () => <DiaryDemo empty />,
+  dashboard: () => <DashboardDemo />,
+  'dashboard-bare': () => <DashboardDemo bare />,
 };
 
 const key = new URLSearchParams(window.location.search).get('p') || 'frame';

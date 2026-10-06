@@ -4,11 +4,12 @@ import { coinIconUrl } from './AssetBadge';
 // 32px round mark: the asset's logo, or two grey initials when there is no logo.
 // Pass `asset` (a symbol) for an asset, or `label` for anything else (a bank).
 export default function Avatar({ asset, label }) {
-  const [failed, setFailed] = useState(false);
-  if (asset && !failed) {
+  // Remember which symbol failed, so a different asset on the same instance tries its own logo.
+  const [failedAsset, setFailedAsset] = useState(null);
+  if (asset && failedAsset !== asset) {
     return (
       <span className="m-avatar">
-        <img src={coinIconUrl(asset)} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
+        <img src={coinIconUrl(asset)} alt="" loading="lazy" decoding="async" onError={() => setFailedAsset(asset)} />
       </span>
     );
   }
