@@ -12,11 +12,14 @@ export default function DetailSheet({ open, onClose, avatar, title, subtitle, am
   const dragStart = useRef(null);
   const [armed, setArmed] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const armedAt = useRef(0);
 
   useEffect(() => {
     if (!open) return undefined;
     setArmed(false);
     setOffset(0);
+    setBusy(false);
     const previous = document.activeElement;
     const onKey = (e) => { if (e.key === 'Escape') closeRef.current(); };
     document.addEventListener('keydown', onKey);
@@ -36,6 +39,16 @@ export default function DetailSheet({ open, onClose, avatar, title, subtitle, am
     const t = setTimeout(() => setArmed(false), 4000);
     return () => clearTimeout(t);
   }, [armed]);
+
+  // First tap arms, second tap confirms. A double tap must not do both at once,
+  // and a second confirm must not fire while the first is still running.
+  const onDanger = async () => {
+    if (busy) return;
+    if (!armed) { armedAt.current = Date.now(); setArmed(true); return; }
+    if (Date.now() - armedAt.current < 400) return;
+    setBusy(true);
+    try { await danger.onConfirm(); } finally { setBusy(false); }
+  };
 
   if (!open) return null;
 
@@ -76,7 +89,7 @@ export default function DetailSheet({ open, onClose, avatar, title, subtitle, am
         {children}
         {danger && (
           <button type="button" className={`m-sheet__danger ${armed ? 'is-armed' : ''}`}
-            onClick={() => (armed ? danger.onConfirm() : setArmed(true))}>
+            onClick={onDanger} disabled={busy}>
             {armed ? (danger.confirmLabel || 'Confirm delete') : danger.label}
           </button>
         )}

@@ -419,7 +419,7 @@ export default function AddMovement() {
           <div className="diary-card__head">
             <span className="diary-card__dot" style={{ background: 'var(--cash)' }} />Bank Cash
             {activeBank && !isNewBank && (
-              <span className="diary-card__total" style={{ color: 'var(--cash)' }}>
+              <span className="diary-card__total">
                 {beCurrency === 'USD' ? formatUSD(bankBalance) : formatEUR(bankBalance)}
               </span>
             )}
@@ -506,7 +506,7 @@ export default function AddMovement() {
         <div className="panel animate-in-2 add-panel">
           <div className="diary-card__head">
             <span className="diary-card__dot" style={{ background: 'var(--dry)' }} />Dry Powder
-            <span className="diary-card__total" style={{ color: 'var(--dry)' }}>{formatEUR(dryPowderTotal)}</span>
+            <span className="diary-card__total">{formatEUR(dryPowderTotal)}</span>
           </div>
           {cashPositions.length > 0 && (
             <div className="dry-list">

@@ -131,7 +131,7 @@ export default function DashboardView({
           {trend.series.length > 1 && (
             <>
               <div className="m-nw__delta">
-                <span className={trend.delta >= 0 ? 'm-up' : 'm-down'}>{signed(trend.delta)}</span> · {trend.label}
+                <span className={trend.delta >= 0 ? 'm-up' : 'm-down'}>{signed(trend.delta)} ({pctText(trend.deltaPct)})</span> · {trend.label}
               </div>
               <div className="m-nw__chart">
                 <ResponsiveContainer width="100%" height={120}>
