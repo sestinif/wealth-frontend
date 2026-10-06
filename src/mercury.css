@@ -65,6 +65,9 @@ body::before, body::after { content: none; }
 .page-layout { background-image: none; }
 .card::after, .hero-stats::before, .hero-stats::after, .asset-card::after, .fab::before { content: none; }
 .num--up, .num--down { animation: none; }
+/* The legacy page fade leaves a transform on .page-inner, which turns it into the
+   containing block of every position:fixed child (dialogs landed off screen). */
+.page-inner { animation: none; }
 
 .card__title, .hero-stat__label, .calc-stat__lbl, .calc-result__lbl,
 .section-header__title, .asset-strip__label, .kpi-card__label,
