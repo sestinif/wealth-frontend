@@ -4,10 +4,11 @@ import Icon from './Icon';
 // One ledger line. Desktop: date · avatar · name+detail · amount · dots.
 // Phone: avatar · name+short detail · amount with the date under it.
 // Without onClick it is a plain row: no dots, no pointer.
+// Without a date the date column is dropped, so the row lines up with the section title.
 export default function LedgerRow({ date, avatar, title, sub, subShort, amount, tone = '', onClick }) {
   const Tag = onClick ? 'button' : 'div';
   return (
-    <Tag className={`m-row ${onClick ? '' : 'm-row--static'}`.trim()} {...(onClick ? { type: 'button', onClick } : {})}>
+    <Tag className={['m-row', onClick ? '' : 'm-row--static', date ? '' : 'm-row--nodate'].filter(Boolean).join(' ')} {...(onClick ? { type: 'button', onClick } : {})}>
       <span className="m-row__date">{date}</span>
       {avatar}
       <span className="m-row__main">

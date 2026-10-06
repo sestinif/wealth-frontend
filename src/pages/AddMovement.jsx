@@ -428,7 +428,7 @@ export default function AddMovement() {
                   const kind = isIn ? 'Money in' : 'Money out';
                   return (
                     <LedgerRow key={en.id} date={formatDay(en.date)} avatar={<Avatar label={en.bank} />}
-                      title={en.note || kind} sub={kind}
+                      title={en.note || kind} sub={en.note ? kind : ''}
                       amount={`${isIn ? '+' : '−'}${enFmt(Math.abs(Number(en.amount) || 0))}`}
                       tone={isIn ? 'in' : ''} onClick={() => setBankSel(en.id)} />
                   );
