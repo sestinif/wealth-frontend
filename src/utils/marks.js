@@ -9,6 +9,9 @@ export const PALETTE = ['#5483DC', '#9778C2', '#34C7DD', '#BB5E80', '#C36BC0', '
 // Mirrored by --stock, --crypto, --cash and --dry in mercury.css (charts need plain hex).
 export const MARKET = { stock: '#8D9BFF', crypto: '#D4A13E', cash: '#34C7DD', dry: '#9C9CA8' };
 
+// Gain and loss, for the charts. Mirrored by --green and --red in mercury.css.
+export const TONE = { up: '#4FD1A1', down: '#F58A9B' };
+
 const HEX = /^#[0-9a-f]{6}$/i;
 const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().toLowerCase();
 

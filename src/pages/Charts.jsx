@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
 import Money from '../components/Money';
@@ -10,7 +10,7 @@ import {
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
-import { MARKET } from '../utils/marks';
+import { MARKET, TONE, assetColor } from '../utils/marks';
 
 const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
 const CURSOR = { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 };
@@ -76,7 +76,10 @@ export default function Charts() {
   const by = dashboard.summary?.by_asset || {};
   const held = Object.entries(by)
     .filter(([, d]) => d && d.include_in_totals !== false && d.value > 0)
-    .map(([symbol, d]) => ({ symbol, name: assets.find(a => a.symbol === symbol)?.name || symbol, value: d.value }))
+    .map(([symbol, d]) => {
+      const asset = assets.find(a => a.symbol === symbol);
+      return { symbol, name: asset?.name || symbol, value: d.value, color: assetColor(asset, symbol) };
+    })
     .sort((a, b) => b.value - a.value);
   const heldTotal = held.reduce((s, h) => s + h.value, 0);
 
@@ -158,7 +161,7 @@ export default function Charts() {
               <div className="m-dist" key={h.symbol}>
                 <span className="m-dist__label"><span className="m-dist__name">{h.name}</span><span className="m-dist__pct">{shareText(pct)}%</span></span>
                 <span>{formatEUR(h.value)}</span>
-                <span className="m-dist__bar"><span className="m-dist__fill" style={{ width: `${Math.max(pct, 1)}%` }} /></span>
+                <span className="m-dist__bar"><span className="m-dist__fill" style={{ width: `${Math.max(pct, 1)}%`, background: h.color }} /></span>
               </div>
             );
           }) : <div className="m-empty">Nothing held yet</div>}
@@ -178,13 +181,17 @@ export default function Charts() {
                     <Tooltip {...tooltipProps} cursor={{ fill: 'rgba(255,255,255,0.04)' }}
                       formatter={(v, name) => [formatEUR(v), name]} />
                     <Bar dataKey="invested" name="Invested" fill="#8D9BFF" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
-                    <Bar dataKey="value" name="Current value" fill="#5F69B8" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+                    {/* Green when the month is worth more today than what went in, pink when it is worth less. */}
+                    <Bar dataKey="value" name="Current value" fill={TONE.up} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                      {monthlyData.map(m => <Cell key={m.month} fill={m.value >= m.invested ? TONE.up : TONE.down} />)}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               <div className="m-legend">
                 <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Invested</span>
-                <span><span className="m-legend__dot" style={{ background: '#5F69B8' }} />Current value</span>
+                <span><span className="m-legend__dot" style={{ background: TONE.up }} />Worth more now</span>
+                <span><span className="m-legend__dot" style={{ background: TONE.down }} />Worth less now</span>
               </div>
             </>
           ) : <div className="m-empty">No purchases this year yet</div>}

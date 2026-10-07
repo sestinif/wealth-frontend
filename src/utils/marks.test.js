@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PALETTE, MARKET, colorFor, assetColor } from './marks.js';
+import { PALETTE, MARKET, TONE, colorFor, assetColor } from './marks.js';
 
 test('colorFor gives the same tint for the same name, whatever the case or the spacing', () => {
   assert.equal(colorFor('Relay'), colorFor('  relay '));
@@ -30,6 +30,6 @@ test('assetColor falls back to a steady tint when no valid colour is set', () =>
 });
 
 test('the palette and the markets stay clear of the gain and loss colours', () => {
-  const reserved = ['#4FD1A1', '#F58A9B'];
+  const reserved = Object.values(TONE);
   [...PALETTE, ...Object.values(MARKET)].forEach(c => assert.ok(!reserved.includes(c.toUpperCase())));
 });
