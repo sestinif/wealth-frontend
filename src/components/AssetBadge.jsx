@@ -18,7 +18,7 @@ export default function AssetBadge({ asset, color = '#9A9AA8', showSymbol = true
     <span className="asset-badge">
       <span
         className="asset-badge__icon"
-        style={err ? { background: `${color}22`, color, boxShadow: `inset 0 0 0 1px ${color}55` } : undefined}
+        style={err ? { background: `${color}3D`, color: `color-mix(in srgb, ${color} 70%, white)` } : undefined}
       >
         {!err
           ? <img src={url} alt="" loading="lazy" decoding="async" onError={() => setErr(true)} />

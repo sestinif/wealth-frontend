@@ -1,5 +1,6 @@
 import React from 'react';
 import AssetBadge from './AssetBadge';
+import { assetColor } from '../utils/marks';
 import { formatPrice } from '../utils/format';
 
 export default function MarketOverview({ assets, prices, marketInfo }) {
@@ -29,7 +30,7 @@ export default function MarketOverview({ assets, prices, marketInfo }) {
             const isCrypto = asset.asset_type === 'crypto' || asset.asset_type === 'dex_token';
             return (
               <tr key={asset.symbol}>
-                <td><AssetBadge asset={asset.symbol} color={asset.color} /></td>
+                <td><AssetBadge asset={asset.symbol} color={assetColor(asset)} /></td>
                 <td className="text-right">{isCrypto ? formatPrice(pi.usd || 0, 'USD') : formatPrice(pi.eur || 0, 'EUR')}</td>
                 <td className="text-right" style={{ color: (mi.change_24h || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
                   {mi.change_24h >= 0 ? '+' : ''}{mi.change_24h || 0}%

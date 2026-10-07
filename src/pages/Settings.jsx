@@ -14,7 +14,7 @@ import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName, setDisplayName as saveDisplayName } from '../utils/user';
 import { formatEUR, formatUSD, formatPrice, formatDayLong } from '../utils/format';
-import { assetColor } from '../utils/marks';
+import { assetColor, isReserved } from '../utils/marks';
 
 export default function Settings() {
   const toast = useToast();
@@ -217,6 +217,9 @@ export default function Settings() {
                 <input type="color" className="m-color" value={sheetAsset.color}
                   onChange={e => handleColorChange(sheetAsset.symbol, e.target.value)} aria-label="Colour" />
               </div>
+            )}
+            {sheetAsset && isReserved(sheetAsset.color) && (
+              <div className="m-caption">Green and red are kept for gains and losses, so this asset shows in another tint. Pick a different colour to use your own.</div>
             )}
           </DetailSheet>
         </div>
