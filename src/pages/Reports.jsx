@@ -9,6 +9,7 @@ import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatDay, sortByDate, pctText } from '../utils/format';
+import { assetColor } from '../utils/marks';
 
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
 
@@ -48,6 +49,7 @@ export default function Reports() {
 
   const getDecimals = (sym) => assets.find(a => a.symbol === sym)?.decimals || 2;
   const getName = (sym) => assets.find(a => a.symbol === sym)?.name || sym;
+  const getColor = (sym) => assetColor(assets.find(a => a.symbol === sym), sym);
 
   const yearOptions = Array.from({ length: new Date().getFullYear() - 2023 }, (_, i) => ({
     value: 2024 + i, label: String(2024 + i)
@@ -67,9 +69,12 @@ export default function Reports() {
     const tone = d.pnl >= 0 ? 'm-up' : 'm-down';
     return (
       <div key={d.asset} className="m-table__row m-table__row--static">
-        <span className="m-table__name">
-          <span className="m-row__title">{getName(d.asset)}</span>
-          <span className="m-table__sub">{formatQty(d.qty, getDecimals(d.asset))} {d.asset}</span>
+        <span className="m-table__name m-table__name--mark">
+          <Avatar asset={d.asset} color={getColor(d.asset)} />
+          <span className="m-row__main">
+            <span className="m-row__title">{getName(d.asset)}</span>
+            <span className="m-table__sub">{formatQty(d.qty, getDecimals(d.asset))} {d.asset}</span>
+          </span>
         </span>
         <span className="m-table__price m-muted">{formatEUR(d.invested)}</span>
         <span>
@@ -133,7 +138,7 @@ export default function Reports() {
                 <button type="button" className="m-link" onClick={() => setShowTx(!showTx)}>{showTx ? 'Hide' : 'Show'}</button>
               </div>
               {showTx && transactions.map((p, i) => (
-                <LedgerRow key={p.id ?? i} date={formatDay(p.date)} avatar={<Avatar asset={p.asset} />}
+                <LedgerRow key={p.id ?? i} date={formatDay(p.date)} avatar={<Avatar asset={p.asset} color={getColor(p.asset)} />}
                   title={getName(p.asset)} sub={`${formatQty(p.quantity, getDecimals(p.asset))} ${p.asset}`}
                   amount={formatEUR(p.amount_eur)} />
               ))}

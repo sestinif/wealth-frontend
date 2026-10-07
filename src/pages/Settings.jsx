@@ -14,6 +14,7 @@ import { useToast } from '../components/Toast';
 import { api } from '../api.js';
 import { getDisplayName, setDisplayName as saveDisplayName } from '../utils/user';
 import { formatEUR, formatUSD, formatPrice, formatDayLong } from '../utils/format';
+import { assetColor } from '../utils/marks';
 
 export default function Settings() {
   const toast = useToast();
@@ -145,7 +146,7 @@ export default function Settings() {
 
           <div className="m-section"><span>Tracked assets</span><span>{assets.length}</span></div>
           {assets.map(asset => (
-            <LedgerRow key={asset.symbol} date="" avatar={<Avatar asset={asset.symbol} />}
+            <LedgerRow key={asset.symbol} date="" avatar={<Avatar asset={asset.symbol} color={assetColor(asset)} />}
               title={asset.name || asset.symbol} sub={asset.name ? asset.symbol : ''}
               amount={getPrice(asset)} onClick={() => setAssetSel(asset.symbol)} />
           ))}
@@ -184,7 +185,7 @@ export default function Settings() {
           </div>
 
           <DetailSheet open={!!sheetAsset} onClose={() => setAssetSel(null)}
-            avatar={sheetAsset ? <Avatar asset={sheetAsset.symbol} /> : null}
+            avatar={sheetAsset ? <Avatar asset={sheetAsset.symbol} color={assetColor(sheetAsset)} /> : null}
             title={sheetAsset ? (sheetAsset.name || sheetAsset.symbol) : ''}
             subtitle={sheetAsset && sheetAsset.name ? sheetAsset.symbol : undefined}
             rows={sheetAsset ? [

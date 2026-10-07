@@ -9,6 +9,7 @@ import Avatar from '../components/Avatar';
 import Money from '../components/Money';
 import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong, formatMonth } from '../utils/format';
 import { buildLedger, filterLedger, groupByMonth, ledgerStats } from '../utils/ledger';
+import { assetColor } from '../utils/marks';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -40,7 +41,7 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
       const a = assetOf(p.asset);
       const from = brokerOf(p);
       return {
-        avatar: <Avatar asset={p.asset} />,
+        avatar: <Avatar asset={p.asset} color={assetColor(a)} />,
         title: a.name || p.asset,
         sub: `${qty(p.quantity, 8)} ${p.asset} at ${formatPrice(p.price_eur)}${from ? ` · from ${from}` : ''}`,
         subShort: `${qty(p.quantity, 5)} ${p.asset} · ${p.price_eur >= 100 ? formatEUR(p.price_eur, 0) : formatPrice(p.price_eur)}`,

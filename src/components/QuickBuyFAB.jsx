@@ -4,6 +4,7 @@ import { useToast } from './Toast';
 import AssetBadge from './AssetBadge';
 import Icon from './Icon';
 import { formatPrice, localDay } from '../utils/format';
+import { assetColor } from '../utils/marks';
 
 export default function QuickBuyFAB() {
   const toast = useToast();
@@ -121,7 +122,7 @@ export default function QuickBuyFAB() {
                       className={`fab-asset-chip ${asset === a.symbol ? 'active' : ''}`}
                       onClick={() => setAsset(a.symbol)}
                     >
-                      <AssetBadge asset={a.symbol} color="#9A9AA8" />
+                      <AssetBadge asset={a.symbol} color={assetColor(a)} />
                     </button>
                   ))}
                 </div>

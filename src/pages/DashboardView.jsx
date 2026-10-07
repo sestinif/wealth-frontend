@@ -12,6 +12,7 @@ import {
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { computeNetWorth, periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
+import { assetColor } from '../utils/marks';
 
 const ownMoney = (amount, currency) =>
   ((currency || 'EUR').toUpperCase() === 'USD' ? formatUSD : formatEUR)(Number(amount) || 0);
@@ -67,9 +68,12 @@ export default function DashboardView({
     const tone = d.pnl >= 0 ? 'm-up' : 'm-down';
     return (
       <button type="button" key={a.symbol} className={`m-table__row ${muted ? 'is-muted' : ''}`} onClick={() => setSheetSym(a.symbol)}>
-        <span className="m-table__name">
-          <span className="m-row__title">{a.name || a.symbol}</span>
-          <span className="m-table__sub">{formatQty(d.qty, a.decimals)} {a.symbol}</span>
+        <span className="m-table__name m-table__name--mark">
+          <Avatar asset={a.symbol} color={assetColor(a)} />
+          <span className="m-row__main">
+            <span className="m-row__title">{a.name || a.symbol}</span>
+            <span className="m-table__sub">{formatQty(d.qty, a.decimals)} {a.symbol}</span>
+          </span>
         </span>
         <span className="m-table__price m-muted">{priceOf(a.symbol)}</span>
         <span>
@@ -221,7 +225,7 @@ export default function DashboardView({
       </div>
 
       <DetailSheet open={!!sd} onClose={() => setSheetSym(null)}
-        avatar={sheetAsset && <Avatar asset={sheetAsset.symbol} />}
+        avatar={sheetAsset && <Avatar asset={sheetAsset.symbol} color={assetColor(sheetAsset)} />}
         title={sheetAsset ? (sheetAsset.name || sheetAsset.symbol) : ''}
         subtitle={sheetAsset?.symbol}
         amount={sd && <Money value={sd.value * fx} currency={cur} />}
