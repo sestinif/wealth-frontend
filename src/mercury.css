@@ -37,12 +37,13 @@
   --red-soft: #F58A9B;
   --red-bg: rgba(245,138,155,0.12);
   --red-rgb: 245,138,155;
+  /* One colour per market — the same hex values as MARKET in utils/marks.js */
   --stock: #8D9BFF;
   --stock-bg: rgba(141,155,255,0.12);
-  --cash: #5F69B8;
-  --cash-bg: rgba(95,105,184,0.14);
-  --crypto: #3D4272;
-  --dry: #6B6B7B;
+  --cash: #34C7DD;
+  --cash-bg: rgba(52,199,221,0.12);
+  --crypto: #D4A13E;
+  --dry: #9C9CA8;
   --dry-bg: rgba(255,255,255,0.04);
   --font-num: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

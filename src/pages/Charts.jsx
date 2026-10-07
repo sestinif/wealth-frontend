@@ -10,6 +10,7 @@ import {
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
+import { MARKET } from '../utils/marks';
 
 const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
 const CURSOR = { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 };
@@ -136,14 +137,14 @@ export default function Charts() {
                     <Tooltip {...tooltipProps} cursor={CURSOR}
                       formatter={(v, name) => [formatEUR(v), name]}
                       labelFormatter={(l) => formatDayLong(l)} />
-                    <Area type="monotone" dataKey="stock" name="Stock market" stackId="m" stroke="none" fill="#8D9BFF" fillOpacity={1} isAnimationActive={false} />
-                    <Area type="monotone" dataKey="crypto" name="Crypto market" stackId="m" stroke="none" fill="#3D4272" fillOpacity={1} isAnimationActive={false} />
+                    <Area type="monotone" dataKey="stock" name="Stock market" stackId="m" stroke="none" fill={MARKET.stock} fillOpacity={1} isAnimationActive={false} />
+                    <Area type="monotone" dataKey="crypto" name="Crypto market" stackId="m" stroke="none" fill={MARKET.crypto} fillOpacity={1} isAnimationActive={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
               <div className="m-legend">
-                <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Stock market</span>
-                <span><span className="m-legend__dot" style={{ background: '#3D4272' }} />Crypto market</span>
+                <span><span className="m-legend__dot" style={{ background: MARKET.stock }} />Stock market</span>
+                <span><span className="m-legend__dot" style={{ background: MARKET.crypto }} />Crypto market</span>
               </div>
             </>
           ) : <div className="m-empty">Growth will appear after your first purchases</div>}
