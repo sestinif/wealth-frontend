@@ -17,6 +17,8 @@ import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong, localDay } from '../utils/format';
 
+const localTime = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+
 const TABS = [
   { key: 'buy', label: 'Purchase' },
   { key: 'bank', label: 'Bank' },
@@ -53,6 +55,9 @@ export default function AddMovement() {
   const [error, setError] = useState('');
   const [showAddAsset, setShowAddAsset] = useState(false);
   const [fundedFrom, setFundedFrom] = useState('');
+  // Crypto: the time of the buy + the market price looked up for that minute
+  const [time, setTime] = useState(localTime());
+  const [histState, setHistState] = useState({ loading: false, error: '' });
 
   // --- Bank cash form ---
   const [bank, setBank] = useState('Relay');
@@ -120,7 +125,7 @@ export default function AddMovement() {
   };
 
   useEffect(() => {
-    if (useLivePrice && asset && prices[asset]) {
+    if (useLivePrice && asset && prices[asset] && !isCrypto) {
       const priceInfo = prices[asset];
       if (priceCurrency === 'USD' && priceInfo.usd) {
         setPriceUsd(liveStr(priceInfo.usd));
@@ -130,7 +135,38 @@ export default function AddMovement() {
         setPriceUsd(liveStr(priceInfo.usd));
       }
     }
-  }, [asset, useLivePrice, prices, priceCurrency]);
+  }, [asset, useLivePrice, prices, priceCurrency, isCrypto]);
+
+  // Crypto: price = market price at the entered date + time; amount = quantity × price.
+  // Quantity is typed (what really landed in the wallet), so it is stored exactly.
+  useEffect(() => {
+    if (!isCrypto || !asset || !date || !time) return;
+    const ts = new Date(`${date}T${time}`).getTime() / 1000;
+    if (!ts) return;
+    let cancelled = false;
+    setHistState({ loading: true, error: '' });
+    const t = setTimeout(async () => {
+      try {
+        const p = await api.getHistoricalPrice(asset, ts);
+        if (cancelled) return;
+        setPriceEur(String(p.eur));
+        setPriceUsd(p.usd ? String(p.usd) : '');
+        setHistState({ loading: false, error: '' });
+      } catch (err) {
+        if (cancelled) return;
+        setPriceEur(''); setPriceUsd('');
+        setHistState({ loading: false, error: err.message });
+      }
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [isCrypto, asset, date, time]);
+
+  useEffect(() => {
+    if (!isCrypto) return;
+    const q = parseFloat(qty);
+    const p = parseFloat(priceEur);
+    setAmountEur(q > 0 && p > 0 ? (q * p).toFixed(2) : '');
+  }, [isCrypto, qty, priceEur]);
 
   const handleAmountChange = (v) => {
     setAmountEur(v);
@@ -191,6 +227,8 @@ export default function AddMovement() {
 
   const handleBuySubmit = async (e) => {
     e.preventDefault();
+    if (isCrypto && !(parseFloat(qty) > 0)) { setError('Enter the quantity you received'); return; }
+    if (isCrypto && !priceEur) { setError(histState.error || 'Market price not available for that time'); return; }
     if (!date || !asset || !amountEur || !priceEur) { setError('Fill in all fields'); return; }
     const parsedAmount = parseFloat(amountEur);
     const parsedPrice = parseFloat(priceEur);
@@ -216,7 +254,9 @@ export default function AddMovement() {
         }
       }
 
-      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd, fundFrom, fundDeducted);
+      // Crypto: the typed quantity is the source of truth (the stored price is rounded).
+      const exactQty = isCrypto ? parseFloat(qty) : null;
+      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd, fundFrom, fundDeducted, exactQty);
 
       if (fundPos) {
         try {
@@ -227,7 +267,7 @@ export default function AddMovement() {
       }
 
       setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes(''); setFundedFrom('');
-      setDate(localDay());
+      setDate(localDay()); setTime(localTime());
       setError('');
       toast(`${asset} purchase added`, 'success');
     } catch (err) { setError(err.message); }
@@ -330,6 +370,44 @@ export default function AddMovement() {
               </select>
             </Field>
 
+{isCrypto ? (
+              <>
+                <Field label="Quantity received" hint="The exact amount that landed in your wallet.">
+                  <input className="form-input" type="number" step="any" placeholder="0.00000000" value={qty}
+                    onChange={e => setQty(e.target.value)} />
+                </Field>
+
+                <div className="m-g2">
+                  <Field label="Date">
+                    <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+                  </Field>
+                  <Field label="Time">
+                    <input className="form-input" type="time" value={time} onChange={e => setTime(e.target.value)} />
+                  </Field>
+                </div>
+
+                <div className="m-g2">
+                  <Field label="Market price" hint={histState.error || (histState.loading ? 'Looking up the price…' : 'At that date and time')}>
+                    <input className="form-input" type="text" readOnly value={priceEur ? formatPrice(parseFloat(priceEur)) : ''} placeholder="—" />
+                  </Field>
+                  <Field label="Amount invested" hint="Quantity × market price">
+                    <input className="form-input" type="text" readOnly value={amountEur ? formatEUR(parseFloat(amountEur)) : ''} placeholder="—" />
+                  </Field>
+                </div>
+
+                {cashPositions.length > 0 && (
+                  <Field label="Funded from" hint={fundedFrom ? 'Deducted from this broker’s dry powder.' : undefined}>
+                  <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
+                    <option value="">None</option>
+                    {cashPositions.map(p => (
+                      <option key={p.id} value={p.id}>{`${p.label} (${curFmt(p.currency)(p.amount_eur)})`}</option>
+                    ))}
+                  </select>
+                </Field>
+                )}
+              </>
+            ) : (
+              <>
             <AmountField label="Amount" symbol="€" value={amountEur} onChange={handleAmountChange}
               caption={parseFloat(qty) > 0 ? `You get ${qty} ${asset}` : 'Fill in the amount or the quantity. The other is computed.'} />
 
@@ -365,6 +443,9 @@ export default function AddMovement() {
               <Field label="Date">
                 <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
               </Field>
+            )}
+
+              </>
             )}
 
             <Field label="Note">

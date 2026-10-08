@@ -30,8 +30,9 @@ export function installMockApi(api) {
     getAnnualReport: ok(fx.reports.annual),
     getMonthlyReport: ok(fx.reports.monthly),
     searchAssets: ok(fx.searchResults),
-    addPurchase: (date, asset, amount_eur, price_eur, notes = '') => {
-      const p = { id: `p${nextId++}`, date, asset, amount_eur, price_eur, quantity: amount_eur / price_eur, notes };
+    getHistoricalPrice: (asset, ts) => Promise.resolve({ eur: 71922.48, usd: 80615.48 }),
+    addPurchase: (date, asset, amount_eur, price_eur, notes = '', priceUsd = 0, fundedFrom = null, fundedAmount = 0, quantity = null) => {
+      const p = { id: `p${nextId++}`, date, asset, amount_eur, price_eur, quantity: quantity > 0 ? quantity : amount_eur / price_eur, notes };
       state.purchases = [p, ...state.purchases];
       return Promise.resolve(p);
     },

@@ -119,14 +119,22 @@ export const api = {
     return handleResponse(response);
   },
 
-  addPurchase: async (date, asset, amountEur, priceEur, notes = '', priceUsd = 0, fundedFrom = null, fundedAmount = 0) => {
+  // Market price {eur, usd} of a crypto asset at a unix time (seconds)
+  getHistoricalPrice: async (asset, ts) => {
+    const response = await fetch(`${BASE_URL}/prices/historical?asset=${encodeURIComponent(asset)}&ts=${Math.floor(ts)}`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  addPurchase: async (date, asset, amountEur, priceEur, notes = '', priceUsd = 0, fundedFrom = null, fundedAmount = 0, quantity = null) => {
     const response = await fetch(`${BASE_URL}/purchases`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, price_usd: priceUsd, notes, funded_from: fundedFrom, funded_amount: fundedAmount })
+      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, price_usd: priceUsd, notes, funded_from: fundedFrom, funded_amount: fundedAmount, ...(quantity > 0 ? { quantity } : {}) })
     });
     return handleResponse(response);
   },
