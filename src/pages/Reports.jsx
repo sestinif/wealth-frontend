@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
 import Tabs from '../components/Tabs';
@@ -9,12 +10,19 @@ import LedgerRow from '../components/LedgerRow';
 import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import { formatEUR, formatQty, formatDay, formatMonth, sortByDate, pctText } from '../utils/format';
-import { buildCashflow } from '../utils/cashflow';
+import {
+  formatEUR, formatQty, formatDay, formatMonth, sortByDate, pctText,
+  TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
+} from '../utils/format';
+import { buildCashflow, flowSeries } from '../utils/cashflow';
 import { eurUsdRate } from '../utils/networth';
 import { assetColor } from '../utils/marks';
 
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
+
+// Cash flow chart: indigo is what went into investments, green what was set aside (pink when it shrank).
+const FLOW = { invested: '#8D9BFF', up: '#4FD1A1', down: '#F58A9B' };
+const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
 
 export default function Reports() {
   const [user, setUser] = useState(null);
@@ -107,53 +115,65 @@ export default function Reports() {
   };
 
 
-  const savedCell = (r) => (!r.hasBank ? '—' : r.saved === 0 ? formatEUR(0) : signedEUR(r.saved));
-  const savedTone = (r) => (!r.hasBank || r.saved === 0 ? 'm-muted' : r.saved > 0 ? 'm-up' : 'm-down');
-
-  // Lifetime lists its years, a year lists its months; a row opens that period.
-  const flowRow = (r, label) => {
-    const open = () => {
-      setYear(parseInt(r.key.slice(0, 4)));
-      if (r.key.length > 4) { setMonth(parseInt(r.key.slice(5, 7))); setFlowBy('month'); }
-      else setFlowBy('year');
-    };
-    return (
-      <button type="button" key={r.key} className="m-table__row m-table__row--flow" onClick={open}>
-        <span className="m-table__name">{label}</span>
-        <span>{formatEUR(r.invested)}</span>
-        <span className={savedTone(r)}>{savedCell(r)}</span>
-      </button>
-    );
-  };
-
   const cashflowView = (cf) => {
     const none = { invested: 0, saved: 0, hasBank: false };
     const monthKey = `${year}-${String(month).padStart(2, '0')}`;
     const sel = flowBy === 'lifetime' ? cf.total
       : flowBy === 'year' ? cf.years.find(r => r.key === String(year)) || none
       : cf.months.find(r => r.key === monthKey) || none;
-    const rows = flowBy === 'lifetime' ? cf.years
-      : flowBy === 'year' ? cf.months.filter(r => r.key.startsWith(`${year}-`))
-      : [];
+    const period = flowBy === 'lifetime' ? 'Lifetime' : flowBy === 'year' ? String(year) : formatMonth(`${monthKey}-01`);
+    const bars = flowSeries(cf, flowBy, year, month);
+    const hasBars = bars.some(b => b.invested !== 0 || b.saved !== 0);
+    // A bar opens its period: a year from lifetime, a month from the year, another month from a month.
+    const open = (state) => {
+      const key = state?.activePayload?.[0]?.payload?.key;
+      if (!key) return;
+      setYear(parseInt(key.slice(0, 4)));
+      if (key.length > 4) { setMonth(parseInt(key.slice(5, 7))); setFlowBy('month'); }
+      else setFlowBy('year');
+    };
     return (
       <>
-        <div style={{ paddingTop: 20 }}>
-          <Segmented options={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'year', label: 'Year' }, { key: 'month', label: 'Month' }]}
-            value={flowBy} onChange={setFlowBy} />
-        </div>
-        <div style={{ paddingTop: 20 }}>
-          <StatRow items={[
-            { label: 'Invested', value: <Money value={sel.invested} /> },
-            { label: 'Saved', value: sel.hasBank ? <Money value={sel.saved} sign /> : '—', tone: sel.hasBank && sel.saved !== 0 ? (sel.saved > 0 ? 'up' : 'down') : undefined },
-          ]} />
-        </div>
-        {rows.length > 0 && (
-          <div className="m-table--flow">
-            <div className="m-table__head">
-              <span>{flowBy === 'lifetime' ? 'Year' : 'Month'}</span><span>Invested</span><span>Saved</span>
+        <div className="m-flow__head">
+          <div className="m-flow__figures">
+            <div className="m-stat">
+              <div className="m-stat__label"><span className="m-legend__dot" style={{ background: FLOW.invested }} />Invested · {period}</div>
+              <div className="m-stat__value"><Money value={sel.invested} /></div>
             </div>
-            {rows.map(r => flowRow(r, r.key.length > 4 ? formatMonth(`${r.key}-01`) : r.key))}
+            <div className="m-stat">
+              <div className="m-stat__label"><span className="m-legend__dot" style={{ background: sel.hasBank && sel.saved < 0 ? FLOW.down : FLOW.up }} />Saved · {period}</div>
+              <div className={`m-stat__value ${sel.hasBank && sel.saved !== 0 ? (sel.saved > 0 ? 'm-stat__value--up' : 'm-stat__value--down') : ''}`}>
+                {sel.hasBank ? <Money value={sel.saved} sign /> : '—'}
+              </div>
+            </div>
           </div>
+          <div className="m-flow__seg">
+            <Segmented options={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'year', label: 'Year' }, { key: 'month', label: 'Month' }]}
+              value={flowBy} onChange={setFlowBy} />
+          </div>
+        </div>
+        {hasBars ? (
+          <div className="m-flow__chart">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={bars} margin={{ top: 8, right: 0, left: 0, bottom: 0 }} barGap={3} onClick={open}>
+                <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" />
+                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
+                  cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                  labelFormatter={(label, items) => { const k = items?.[0]?.payload?.key || ''; return k.length > 4 ? formatMonth(`${k}-01`) : label; }}
+                  formatter={(v, name) => [name === 'Saved' ? (v === 0 ? formatEUR(0) : signedEUR(v)) : formatEUR(v), name]} />
+                <Bar dataKey="invested" name="Invested" fill={FLOW.invested} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                  {bars.map(b => <Cell key={b.key} fill={FLOW.invested} fillOpacity={b.selected ? 1 : 0.3} />)}
+                </Bar>
+                <Bar dataKey="saved" name="Saved" fill={FLOW.up} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                  {bars.map(b => <Cell key={b.key} fill={b.saved >= 0 ? FLOW.up : FLOW.down} fillOpacity={b.selected ? 1 : 0.3} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="m-empty">Nothing in this period</div>
         )}
       </>
     );

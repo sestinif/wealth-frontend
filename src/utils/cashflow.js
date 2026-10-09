@@ -71,3 +71,25 @@ export function buildCashflow(purchases = [], bankEntries = [], rate = null, dry
   if (hasOpening) total.hasBank = true;
   return { months: monthRows, years: yearRows, total };
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Bars for the chart, oldest first. Lifetime: one per year. Year and month: the twelve
+// months of `year`, so a month is always read next to its neighbours; in the month view
+// only the chosen one is `selected`.
+export function flowSeries(cf, view, year, month) {
+  if (view === 'lifetime') {
+    return [...cf.years].reverse().map(r => ({ key: r.key, label: r.key, invested: r.invested, saved: r.hasBank ? r.saved : 0, selected: true }));
+  }
+  const byKey = new Map(cf.months.map(r => [r.key, r]));
+  return MONTHS.map((label, i) => {
+    const key = `${year}-${String(i + 1).padStart(2, '0')}`;
+    const r = byKey.get(key);
+    return {
+      key, label,
+      invested: r ? r.invested : 0,
+      saved: r && r.hasBank ? r.saved : 0,
+      selected: view !== 'month' || i + 1 === month,
+    };
+  });
+}

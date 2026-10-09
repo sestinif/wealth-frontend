@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCashflow } from './cashflow.js';
+import { buildCashflow, flowSeries } from './cashflow.js';
 
 const purchases = [
   { date: '2026-09-11', amount_eur: 483.59 },
@@ -94,4 +94,24 @@ test('the dry powder that was already there counts in lifetime only', () => {
 test('dry powder in dollars uses the dated euro value when the server sends it', () => {
   const m = buildCashflow([], [], 1.1, [{ date: '2026-10-02', delta: 1100, currency: 'USD', amount_eur: 982.14 }]).months[0];
   assert.equal(m.saved, 982.14);
+});
+
+test('chart bars: lifetime is one per year, oldest first', () => {
+  const cf = buildCashflow(purchases, bank);
+  assert.deepEqual(flowSeries(cf, 'lifetime', 2026, 10).map(b => b.label), ['2025', '2026']);
+});
+
+test('chart bars: a year is always its twelve months, empty ones at zero', () => {
+  const bars = flowSeries(buildCashflow(purchases, bank), 'year', 2026, 10);
+  assert.equal(bars.length, 12);
+  assert.deepEqual(bars.map(b => b.label).slice(0, 3), ['Jan', 'Feb', 'Mar']);
+  assert.equal(bars[8].invested, 985.59);
+  assert.equal(bars[8].saved, 2498);
+  assert.equal(bars[0].invested, 0);
+  assert.ok(bars.every(b => b.selected));
+});
+
+test('chart bars: the month view marks only the chosen month', () => {
+  const bars = flowSeries(buildCashflow(purchases, bank), 'month', 2026, 9);
+  assert.deepEqual(bars.filter(b => b.selected).map(b => b.key), ['2026-09']);
 });
