@@ -106,7 +106,7 @@ export default function Reports() {
 
 
   const flowRow = (r, label, selectedKey) => {
-    const tone = r.saved > 0 ? 'm-up' : r.saved < 0 ? 'm-down' : 'm-muted';
+    const tone = !r.hasBank ? 'm-muted' : r.saved > 0 ? 'm-up' : r.saved < 0 ? 'm-down' : 'm-muted';
     const pick = () => {
       setYear(parseInt(r.key.slice(0, 4)));
       if (r.key.length > 4) setMonth(parseInt(r.key.slice(5, 7)));
@@ -115,7 +115,7 @@ export default function Reports() {
       <button type="button" key={r.key} className={`m-table__row m-table__row--flow ${r.key === selectedKey ? 'is-selected' : ''}`} onClick={pick}>
         <span className="m-table__name">{label}</span>
         <span>{formatEUR(r.invested)}</span>
-        <span className={tone}>{r.saved === 0 ? formatEUR(0) : signedEUR(r.saved)}</span>
+        <span className={tone}>{!r.hasBank ? '—' : r.saved === 0 ? formatEUR(0) : signedEUR(r.saved)}</span>
       </button>
     );
   };
@@ -124,7 +124,7 @@ export default function Reports() {
     const byYear = flowBy === 'year';
     const rows = byYear ? cf.years : cf.months;
     const selectedKey = byYear ? String(year) : `${year}-${String(month).padStart(2, '0')}`;
-    const sel = rows.find(r => r.key === selectedKey) || { invested: 0, saved: 0 };
+    const sel = rows.find(r => r.key === selectedKey) || { invested: 0, saved: 0, hasBank: false };
     const periodLabel = byYear ? String(year) : formatMonth(`${selectedKey}-01`);
     return (
       <>
@@ -134,7 +134,7 @@ export default function Reports() {
         <div style={{ paddingTop: 20 }}>
           <StatRow items={[
             { label: `Invested · ${periodLabel}`, value: <Money value={sel.invested} /> },
-            { label: `Saved · ${periodLabel}`, value: <Money value={sel.saved} sign />, tone: sel.saved > 0 ? 'up' : sel.saved < 0 ? 'down' : undefined },
+            { label: `Saved · ${periodLabel}`, value: sel.hasBank ? <Money value={sel.saved} sign /> : '—', tone: sel.hasBank ? (sel.saved > 0 ? 'up' : sel.saved < 0 ? 'down' : undefined) : undefined },
           ]} />
         </div>
         {rows.length === 0 ? (

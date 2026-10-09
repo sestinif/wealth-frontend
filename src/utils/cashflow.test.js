@@ -55,3 +55,10 @@ test('rows with a broken date are ignored, empty input is fine', () => {
   assert.equal(buildCashflow([{ date: '', amount_eur: 5 }], [{ date: 'x', amount: 5, currency: 'EUR' }]).months.length, 0);
   assert.equal(buildCashflow().total.saved, 0);
 });
+
+test('a period with no bank movements is flagged, not shown as zero saved', () => {
+  const { months, years } = buildCashflow([{ date: '2025-03-02', amount_eur: 100 }], [{ date: '2026-01-05', amount: 50, currency: 'EUR' }]);
+  assert.equal(months.find(m => m.key === '2025-03').hasBank, false);
+  assert.equal(months.find(m => m.key === '2026-01').hasBank, true);
+  assert.equal(years.find(y => y.key === '2025').hasBank, false);
+});

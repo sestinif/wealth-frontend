@@ -11,6 +11,8 @@ const finish = (key, t) => ({
   outflow: cents(t.outflow),
   saved: cents(t.inflow - t.outflow),
   invested: cents(t.invested),
+  // No bank movement at all in the period: "saved" is unknown, not zero.
+  hasBank: t.inflow > 0 || t.outflow > 0,
 });
 
 // purchases: [{date, amount_eur}], bankEntries: [{date, amount, currency}] (amount > 0 in, < 0 out).
