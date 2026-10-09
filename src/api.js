@@ -1,3 +1,6 @@
+import { readResponse } from './utils/http.js';
+import { purchaseBody } from './utils/purchase.js';
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
 const TOKEN_KEY = 'wealth_token';
@@ -13,20 +16,14 @@ const authHeaders = () => {
   };
 };
 
-const handleResponse = async (response) => {
-  if (response.status === 401) {
-    removeToken();
-    window.location.href = '/login';
-    throw new Error('Session expired');
-  }
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Errore del server' }));
-    throw new Error(error.detail || 'Errore del server');
-  }
-
-  return response.json().catch(() => ({}));
-};
+const handleResponse = (response, options = {}) =>
+  readResponse(response, {
+    ...options,
+    onSessionExpired: () => {
+      removeToken();
+      window.location.href = '/login';
+    },
+  });
 
 export const api = {
   health: async () => {
@@ -45,7 +42,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password })
     });
-    return handleResponse(response);
+    return handleResponse(response, { sessionAware: false });
   },
 
   login: async (username, password) => {
@@ -54,7 +51,8 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    return handleResponse(response);
+    // A 401 here is a wrong password, not an expired session.
+    return handleResponse(response, { sessionAware: false });
   },
 
   getMe: async () => {
@@ -77,17 +75,25 @@ export const api = {
   },
 
   // Revoke every existing session server-side (bumps token_version), then clear the
-  // local token and bounce to login like a normal logout.
+  // local token and bounce to login like a normal logout. If the server can't be
+  // reached, nothing changes and the caller is told: signing out locally while the
+  // other devices stay signed in would look like it worked when it hadn't.
+  // (A 401 means this session is already dead, so signing out locally is right.)
   logoutAll: async () => {
+    let response;
     try {
-      await fetch(`${BASE_URL}/auth/logout-all`, {
+      response = await fetch(`${BASE_URL}/auth/logout-all`, {
         method: 'POST',
         headers: authHeaders()
       });
-    } finally {
-      removeToken();
-      window.location.href = '/login';
+    } catch {
+      throw new Error('Couldn\u2019t reach the server. You\u2019re still signed in on every device.');
     }
+    if (!response.ok && response.status !== 401) {
+      throw new Error('The server didn\u2019t sign the other devices out. You\u2019re still signed in.');
+    }
+    removeToken();
+    window.location.href = '/login';
   },
 
   getPrices: async () => {
@@ -127,6 +133,8 @@ export const api = {
     return handleResponse(response);
   },
 
+  // `quantity` is the exact amount received when the user typed one; the server
+  // then keeps it instead of recomputing amount / price.
   addPurchase: async (date, asset, amountEur, priceEur, notes = '', priceUsd = 0, fundedFrom = null, fundedAmount = 0, quantity = null) => {
     const response = await fetch(`${BASE_URL}/purchases`, {
       method: 'POST',
@@ -134,7 +142,7 @@ export const api = {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
-      body: JSON.stringify({ date, asset, amount_eur: amountEur, price_eur: priceEur, price_usd: priceUsd, notes, funded_from: fundedFrom, funded_amount: fundedAmount, ...(quantity > 0 ? { quantity } : {}) })
+      body: JSON.stringify(purchaseBody({ date, asset, amountEur, priceEur, priceUsd, notes, fundedFrom, fundedAmount, quantity }))
     });
     return handleResponse(response);
   },
@@ -296,7 +304,7 @@ export const api = {
   },
 
   removeAsset: async (symbol) => {
-    const response = await fetch(`${BASE_URL}/assets/${symbol}`, {
+    const response = await fetch(`${BASE_URL}/assets/${encodeURIComponent(symbol)}`, {
       method: 'DELETE',
       headers: authHeaders()
     });
@@ -304,7 +312,7 @@ export const api = {
   },
 
   updateAssetTracking: async (symbol, included) => {
-    const response = await fetch(`${BASE_URL}/assets/${symbol}/tracking`, {
+    const response = await fetch(`${BASE_URL}/assets/${encodeURIComponent(symbol)}/tracking`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ included })
@@ -313,7 +321,7 @@ export const api = {
   },
 
   updateAssetColor: async (symbol, color) => {
-    const response = await fetch(`${BASE_URL}/assets/${symbol}/color`, {
+    const response = await fetch(`${BASE_URL}/assets/${encodeURIComponent(symbol)}/color`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ color })
