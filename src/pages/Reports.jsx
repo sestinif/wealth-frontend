@@ -27,7 +27,7 @@ export default function Reports() {
   const [report, setReport] = useState(null);
   const [showTx, setShowTx] = useState(false);
   const [cashflow, setCashflow] = useState(null);
-  const [flowBy, setFlowBy] = useState('month');
+  const [flowBy, setFlowBy] = useState('lifetime');
 
   useEffect(() => {
     Promise.all([api.getMe(), api.getAssets()])
@@ -105,58 +105,71 @@ export default function Reports() {
   };
 
 
-  const flowRow = (r, label, selectedKey) => {
-    const tone = !r.hasBank ? 'm-muted' : r.saved > 0 ? 'm-up' : r.saved < 0 ? 'm-down' : 'm-muted';
-    const pick = () => {
+  const savedCell = (r) => (!r.hasBank ? '—' : r.saved === 0 ? formatEUR(0) : signedEUR(r.saved));
+  const savedTone = (r) => (!r.hasBank || r.saved === 0 ? 'm-muted' : r.saved > 0 ? 'm-up' : 'm-down');
+
+  // Lifetime lists its years, a year lists its months; a row opens that period.
+  const flowRow = (r, label) => {
+    const open = () => {
       setYear(parseInt(r.key.slice(0, 4)));
-      if (r.key.length > 4) setMonth(parseInt(r.key.slice(5, 7)));
+      if (r.key.length > 4) { setMonth(parseInt(r.key.slice(5, 7))); setFlowBy('month'); }
+      else setFlowBy('year');
     };
     return (
-      <button type="button" key={r.key} className={`m-table__row m-table__row--flow ${r.key === selectedKey ? 'is-selected' : ''}`} onClick={pick}>
+      <button type="button" key={r.key} className="m-table__row m-table__row--flow" onClick={open}>
         <span className="m-table__name">{label}</span>
         <span>{formatEUR(r.invested)}</span>
-        <span className={tone}>{!r.hasBank ? '—' : r.saved === 0 ? formatEUR(0) : signedEUR(r.saved)}</span>
+        <span className={savedTone(r)}>{savedCell(r)}</span>
       </button>
     );
   };
 
   const cashflowView = (cf) => {
-    const byYear = flowBy === 'year';
-    const rows = byYear ? cf.years : cf.months;
-    const selectedKey = byYear ? String(year) : `${year}-${String(month).padStart(2, '0')}`;
-    const sel = rows.find(r => r.key === selectedKey) || { invested: 0, saved: 0, hasBank: false };
-    const periodLabel = byYear ? String(year) : formatMonth(`${selectedKey}-01`);
+    const none = { invested: 0, saved: 0, hasBank: false };
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+    const sel = flowBy === 'lifetime' ? cf.total
+      : flowBy === 'year' ? cf.years.find(r => r.key === String(year)) || none
+      : cf.months.find(r => r.key === monthKey) || none;
+    const rows = flowBy === 'lifetime' ? cf.years
+      : flowBy === 'year' ? cf.months.filter(r => r.key.startsWith(`${year}-`))
+      : [];
     return (
       <>
         <div style={{ paddingTop: 20 }}>
-          <Segmented options={[{ key: 'month', label: 'Month' }, { key: 'year', label: 'Year' }]} value={flowBy} onChange={setFlowBy} />
+          <Segmented options={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'year', label: 'Year' }, { key: 'month', label: 'Month' }]}
+            value={flowBy} onChange={setFlowBy} />
         </div>
         <div style={{ paddingTop: 20 }}>
           <StatRow items={[
-            { label: `Invested · ${periodLabel}`, value: <Money value={sel.invested} /> },
-            { label: `Saved · ${periodLabel}`, value: sel.hasBank ? <Money value={sel.saved} sign /> : '—', tone: sel.hasBank ? (sel.saved > 0 ? 'up' : sel.saved < 0 ? 'down' : undefined) : undefined },
+            { label: 'Invested', value: <Money value={sel.invested} /> },
+            { label: 'Saved', value: sel.hasBank ? <Money value={sel.saved} sign /> : '—', tone: sel.hasBank && sel.saved !== 0 ? (sel.saved > 0 ? 'up' : 'down') : undefined },
           ]} />
         </div>
-        {rows.length === 0 ? (
-          <div className="m-empty">No bank movements or purchases yet</div>
-        ) : (
+        {rows.length > 0 && (
           <div className="m-table--flow">
             <div className="m-table__head">
-              <span>{byYear ? 'Year' : 'Month'}</span><span>Invested</span><span>Saved</span>
+              <span>{flowBy === 'lifetime' ? 'Year' : 'Month'}</span><span>Invested</span><span>Saved</span>
             </div>
-            {rows.map(r => flowRow(r, byYear ? r.key : formatMonth(`${r.key}-01`), selectedKey))}
+            {rows.map(r => flowRow(r, r.key.length > 4 ? formatMonth(`${r.key}-01`) : r.key))}
           </div>
         )}
       </>
     );
   };
 
-  const filters = tab === 'lifetime' ? null : (
+  const isFlow = tab === 'cashflow';
+  // Cash flow goes back as far as the data does, not just to the first year of the reports.
+  const flowYears = cashflow
+    ? [...new Set([...cashflow.years.map(r => parseInt(r.key)), new Date().getFullYear(), year])].sort((a, b) => a - b).map(y => ({ value: y, label: String(y) }))
+    : yearOptions;
+  const showYear = isFlow ? flowBy !== 'lifetime' : tab !== 'lifetime';
+  const showMonth = isFlow ? flowBy === 'month' : tab === 'monthly';
+  const filters = !showYear ? null : (
     <div style={{ display: 'flex', gap: 14 }}>
       <select className="m-select" aria-label="Year" value={year} onChange={e => setYear(parseInt(e.target.value))}>
-        {yearOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {(isFlow ? flowYears : yearOptions).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      {(tab === 'monthly' || (tab === 'cashflow' && flowBy === 'month')) && (
+      {showMonth && (
         <select className="m-select" aria-label="Month" value={month} onChange={e => setMonth(parseInt(e.target.value))}>
           {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>

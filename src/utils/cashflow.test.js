@@ -62,3 +62,8 @@ test('a period with no bank movements is flagged, not shown as zero saved', () =
   assert.equal(months.find(m => m.key === '2026-01').hasBank, true);
   assert.equal(years.find(y => y.key === '2025').hasBank, false);
 });
+
+test('the dated euro value from the server wins over the live rate', () => {
+  const m = buildCashflow([], [{ date: '2026-09-10', amount: 3498, currency: 'USD', amount_eur: 3011.36 }], 1.1186).months[0];
+  assert.equal(m.inflow, 3011.36);
+});

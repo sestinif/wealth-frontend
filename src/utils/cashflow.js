@@ -15,7 +15,7 @@ const finish = (key, t) => ({
   hasBank: t.inflow > 0 || t.outflow > 0,
 });
 
-// purchases: [{date, amount_eur}], bankEntries: [{date, amount, currency}] (amount > 0 in, < 0 out).
+// purchases: [{date, amount_eur}], bankEntries: [{date, amount, currency, amount_eur?}] (amount > 0 in, < 0 out).
 // rate: USD per 1 EUR (null = USD counts at face value, like the rest of the app).
 // Returns { months, years, total }, months and years newest first.
 export function buildCashflow(purchases = [], bankEntries = [], rate = null) {
@@ -34,7 +34,9 @@ export function buildCashflow(purchases = [], bankEntries = [], rate = null) {
   for (const b of bankEntries) {
     const m = slot(b.date);
     if (!m) continue;
-    const v = toEur(b.amount, b.currency, rate);
+    // The server sends amount_eur at the rate of the movement's own day; the live
+    // rate is only the fallback, since it would make past months drift.
+    const v = Number.isFinite(b.amount_eur) ? b.amount_eur : toEur(b.amount, b.currency, rate);
     if (v >= 0) m.inflow += v; else m.outflow += -v;
   }
 
