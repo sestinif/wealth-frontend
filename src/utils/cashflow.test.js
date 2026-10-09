@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCashflow, flowPeriods, FLOW_START } from './cashflow.js';
+import { buildCashflow, flowPeriods } from './cashflow.js';
 
 const month = (cf, key) => cf.months.find(m => m.key === key);
 
@@ -62,14 +62,13 @@ test('dollars use the dated euro value from the server, the live rate only as fa
   assert.equal(month(live, '2026-09').saved, 1000);
 });
 
-test('nothing before the start month is counted, in either figure', () => {
-  assert.equal(FLOW_START, '2026-09');
+test('the whole history counts, however far back', () => {
   const cf = buildCashflow({
-    purchases: [{ date: '2026-08-31', amount_eur: 500 }, { date: '2026-09-01', amount_eur: 100 }, { date: '2025-11-04', amount_eur: 2000 }],
-    bankEntries: [{ date: '2026-06-01', amount: 900, currency: 'EUR' }],
+    purchases: [{ date: '2022-03-10', amount_eur: 500 }, { date: '2025-11-04', amount_eur: 2000 }],
+    bankFlows: [{ date: '2021-06-01', amount: 900, currency: 'EUR' }],
   });
-  assert.deepEqual(cf.months.map(m => m.key), ['2026-09']);
-  assert.deepEqual(cf.years, [{ key: '2026', saved: 0, invested: 100 }]);
+  assert.deepEqual(cf.months.map(m => m.key), ['2025-11', '2022-03', '2021-06']);
+  assert.deepEqual(cf.years.map(y => y.key), ['2025', '2022', '2021']);
 });
 
 test('years add their months up, newest first', () => {
@@ -86,12 +85,11 @@ test('broken dates are ignored, empty input is fine', () => {
   assert.deepEqual(buildCashflow(), { months: [], years: [] });
 });
 
-test('pickable periods run from the start month to today', () => {
-  const p = flowPeriods(new Date(2026, 9, 9));        // 9 October 2026
-  assert.deepEqual(p.years, [2026]);
-  assert.deepEqual(p.monthsOf(2026), [9, 10]);
-  const q = flowPeriods(new Date(2027, 1, 3));        // 3 February 2027
-  assert.deepEqual(q.years, [2026, 2027]);
-  assert.deepEqual(q.monthsOf(2026), [9, 10, 11, 12]);
-  assert.deepEqual(q.monthsOf(2027), [1, 2]);
+test('pickable periods run from the first year with data to today', () => {
+  const cf = buildCashflow({ purchases: [{ date: '2024-05-02', amount_eur: 10 }] });
+  const p = flowPeriods(cf, new Date(2026, 9, 9));        // 9 October 2026
+  assert.deepEqual(p.years, [2024, 2025, 2026]);
+  assert.equal(p.monthsOf(2025).length, 12);
+  assert.deepEqual(p.monthsOf(2026), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(flowPeriods(buildCashflow(), new Date(2026, 9, 9)).years, [2026]);
 });

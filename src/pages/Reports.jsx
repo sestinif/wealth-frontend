@@ -10,7 +10,7 @@ import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatQty, formatDay, formatMonth, sortByDate, pctText } from '../utils/format';
-import { buildCashflow, flowPeriods, FLOW_START } from '../utils/cashflow';
+import { buildCashflow, flowPeriods, BANK_HISTORY_START } from '../utils/cashflow';
 import { eurUsdRate } from '../utils/networth';
 import { assetColor } from '../utils/marks';
 
@@ -49,7 +49,7 @@ export default function Reports() {
           const [purchases, bankEntries, prices, dryEvents, flows] = await Promise.all([
             api.getPurchases(), api.getBankEntries(), api.getPrices(),
             api.getCashEvents().catch(() => []),
-            api.getBankFlows(`${FLOW_START}-01`).catch(() => ({ available: false, rows: [] })),
+            api.getBankFlows(BANK_HISTORY_START).catch(() => ({ available: false, rows: [] })),
           ]);
           if (stale) return;
           setMercuryOk(!!flows?.available);
@@ -116,8 +116,8 @@ export default function Reports() {
   };
 
 
-  // Cash flow: two figures for the chosen month or year. Periods start at FLOW_START.
-  const periods = flowPeriods();
+  // Cash flow: two figures for the chosen month or year, over the whole history.
+  const periods = flowPeriods(cashflow || { years: [] });
   const flowYear = periods.years.includes(year) ? year : periods.years[periods.years.length - 1];
   const flowMonths = periods.monthsOf(flowYear);
   const flowMonth = flowMonths.includes(month) ? month : flowMonths[flowMonths.length - 1];
@@ -126,7 +126,6 @@ export default function Reports() {
     const byYear = flowBy === 'year';
     const key = byYear ? String(flowYear) : `${flowYear}-${String(flowMonth).padStart(2, '0')}`;
     const sel = (byYear ? cf.years : cf.months).find(r => r.key === key) || { saved: 0, invested: 0 };
-    const startsMidYear = byYear && String(flowYear) === FLOW_START.slice(0, 4) && FLOW_START.slice(5) !== '01';
     return (
       <>
         <div className="m-flow__head">
@@ -147,9 +146,8 @@ export default function Reports() {
           </div>
         </div>
         <div className="m-flow__note">
-          {startsMidYear && <div>Counted from {formatMonth(`${FLOW_START}-01`)}.</div>}
           {mercuryOk
-            ? mercuryCount !== null && <div>Mercury: {mercuryCount} {mercuryCount === 1 ? 'movement' : 'movements'} read since {formatMonth(`${FLOW_START}-01`)}.</div>
+            ? mercuryCount !== null && <div>Mercury: {mercuryCount} {mercuryCount === 1 ? 'movement' : 'movements'} read, whole history.</div>
             : <div>Mercury did not answer, so Saved is missing its movements. Reload to try again.</div>}
         </div>
       </>

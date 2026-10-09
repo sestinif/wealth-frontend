@@ -8,11 +8,12 @@
 // out of savings: it was saved before and is invested now. Those movements carry
 // kind 'purchase' and are left out of Saved, as are currency fixes ('convert').
 // The dry powder that was already there when the log started ('opening' rows) counts
-// in the month the log began, since its real dates are unknown.
+// in the month the log began (October 2026), which is when it was set aside.
 import { toEur } from './networth.js';
 
-// Before this month there is no reliable record of what was saved.
-export const FLOW_START = '2026-09';
+// How far back to ask the bank for its movements: before the bank itself existed, so
+// the whole history comes back.
+export const BANK_HISTORY_START = '2019-01-01';
 
 const cents = (n) => Math.round(n * 100) / 100;
 const eur = (row, amount, rate) => (Number.isFinite(row.amount_eur) ? row.amount_eur : toEur(amount, row.currency, rate));
@@ -22,12 +23,12 @@ const eur = (row, amount, rate) => (Number.isFinite(row.amount_eur) ? row.amount
 // bankFlows (Mercury):  [{date, amount, currency, amount_eur?}]   same sign rule
 // dryEvents:            [{date, delta, currency, amount_eur?, opening, kind}]
 // rate: USD per 1 EUR, only used when a row has no dated amount_eur.
-// Returns { months, years }: [{ key, saved, invested }], newest first, from FLOW_START on.
+// Returns { months, years }: [{ key, saved, invested }], newest first.
 export function buildCashflow({ purchases = [], bankEntries = [], bankFlows = [], dryEvents = [], rate = null } = {}) {
   const months = new Map();
   const slot = (day) => {
     const key = String(day || '').slice(0, 7);
-    if (!/^\d{4}-\d{2}$/.test(key) || key < FLOW_START) return null;
+    if (!/^\d{4}-\d{2}$/.test(key)) return null;
     if (!months.has(key)) months.set(key, { saved: 0, invested: 0 });
     return months.get(key);
   };
@@ -59,19 +60,18 @@ export function buildCashflow({ purchases = [], bankEntries = [], bankFlows = []
   };
 }
 
-// The periods that can be picked: years from the start year to `now`, and for a year
-// the months that fall between FLOW_START and `now`.
-export function flowPeriods(now = new Date()) {
-  const [startYear, startMonth] = FLOW_START.split('-').map(Number);
+// The periods that can be picked: every year from the first one with data to `now`, and
+// for a year its months up to `now`.
+export function flowPeriods(cf, now = new Date()) {
   const thisYear = now.getFullYear();
   const thisMonth = now.getMonth() + 1;
+  const firstYear = cf.years.reduce((min, r) => Math.min(min, parseInt(r.key)), thisYear);
   const years = [];
-  for (let y = startYear; y <= Math.max(thisYear, startYear); y++) years.push(y);
+  for (let y = firstYear; y <= thisYear; y++) years.push(y);
   const monthsOf = (year) => {
-    const from = year === startYear ? startMonth : 1;
-    const to = year >= thisYear ? (year === thisYear ? thisMonth : 0) : 12;
+    const to = year < thisYear ? 12 : year === thisYear ? thisMonth : 0;
     const out = [];
-    for (let m = from; m <= to; m++) out.push(m);
+    for (let m = 1; m <= to; m++) out.push(m);
     return out;
   };
   return { years, monthsOf };
