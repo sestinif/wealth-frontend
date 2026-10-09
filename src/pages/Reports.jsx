@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
 import Tabs from '../components/Tabs';
+import Segmented from '../components/Segmented';
 import StatRow from '../components/StatRow';
 import Money from '../components/Money';
 import LedgerRow from '../components/LedgerRow';
@@ -26,6 +27,7 @@ export default function Reports() {
   const [report, setReport] = useState(null);
   const [showTx, setShowTx] = useState(false);
   const [cashflow, setCashflow] = useState(null);
+  const [flowBy, setFlowBy] = useState('month');
 
   useEffect(() => {
     Promise.all([api.getMe(), api.getAssets()])
@@ -105,51 +107,41 @@ export default function Reports() {
 
   const flowRow = (r, label) => {
     const tone = r.saved > 0 ? 'm-up' : r.saved < 0 ? 'm-down' : 'm-muted';
-    const savedText = r.saved === 0 ? formatEUR(0) : signedEUR(r.saved);
     return (
       <div key={r.key} className="m-table__row m-table__row--static">
         <span className="m-table__name">{label}</span>
-        <span className="m-table__price m-muted">{formatEUR(r.inflow)}</span>
-        <span className="m-table__price m-muted">{formatEUR(r.outflow)}</span>
-        <span>
-          <span className={tone}>{savedText}</span>
-          <span className="m-table__sub m-table__phone">In {formatEUR(r.inflow)} · out {formatEUR(r.outflow)} · invested {formatEUR(r.invested)}</span>
-        </span>
-        <span className="m-table__price m-muted">{formatEUR(r.invested)}</span>
+        <span>{formatEUR(r.invested)}</span>
+        <span className={tone}>{r.saved === 0 ? formatEUR(0) : signedEUR(r.saved)}</span>
       </div>
     );
   };
 
-  const flowHead = (first) => (
-    <div className="m-table__head">
-      <span>{first}</span><span>Money in</span><span>Money out</span><span>Saved</span><span>Invested</span>
-    </div>
-  );
-
-  const cashflowView = (cf) => (
-    <>
-      <div style={{ paddingTop: 20 }}>
-        <StatRow items={[
-          { label: 'Money in', value: <Money value={cf.total.inflow} /> },
-          { label: 'Money out', value: <Money value={cf.total.outflow} /> },
-          { label: 'Saved', value: <Money value={cf.total.saved} sign />, tone: cf.total.saved > 0 ? 'up' : cf.total.saved < 0 ? 'down' : undefined },
-        ]} />
-      </div>
-      {cf.months.length === 0 ? (
-        <div className="m-empty">No bank movements or purchases yet</div>
-      ) : (
-        <div className="m-table--flow">
-          {flowHead('Year by year')}
-          {cf.years.map(r => flowRow(r, r.key))}
-          {flowHead('Month by month')}
-          {cf.months.map(r => flowRow(r, formatMonth(`${r.key}-01`)))}
-          <div className="m-table__sub" style={{ paddingTop: 14 }}>
-            Saved = money in minus money out on your bank accounts. Dollar movements are converted at today’s rate.
-          </div>
+  const cashflowView = (cf) => {
+    const rows = flowBy === 'year' ? cf.years : cf.months;
+    return (
+      <>
+        <div style={{ paddingTop: 20 }}>
+          <Segmented options={[{ key: 'month', label: 'Month' }, { key: 'year', label: 'Year' }]} value={flowBy} onChange={setFlowBy} />
         </div>
-      )}
-    </>
-  );
+        <div style={{ paddingTop: 20 }}>
+          <StatRow items={[
+            { label: 'Invested', value: <Money value={cf.total.invested} /> },
+            { label: 'Saved', value: <Money value={cf.total.saved} sign />, tone: cf.total.saved > 0 ? 'up' : cf.total.saved < 0 ? 'down' : undefined },
+          ]} />
+        </div>
+        {rows.length === 0 ? (
+          <div className="m-empty">No bank movements or purchases yet</div>
+        ) : (
+          <div className="m-table--flow">
+            <div className="m-table__head">
+              <span>{flowBy === 'year' ? 'Year' : 'Month'}</span><span>Invested</span><span>Saved</span>
+            </div>
+            {rows.map(r => flowRow(r, flowBy === 'year' ? r.key : formatMonth(`${r.key}-01`)))}
+          </div>
+        )}
+      </>
+    );
+  };
 
   const filters = tab === 'lifetime' || tab === 'cashflow' ? null : (
     <div style={{ display: 'flex', gap: 14 }}>

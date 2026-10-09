@@ -412,8 +412,7 @@ button.m-cat { cursor: pointer; }
 .m-table__name--mark { display: flex; align-items: center; gap: 12px; }
 .m-table__sub { display: block; margin-top: 1px; font-size: 12px; color: var(--text-2); }
 .m-table__phone { display: none; }
-.m-table--flow .m-table__head, .m-table--flow .m-table__row { grid-template-columns: minmax(0, 1.5fr) 1fr 1fr 1fr 1fr; }
-.m-table--flow .m-table__head:not(:first-child) { padding-top: 26px; }
+.m-table--flow .m-table__head, .m-table--flow .m-table__row { grid-template-columns: minmax(0, 1.4fr) 1fr 1fr; }
 .m-section { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 22px 0 8px; font-size: 13px; color: var(--text-2); }
 .m-foot { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 28px 0 8px; font-size: 12px; color: var(--text-2); }
 
@@ -458,8 +457,10 @@ button.m-cat { cursor: pointer; }
 
   .m-greet__title { font-size: 22px; }
   .m-nw__value { font-size: 32px; }
-  .m-table__head, .m-table__row, .m-table--flow .m-table__head, .m-table--flow .m-table__row { grid-template-columns: minmax(0, 1fr) auto; }
+  .m-table__head, .m-table__row { grid-template-columns: minmax(0, 1fr) auto; }
   .m-table__head > :not(:first-child), .m-table__price, .m-table__profit { display: none; }
+  .m-table--flow .m-table__head, .m-table--flow .m-table__row { grid-template-columns: minmax(0, 1.2fr) 1fr 1fr; }
+  .m-table--flow .m-table__head > :not(:first-child) { display: block; }
   .m-table__phone { display: block; }
   .form-input, .auth-card .form-input { font-size: 16px; }   /* below 16px iOS zooms the page on focus */
   .m-stats--four { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
