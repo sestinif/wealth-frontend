@@ -415,7 +415,8 @@ button.m-cat { cursor: pointer; }
 .m-flow__head { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 22px; }
 .m-flow__period { font-size: 15px; color: var(--text-1); }
 .m-flow__seg { width: 200px; flex-shrink: 0; }
-.m-flow__figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.m-flow__figures { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; margin-top: 18px; }
+.m-flow__plus { font-size: 24px; color: var(--text-2); line-height: 1; }
 .m-flow__figures .m-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
 .m-flow__figures .m-stat__label { font-size: 13px; margin-bottom: 8px; }
 .m-flow__figures .m-stat__value { font-size: 34px; }
@@ -467,7 +468,8 @@ button.m-cat { cursor: pointer; }
   .m-table__head, .m-table__row { grid-template-columns: minmax(0, 1fr) auto; }
   .m-table__head > :not(:first-child), .m-table__price, .m-table__profit { display: none; }
   .m-flow__seg { width: 160px; }
-  .m-flow__figures { grid-template-columns: minmax(0, 1fr); }
+  .m-flow__figures { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .m-flow__plus { text-align: center; }
   .m-flow__figures .m-stat__value { font-size: 30px; }
   .m-table__phone { display: block; }
   .form-input, .auth-card .form-input { font-size: 16px; }   /* below 16px iOS zooms the page on focus */

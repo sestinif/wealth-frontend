@@ -6,8 +6,9 @@
 //
 // Buying from a broker's dry powder lowers that dry powder, but it is not money taken
 // out of savings: it was saved before and is invested now. Those movements carry
-// kind 'purchase' and are left out of Saved, as are currency fixes ('convert') and the
-// balances that already existed when the dry-powder log started ('opening').
+// kind 'purchase' and are left out of Saved, as are currency fixes ('convert').
+// The dry powder that was already there when the log started ('opening' rows) counts
+// in the month the log began, since its real dates are unknown.
 import { toEur } from './networth.js';
 
 // Before this month there is no reliable record of what was saved.
@@ -40,7 +41,7 @@ export function buildCashflow({ purchases = [], bankEntries = [], bankFlows = []
     if (m) m.saved += eur(b, b.amount, rate);
   }
   for (const e of dryEvents) {
-    if (e.opening || (e.kind && e.kind !== 'manual')) continue;
+    if (e.kind && e.kind !== 'manual') continue;
     const m = slot(e.date);
     if (m) m.saved += eur(e, e.delta, rate);
   }

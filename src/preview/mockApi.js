@@ -31,7 +31,7 @@ export function installMockApi(api) {
       { date: '2026-09-02', delta: 2000, currency: 'EUR', opening: false, kind: 'manual' },
       { date: '2026-10-10', delta: -1500, currency: 'EUR', opening: false, kind: 'purchase' },
     ]),
-    getBankFlows: () => Promise.resolve({ available: true, rows: [
+    getBankFlows: () => Promise.resolve({ available: true, stats: { accounts: 2, seen: 2, counted: 2 }, rows: [
       { date: '2026-09-15', amount: 4000, currency: 'USD', amount_eur: 3443.53 },
       { date: '2026-10-03', amount: 2500, currency: 'USD', amount_eur: 2231.35 },
     ] }),

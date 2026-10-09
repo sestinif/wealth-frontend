@@ -29,6 +29,7 @@ export default function Reports() {
   const [cashflow, setCashflow] = useState(null);
   const [flowBy, setFlowBy] = useState('month');
   const [mercuryOk, setMercuryOk] = useState(true);
+  const [mercuryCount, setMercuryCount] = useState(null);
 
   useEffect(() => {
     Promise.all([api.getMe(), api.getAssets()])
@@ -52,6 +53,7 @@ export default function Reports() {
           ]);
           if (stale) return;
           setMercuryOk(!!flows?.available);
+          setMercuryCount(flows?.available ? (flows.stats?.counted ?? (flows.rows || []).length) : null);
           setCashflow(buildCashflow({
             purchases, bankEntries: bankEntries || [], bankFlows: flows?.rows || [], dryEvents: dryEvents || [], rate: eurUsdRate(prices),
           }));
@@ -138,17 +140,18 @@ export default function Reports() {
             <div className="m-stat__label">Saved</div>
             <div className={`m-stat__value ${sel.saved > 0 ? 'm-stat__value--up' : sel.saved < 0 ? 'm-stat__value--down' : ''}`}><Money value={sel.saved} /></div>
           </div>
+          <div className="m-flow__plus" aria-hidden="true">+</div>
           <div className="m-stat">
             <div className="m-stat__label">Invested</div>
             <div className="m-stat__value"><Money value={sel.invested} /></div>
           </div>
         </div>
-        {(startsMidYear || !mercuryOk) && (
-          <div className="m-flow__note">
-            {startsMidYear && <div>Counted from {formatMonth(`${FLOW_START}-01`)}.</div>}
-            {!mercuryOk && <div>Mercury did not answer, so Saved is missing its movements. Reload to try again.</div>}
-          </div>
-        )}
+        <div className="m-flow__note">
+          {startsMidYear && <div>Counted from {formatMonth(`${FLOW_START}-01`)}.</div>}
+          {mercuryOk
+            ? mercuryCount !== null && <div>Mercury: {mercuryCount} {mercuryCount === 1 ? 'movement' : 'movements'} read since {formatMonth(`${FLOW_START}-01`)}.</div>
+            : <div>Mercury did not answer, so Saved is missing its movements. Reload to try again.</div>}
+        </div>
       </>
     );
   };

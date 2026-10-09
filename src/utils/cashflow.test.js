@@ -27,14 +27,23 @@ test('buying from dry powder is invested, and takes nothing off saved', () => {
   assert.deepEqual(month(cf, '2026-10'), { key: '2026-10', saved: 0, invested: 1500 });
 });
 
-test('the dry powder that was already there, and currency fixes, are not savings', () => {
+test('currency fixes are not savings; the dry powder already there counts where the log began', () => {
   const cf = buildCashflow({ dryEvents: [
-    { date: '2026-10-09', delta: 2500, currency: 'EUR', opening: true, kind: 'manual' },
+    { date: '2026-10-09', delta: 2000, currency: 'EUR', opening: true, kind: 'manual' },
     { date: '2026-10-09', delta: -500, currency: 'EUR', kind: 'convert' },
     { date: '2026-10-09', delta: 550, currency: 'USD', kind: 'convert' },
     { date: '2026-10-09', delta: 300, currency: 'EUR' },   // rows written before `kind` existed count as manual
   ] });
-  assert.equal(month(cf, '2026-10').saved, 300);
+  assert.equal(month(cf, '2026-10').saved, 2300);
+});
+
+test('the real October: one Relay movement plus the dry powder already on the broker', () => {
+  const cf = buildCashflow({
+    purchases: [{ date: '2026-10-08', amount_eur: 986.85 }],
+    bankEntries: [{ date: '2026-10-05', amount: 1000, currency: 'USD', amount_eur: 892.54 }],
+    dryEvents: [{ date: '2026-10-09', delta: 2000, currency: 'EUR', opening: true, kind: 'manual' }],
+  });
+  assert.deepEqual(month(cf, '2026-10'), { key: '2026-10', saved: 2892.54, invested: 986.85 });
 });
 
 test('a transfer between two Mercury accounts nets to zero', () => {
