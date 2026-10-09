@@ -27,19 +27,27 @@ export default function Dashboard() {
         api.getDashboard(), api.getMe(), api.getAssets(),
         api.getPricesStatus().catch(() => ({})),
         api.getNetWorth().catch(() => null),
-        api.getCashPositions().catch(() => []),
+        api.getCashPositions().catch(() => null),
       ]);
-      setData(d); setUser(u); setAssets(a); setNetworth(nw); setCashPositions(cp || []);
+      // nw / cp are null when THIS round's request failed. Keep what the last good
+      // round showed: replacing it dropped the bank balances (or the dry powder)
+      // out of the total for a minute, and the number jumped down and back.
+      setData(d); setUser(u); setAssets(a);
+      setNetworth(prev => nw ?? prev);
+      setCashPositions(prev => cp ?? prev);
       setCacheAge(s?.cache_age_seconds);
       api.getMarketInfo().then(setMarketInfo).catch(() => {});
       api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
 
       // Record today's net-worth snapshot once per load (backend upserts per day).
-      if (!snapshotDone.current) {
-        snapshotDone.current = true;
+      // Only when every part of the total arrived: with the bank balances or the
+      // dry powder missing, the day was saved too low and the chart showed a dip.
+      // Not marked done until it is saved, so the next refresh tries again.
+      if (!snapshotDone.current && nw && cp) {
         try {
-          const n = computeNetWorth({ summary: d.summary, assets: a, prices: d.prices || {}, networth: nw, cashPositions: cp || [] });
+          const n = computeNetWorth({ summary: d.summary, assets: a, prices: d.prices || {}, networth: nw, cashPositions: cp });
           await api.postNetworthSnapshot({ total: n.total, portfolio: n.portfolio, cash: n.cash, dry: n.dry });
+          snapshotDone.current = true;
           api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
         } catch (e) { /* best-effort */ }
       }

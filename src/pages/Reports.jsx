@@ -32,16 +32,21 @@ export default function Reports() {
   }, []);
 
   useEffect(() => {
+    // Flipping through months fires one request each, and they can come back out
+    // of order. Only the answer to the LAST choice may land, or the screen shows
+    // a different month from the one selected.
+    let stale = false;
     const fetchReport = async () => {
       try {
         let data;
         if (tab === 'monthly') data = await api.getMonthlyReport(year, month);
         else if (tab === 'annual') data = await api.getAnnualReport(year);
         else data = await api.getLifetimeReport();
-        setReport(data);
-      } catch (err) { setError(err.message); }
+        if (!stale) setReport(data);
+      } catch (err) { if (!stale) setError(err.message); }
     };
     fetchReport();
+    return () => { stale = true; };
   }, [tab, year, month]);
 
   if (loading) return <PageLayout title="Report" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
