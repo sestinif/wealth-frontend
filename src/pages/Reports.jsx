@@ -105,19 +105,27 @@ export default function Reports() {
   };
 
 
-  const flowRow = (r, label) => {
+  const flowRow = (r, label, selectedKey) => {
     const tone = r.saved > 0 ? 'm-up' : r.saved < 0 ? 'm-down' : 'm-muted';
+    const pick = () => {
+      setYear(parseInt(r.key.slice(0, 4)));
+      if (r.key.length > 4) setMonth(parseInt(r.key.slice(5, 7)));
+    };
     return (
-      <div key={r.key} className="m-table__row m-table__row--static">
+      <button type="button" key={r.key} className={`m-table__row m-table__row--flow ${r.key === selectedKey ? 'is-selected' : ''}`} onClick={pick}>
         <span className="m-table__name">{label}</span>
         <span>{formatEUR(r.invested)}</span>
         <span className={tone}>{r.saved === 0 ? formatEUR(0) : signedEUR(r.saved)}</span>
-      </div>
+      </button>
     );
   };
 
   const cashflowView = (cf) => {
-    const rows = flowBy === 'year' ? cf.years : cf.months;
+    const byYear = flowBy === 'year';
+    const rows = byYear ? cf.years : cf.months;
+    const selectedKey = byYear ? String(year) : `${year}-${String(month).padStart(2, '0')}`;
+    const sel = rows.find(r => r.key === selectedKey) || { invested: 0, saved: 0 };
+    const periodLabel = byYear ? String(year) : formatMonth(`${selectedKey}-01`);
     return (
       <>
         <div style={{ paddingTop: 20 }}>
@@ -125,8 +133,8 @@ export default function Reports() {
         </div>
         <div style={{ paddingTop: 20 }}>
           <StatRow items={[
-            { label: 'Invested', value: <Money value={cf.total.invested} /> },
-            { label: 'Saved', value: <Money value={cf.total.saved} sign />, tone: cf.total.saved > 0 ? 'up' : cf.total.saved < 0 ? 'down' : undefined },
+            { label: `Invested · ${periodLabel}`, value: <Money value={sel.invested} /> },
+            { label: `Saved · ${periodLabel}`, value: <Money value={sel.saved} sign />, tone: sel.saved > 0 ? 'up' : sel.saved < 0 ? 'down' : undefined },
           ]} />
         </div>
         {rows.length === 0 ? (
@@ -134,21 +142,21 @@ export default function Reports() {
         ) : (
           <div className="m-table--flow">
             <div className="m-table__head">
-              <span>{flowBy === 'year' ? 'Year' : 'Month'}</span><span>Invested</span><span>Saved</span>
+              <span>{byYear ? 'Year' : 'Month'}</span><span>Invested</span><span>Saved</span>
             </div>
-            {rows.map(r => flowRow(r, flowBy === 'year' ? r.key : formatMonth(`${r.key}-01`)))}
+            {rows.map(r => flowRow(r, byYear ? r.key : formatMonth(`${r.key}-01`), selectedKey))}
           </div>
         )}
       </>
     );
   };
 
-  const filters = tab === 'lifetime' || tab === 'cashflow' ? null : (
+  const filters = tab === 'lifetime' ? null : (
     <div style={{ display: 'flex', gap: 14 }}>
       <select className="m-select" aria-label="Year" value={year} onChange={e => setYear(parseInt(e.target.value))}>
         {yearOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      {tab === 'monthly' && (
+      {(tab === 'monthly' || (tab === 'cashflow' && flowBy === 'month')) && (
         <select className="m-select" aria-label="Month" value={month} onChange={e => setMonth(parseInt(e.target.value))}>
           {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>

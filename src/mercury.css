@@ -413,6 +413,7 @@ button.m-cat { cursor: pointer; }
 .m-table__sub { display: block; margin-top: 1px; font-size: 12px; color: var(--text-2); }
 .m-table__phone { display: none; }
 .m-table--flow .m-table__head, .m-table--flow .m-table__row { grid-template-columns: minmax(0, 1.4fr) 1fr 1fr; }
+.m-table__row--flow:hover, .m-table__row--flow.is-selected { background: rgba(255,255,255,0.04); }
 .m-section { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 22px 0 8px; font-size: 13px; color: var(--text-2); }
 .m-foot { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 28px 0 8px; font-size: 12px; color: var(--text-2); }
 
