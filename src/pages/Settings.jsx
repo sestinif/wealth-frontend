@@ -99,7 +99,22 @@ export default function Settings() {
     try {
       await api.updateAssetColor(symbol, color);
       setAssets(prev => prev.map(a => a.symbol === symbol ? { ...a, color } : a));
-    } catch (err) {}
+    } catch (err) { toast(err.message, 'error'); }
+  };
+
+  // Signing out of every device is hard to undo and sits right under the password
+  // form, so it takes two taps: the first arms it, the second does it. The
+  // armed state clears itself after 4 seconds.
+  const [logoutArmed, setLogoutArmed] = useState(false);
+  useEffect(() => {
+    if (!logoutArmed) return;
+    const t = setTimeout(() => setLogoutArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [logoutArmed]);
+  const handleLogoutAll = async () => {
+    if (!logoutArmed) { setLogoutArmed(true); return; }
+    setLogoutArmed(false);
+    try { await api.logoutAll(); } catch (err) { toast(err.message, 'error'); }
   };
 
   const handleChangePassword = async (e) => {
@@ -234,7 +249,9 @@ export default function Settings() {
           <div className="m-caption" style={{ marginTop: 0, marginBottom: 12 }}>
             Logs out this and all other devices. You'll need to sign in again.
           </div>
-          <button className="btn btn--danger" onClick={() => api.logoutAll()}>Log out all devices</button>
+          <button className="btn btn--danger" onClick={handleLogoutAll}>
+            {logoutArmed ? 'Tap again to confirm' : 'Log out all devices'}
+          </button>
 
           <div className="m-section"><span>About</span></div>
           <div className="m-caption" style={{ marginTop: 0 }}>Wealth 3.0</div>
