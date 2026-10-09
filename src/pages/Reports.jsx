@@ -123,7 +123,9 @@ export default function Reports() {
       : cf.months.find(r => r.key === monthKey) || none;
     const period = flowBy === 'lifetime' ? 'Lifetime' : flowBy === 'year' ? String(year) : formatMonth(`${monthKey}-01`);
     const bars = flowSeries(cf, flowBy, year, month);
-    const hasBars = bars.some(b => b.invested !== 0 || b.saved !== 0);
+    // Saved is a monthly figure: lifetime shows what was invested only.
+    const showSaved = flowBy !== 'lifetime';
+    const hasBars = bars.some(b => b.invested !== 0 || (showSaved && b.saved !== 0));
     // A bar opens its period: a year from lifetime, a month from the year, another month from a month.
     const open = (state) => {
       const key = state?.activePayload?.[0]?.payload?.key;
@@ -140,12 +142,14 @@ export default function Reports() {
               <div className="m-stat__label"><span className="m-legend__dot" style={{ background: FLOW.invested }} />Invested · {period}</div>
               <div className="m-stat__value"><Money value={sel.invested} /></div>
             </div>
-            <div className="m-stat">
-              <div className="m-stat__label"><span className="m-legend__dot" style={{ background: sel.hasBank && sel.saved < 0 ? FLOW.down : FLOW.up }} />Saved · {period}</div>
-              <div className={`m-stat__value ${sel.hasBank && sel.saved !== 0 ? (sel.saved > 0 ? 'm-stat__value--up' : 'm-stat__value--down') : ''}`}>
-                {sel.hasBank ? <Money value={sel.saved} sign /> : '—'}
+            {showSaved && (
+              <div className="m-stat">
+                <div className="m-stat__label"><span className="m-legend__dot" style={{ background: sel.hasBank && sel.saved < 0 ? FLOW.down : FLOW.up }} />Saved · {period}</div>
+                <div className={`m-stat__value ${sel.hasBank && sel.saved !== 0 ? (sel.saved > 0 ? 'm-stat__value--up' : 'm-stat__value--down') : ''}`}>
+                  {sel.hasBank ? <Money value={sel.saved} sign /> : '—'}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div className="m-flow__seg">
             <Segmented options={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'year', label: 'Year' }, { key: 'month', label: 'Month' }]}
@@ -166,9 +170,11 @@ export default function Reports() {
                 <Bar dataKey="invested" name="Invested" fill={FLOW.invested} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
                   {bars.map(b => <Cell key={b.key} fill={FLOW.invested} fillOpacity={b.selected ? 1 : 0.3} />)}
                 </Bar>
-                <Bar dataKey="saved" name="Saved" fill={FLOW.up} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
-                  {bars.map(b => <Cell key={b.key} fill={b.saved >= 0 ? FLOW.up : FLOW.down} fillOpacity={b.selected ? 1 : 0.3} />)}
-                </Bar>
+                {showSaved && (
+                  <Bar dataKey="saved" name="Saved" fill={FLOW.up} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                    {bars.map(b => <Cell key={b.key} fill={b.saved >= 0 ? FLOW.up : FLOW.down} fillOpacity={b.selected ? 1 : 0.3} />)}
+                  </Bar>
+                )}
               </BarChart>
             </ResponsiveContainer>
           </div>
