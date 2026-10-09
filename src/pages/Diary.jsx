@@ -4,6 +4,8 @@ import { useToast } from '../components/Toast';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import DiaryView from './DiaryView';
+import { restoredBalance } from '../utils/purchase';
+import { formatEUR, formatUSD } from '../utils/format';
 
 // Diary is the pure history view: every purchase and every bank movement.
 // All manual entry lives in the Add Movement page (/add).
@@ -45,12 +47,18 @@ export default function Diary() {
         const pos = cashPositions.find(x => x.id === p.funded_from);
         if (pos) {
           const cur = (pos.currency || 'EUR').toUpperCase();
-          const restored = (Number(pos.amount_eur) || 0) + Number(p.funded_amount);
+          const restored = restoredBalance(pos, p.funded_amount);
           try {
-            await api.updateCashPosition(pos.id, pos.label, Number(restored.toFixed(2)), cur);
+            await api.updateCashPosition(pos.id, pos.label, restored, cur);
             setCashPositions(await api.getCashPositions());
-            toast(`Restored to ${pos.label}`, 'success');
-          } catch (e) { /* best-effort */ }
+            toast(`Purchase deleted · restored to ${pos.label}`, 'success');
+          } catch (e) {
+            // The purchase is gone, so the user has to know the broker still shows the old balance.
+            const fmt = cur === 'USD' ? formatUSD : formatEUR;
+            toast(`Purchase deleted, but ${pos.label} wasn’t updated. Add ${fmt(p.funded_amount)} back by hand.`, 'error');
+          }
+        } else {
+          toast('Purchase deleted. Its broker is no longer in the list, so there was nothing to restore.', 'success');
         }
       } else {
         toast('Purchase deleted', 'success');

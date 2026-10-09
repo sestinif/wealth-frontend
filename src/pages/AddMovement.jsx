@@ -16,6 +16,7 @@ import { useToast } from '../components/Toast';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong, localDay } from '../utils/format';
+import { planFunding } from '../utils/purchase';
 
 const localTime = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
@@ -241,32 +242,34 @@ export default function AddMovement() {
 
       // Resolve dry-powder funding BEFORE saving, so the link + exact deducted amount
       // (in the broker's currency) are stored on the purchase and can be restored on delete.
-      let fundFrom = null, fundDeducted = 0, fundPos = null, fundNewBal = 0, fundCur = 'EUR';
-      if (fundedFrom) {
-        fundPos = cashPositions.find(p => p.id === fundedFrom) || null;
-        if (fundPos) {
-          fundCur = (fundPos.currency || 'EUR').toUpperCase();
-          const deduction = fundCur === 'USD' && eurUsdRate ? parsedAmount * eurUsdRate : parsedAmount;
-          const oldBal = Number(fundPos.amount_eur) || 0;
-          fundNewBal = Math.max(0, oldBal - deduction);
-          fundDeducted = Number((oldBal - fundNewBal).toFixed(2));
-          fundFrom = fundPos.id;
+      const fundPos = fundedFrom ? cashPositions.find(p => p.id === fundedFrom) || null : null;
+      const plan = planFunding(fundPos, parsedAmount, eurUsdRate);
+
+      // Crypto: the typed quantity is the source of truth (the stored price is
+      // rounded). Elsewhere it is sent only when that is what the user typed;
+      // otherwise the server works it out from amount / price like the form shows.
+      const exactQty = isCrypto || lastEdited === 'qty' ? parseFloat(qty) : null;
+      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd, plan?.fundFrom ?? null, plan?.deducted ?? 0, exactQty);
+
+      if (plan) {
+        try {
+          await api.updateCashPosition(fundPos.id, fundPos.label, plan.newBalance, plan.currency);
+          setCashPositions(await api.getCashPositions());
+          toast(`${formatEUR(parsedAmount)} deployed from ${fundPos.label}`, 'success');
+        } catch (e) {
+          // The purchase is saved, so say plainly that the broker is now out of step.
+          // Silent, it left the balance too high and deleting the purchase later
+          // would have put back money that was never taken.
+          const fmt = plan.currency === 'USD' ? formatUSD : formatEUR;
+          toast(`Purchase saved, but ${fundPos.label} wasn’t updated. Set its balance to ${fmt(plan.newBalance)} by hand.`, 'error');
         }
       }
 
-      // Crypto: the typed quantity is the source of truth (the stored price is rounded).
-      const exactQty = isCrypto ? parseFloat(qty) : null;
-      await api.addPurchase(date, asset, parsedAmount, parsedPrice, notes, usd, fundFrom, fundDeducted, exactQty);
-
-      if (fundPos) {
-        try {
-          await api.updateCashPosition(fundPos.id, fundPos.label, Number(fundNewBal.toFixed(2)), fundCur);
-          setCashPositions(await api.getCashPositions());
-          toast(`${formatEUR(parsedAmount)} deployed from ${fundPos.label}`, 'success');
-        } catch (e) { /* purchase already saved; dry powder sync is best-effort */ }
-      }
-
-      setAmountEur(''); setPriceEur(''); setPriceUsd(''); setQty(''); setNotes(''); setFundedFrom('');
+      // Back to a blank form. A typed price goes with it; the live price stays,
+      // because its field is locked and nothing else would fill it in again. A
+      // crypto price follows the date and time, which stay, so it stays too.
+      setAmountEur(''); setQty(''); setNotes(''); setFundedFrom(''); setLastEdited('amount');
+      if (!useLivePrice && !isCrypto) { setPriceEur(''); setPriceUsd(''); }
       setDate(localDay()); setTime(localTime());
       setError('');
       toast(`${asset} purchase added`, 'success');

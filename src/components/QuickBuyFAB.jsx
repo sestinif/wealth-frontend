@@ -58,7 +58,7 @@ export default function QuickBuyFAB() {
   };
 
   const resetForm = () => {
-    setAmountEur(''); setQty(''); setNotes('');
+    setAmountEur(''); setQty(''); setNotes(''); setLastEdited('amount');
     setPriceEur(''); setPriceUsd(''); setUseLivePrice(true);
   };
 
@@ -74,7 +74,8 @@ export default function QuickBuyFAB() {
     try {
       const today = localDay();
       const usd = (currentAsset?.asset_type === 'crypto') ? parseFloat(priceUsd) || 0 : 0;
-      await api.addPurchase(today, asset, parsedAmount, parsedPrice, notes, usd);
+      const exactQty = lastEdited === 'qty' ? parseFloat(qty) : null;
+      await api.addPurchase(today, asset, parsedAmount, parsedPrice, notes, usd, null, 0, exactQty);
       toast(`${asset} purchase recorded`, 'success');
       resetForm();
       setOpen(false);
