@@ -412,11 +412,14 @@ button.m-cat { cursor: pointer; }
 .m-table__name--mark { display: flex; align-items: center; gap: 12px; }
 .m-table__sub { display: block; margin-top: 1px; font-size: 12px; color: var(--text-2); }
 .m-table__phone { display: none; }
-.m-flow__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-top: 22px; }
-.m-flow__figures { display: flex; gap: 44px; min-width: 0; }
-.m-flow__figures .m-stat__value { font-size: 28px; }
-.m-flow__seg { width: 250px; flex-shrink: 0; }
-.m-flow__chart { margin-top: 26px; cursor: pointer; }
+.m-flow__head { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 22px; }
+.m-flow__period { font-size: 15px; color: var(--text-1); }
+.m-flow__seg { width: 200px; flex-shrink: 0; }
+.m-flow__figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.m-flow__figures .m-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+.m-flow__figures .m-stat__label { font-size: 13px; margin-bottom: 8px; }
+.m-flow__figures .m-stat__value { font-size: 34px; }
+.m-flow__note { margin-top: 14px; font-size: 12px; color: var(--text-2); line-height: 1.6; }
 .m-section { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 22px 0 8px; font-size: 13px; color: var(--text-2); }
 .m-foot { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 28px 0 8px; font-size: 12px; color: var(--text-2); }
 
@@ -463,10 +466,9 @@ button.m-cat { cursor: pointer; }
   .m-nw__value { font-size: 32px; }
   .m-table__head, .m-table__row { grid-template-columns: minmax(0, 1fr) auto; }
   .m-table__head > :not(:first-child), .m-table__price, .m-table__profit { display: none; }
-  .m-flow__head { flex-direction: column; }
-  .m-flow__seg { width: 100%; order: -1; }
-  .m-flow__figures { gap: 28px; }
-  .m-flow__figures .m-stat__value { font-size: 22px; }
+  .m-flow__seg { width: 160px; }
+  .m-flow__figures { grid-template-columns: minmax(0, 1fr); }
+  .m-flow__figures .m-stat__value { font-size: 30px; }
   .m-table__phone { display: block; }
   .form-input, .auth-card .form-input { font-size: 16px; }   /* below 16px iOS zooms the page on focus */
   .m-stats--four { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }

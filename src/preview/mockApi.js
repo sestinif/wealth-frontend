@@ -27,10 +27,14 @@ export function installMockApi(api) {
     getCashPositions: () => Promise.resolve(state.cashPositions),
     getBankEntries: () => Promise.resolve(state.bankEntries),
     getCashEvents: () => Promise.resolve([
-      { date: '2026-10-09', delta: 250, currency: 'EUR', opening: true },
-      { date: '2026-10-03', delta: 400, currency: 'EUR', opening: false },
-      { date: '2026-09-18', delta: -150, currency: 'EUR', opening: false },
+      { date: '2026-10-09', delta: 250, currency: 'EUR', opening: true, kind: 'manual' },
+      { date: '2026-09-02', delta: 2000, currency: 'EUR', opening: false, kind: 'manual' },
+      { date: '2026-10-10', delta: -1500, currency: 'EUR', opening: false, kind: 'purchase' },
     ]),
+    getBankFlows: () => Promise.resolve({ available: true, rows: [
+      { date: '2026-09-15', amount: 4000, currency: 'USD', amount_eur: 3443.53 },
+      { date: '2026-10-03', amount: 2500, currency: 'USD', amount_eur: 2231.35 },
+    ] }),
     getLifetimeReport: ok(fx.reports.lifetime),
     getAnnualReport: ok(fx.reports.annual),
     getMonthlyReport: ok(fx.reports.monthly),

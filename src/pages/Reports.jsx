@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
 import Tabs from '../components/Tabs';
@@ -10,19 +9,12 @@ import LedgerRow from '../components/LedgerRow';
 import Avatar from '../components/Avatar';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
-import {
-  formatEUR, formatQty, formatDay, formatMonth, sortByDate, pctText,
-  TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
-} from '../utils/format';
-import { buildCashflow, flowSeries } from '../utils/cashflow';
+import { formatEUR, formatQty, formatDay, formatMonth, sortByDate, pctText } from '../utils/format';
+import { buildCashflow, flowPeriods, FLOW_START } from '../utils/cashflow';
 import { eurUsdRate } from '../utils/networth';
 import { assetColor } from '../utils/marks';
 
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
-
-// Cash flow chart: indigo is what went into investments, green what was set aside (pink when it shrank).
-const FLOW = { invested: '#8D9BFF', up: '#4FD1A1', down: '#F58A9B' };
-const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
 
 export default function Reports() {
   const [user, setUser] = useState(null);
@@ -35,7 +27,8 @@ export default function Reports() {
   const [report, setReport] = useState(null);
   const [showTx, setShowTx] = useState(false);
   const [cashflow, setCashflow] = useState(null);
-  const [flowBy, setFlowBy] = useState('lifetime');
+  const [flowBy, setFlowBy] = useState('month');
+  const [mercuryOk, setMercuryOk] = useState(true);
 
   useEffect(() => {
     Promise.all([api.getMe(), api.getAssets()])
@@ -52,10 +45,16 @@ export default function Reports() {
     const fetchReport = async () => {
       try {
         if (tab === 'cashflow') {
-          const [purchases, bankEntries, prices, dryEvents] = await Promise.all([
-            api.getPurchases(), api.getBankEntries(), api.getPrices(), api.getCashEvents().catch(() => []),
+          const [purchases, bankEntries, prices, dryEvents, flows] = await Promise.all([
+            api.getPurchases(), api.getBankEntries(), api.getPrices(),
+            api.getCashEvents().catch(() => []),
+            api.getBankFlows(`${FLOW_START}-01`).catch(() => ({ available: false, rows: [] })),
           ]);
-          if (!stale) setCashflow(buildCashflow(purchases, bankEntries || [], eurUsdRate(prices), dryEvents || []));
+          if (stale) return;
+          setMercuryOk(!!flows?.available);
+          setCashflow(buildCashflow({
+            purchases, bankEntries: bankEntries || [], bankFlows: flows?.rows || [], dryEvents: dryEvents || [], rate: eurUsdRate(prices),
+          }));
           return;
         }
         let data;
@@ -115,91 +114,58 @@ export default function Reports() {
   };
 
 
+  // Cash flow: two figures for the chosen month or year. Periods start at FLOW_START.
+  const periods = flowPeriods();
+  const flowYear = periods.years.includes(year) ? year : periods.years[periods.years.length - 1];
+  const flowMonths = periods.monthsOf(flowYear);
+  const flowMonth = flowMonths.includes(month) ? month : flowMonths[flowMonths.length - 1];
+
   const cashflowView = (cf) => {
-    const none = { invested: 0, saved: 0, hasBank: false };
-    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-    const sel = flowBy === 'lifetime' ? cf.total
-      : flowBy === 'year' ? cf.years.find(r => r.key === String(year)) || none
-      : cf.months.find(r => r.key === monthKey) || none;
-    const period = flowBy === 'lifetime' ? 'Lifetime' : flowBy === 'year' ? String(year) : formatMonth(`${monthKey}-01`);
-    const bars = flowSeries(cf, flowBy, year, month);
-    // Saved is a monthly figure: lifetime shows what was invested only.
-    const showSaved = flowBy !== 'lifetime';
-    const hasBars = bars.some(b => b.invested !== 0 || (showSaved && b.saved !== 0));
-    // A bar opens its period: a year from lifetime, a month from the year, another month from a month.
-    const open = (state) => {
-      const key = state?.activePayload?.[0]?.payload?.key;
-      if (!key) return;
-      setYear(parseInt(key.slice(0, 4)));
-      if (key.length > 4) { setMonth(parseInt(key.slice(5, 7))); setFlowBy('month'); }
-      else setFlowBy('year');
-    };
+    const byYear = flowBy === 'year';
+    const key = byYear ? String(flowYear) : `${flowYear}-${String(flowMonth).padStart(2, '0')}`;
+    const sel = (byYear ? cf.years : cf.months).find(r => r.key === key) || { saved: 0, invested: 0 };
+    const startsMidYear = byYear && String(flowYear) === FLOW_START.slice(0, 4) && FLOW_START.slice(5) !== '01';
     return (
       <>
         <div className="m-flow__head">
-          <div className="m-flow__figures">
-            <div className="m-stat">
-              <div className="m-stat__label"><span className="m-legend__dot" style={{ background: FLOW.invested }} />Invested · {period}</div>
-              <div className="m-stat__value"><Money value={sel.invested} /></div>
-            </div>
-            {showSaved && (
-              <div className="m-stat">
-                <div className="m-stat__label"><span className="m-legend__dot" style={{ background: sel.hasBank && sel.saved < 0 ? FLOW.down : FLOW.up }} />Saved · {period}</div>
-                <div className={`m-stat__value ${sel.hasBank && sel.saved !== 0 ? (sel.saved > 0 ? 'm-stat__value--up' : 'm-stat__value--down') : ''}`}>
-                  {sel.hasBank ? <Money value={sel.saved} sign /> : '—'}
-                </div>
-              </div>
-            )}
-          </div>
+          <div className="m-flow__period">{byYear ? flowYear : formatMonth(`${key}-01`)}</div>
           <div className="m-flow__seg">
-            <Segmented options={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'year', label: 'Year' }, { key: 'month', label: 'Month' }]}
-              value={flowBy} onChange={setFlowBy} />
+            <Segmented options={[{ key: 'month', label: 'Month' }, { key: 'year', label: 'Year' }]} value={flowBy} onChange={setFlowBy} />
           </div>
         </div>
-        {hasBars ? (
-          <div className="m-flow__chart">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={bars} margin={{ top: 8, right: 0, left: 0, bottom: 0 }} barGap={3} onClick={open}>
-                <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
-                <YAxis hide />
-                <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" />
-                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
-                  cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                  labelFormatter={(label, items) => { const k = items?.[0]?.payload?.key || ''; return k.length > 4 ? formatMonth(`${k}-01`) : label; }}
-                  formatter={(v, name) => [name === 'Saved' ? (v === 0 ? formatEUR(0) : signedEUR(v)) : formatEUR(v), name]} />
-                <Bar dataKey="invested" name="Invested" fill={FLOW.invested} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
-                  {bars.map(b => <Cell key={b.key} fill={FLOW.invested} fillOpacity={b.selected ? 1 : 0.3} />)}
-                </Bar>
-                {showSaved && (
-                  <Bar dataKey="saved" name="Saved" fill={FLOW.up} maxBarSize={18} radius={[2, 2, 0, 0]} isAnimationActive={false}>
-                    {bars.map(b => <Cell key={b.key} fill={b.saved >= 0 ? FLOW.up : FLOW.down} fillOpacity={b.selected ? 1 : 0.3} />)}
-                  </Bar>
-                )}
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="m-flow__figures">
+          <div className="m-stat">
+            <div className="m-stat__label">Saved</div>
+            <div className={`m-stat__value ${sel.saved > 0 ? 'm-stat__value--up' : sel.saved < 0 ? 'm-stat__value--down' : ''}`}><Money value={sel.saved} /></div>
           </div>
-        ) : (
-          <div className="m-empty">Nothing in this period</div>
+          <div className="m-stat">
+            <div className="m-stat__label">Invested</div>
+            <div className="m-stat__value"><Money value={sel.invested} /></div>
+          </div>
+        </div>
+        {(startsMidYear || !mercuryOk) && (
+          <div className="m-flow__note">
+            {startsMidYear && <div>Counted from {formatMonth(`${FLOW_START}-01`)}.</div>}
+            {!mercuryOk && <div>Mercury did not answer, so Saved is missing its movements. Reload to try again.</div>}
+          </div>
         )}
       </>
     );
   };
 
   const isFlow = tab === 'cashflow';
-  // Cash flow goes back as far as the data does, not just to the first year of the reports.
-  const flowYears = cashflow
-    ? [...new Set([...cashflow.years.map(r => parseInt(r.key)), new Date().getFullYear(), year])].sort((a, b) => a - b).map(y => ({ value: y, label: String(y) }))
-    : yearOptions;
-  const showYear = isFlow ? flowBy !== 'lifetime' : tab !== 'lifetime';
+  const showYear = isFlow || tab !== 'lifetime';
   const showMonth = isFlow ? flowBy === 'month' : tab === 'monthly';
+  const yearChoices = isFlow ? periods.years.map(y => ({ value: y, label: String(y) })) : yearOptions;
+  const monthChoices = isFlow ? monthOptions.filter(o => flowMonths.includes(o.value)) : monthOptions;
   const filters = !showYear ? null : (
     <div style={{ display: 'flex', gap: 14 }}>
-      <select className="m-select" aria-label="Year" value={year} onChange={e => setYear(parseInt(e.target.value))}>
-        {(isFlow ? flowYears : yearOptions).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      <select className="m-select" aria-label="Year" value={isFlow ? flowYear : year} onChange={e => setYear(parseInt(e.target.value))}>
+        {yearChoices.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
       {showMonth && (
-        <select className="m-select" aria-label="Month" value={month} onChange={e => setMonth(parseInt(e.target.value))}>
-          {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        <select className="m-select" aria-label="Month" value={isFlow ? flowMonth : month} onChange={e => setMonth(parseInt(e.target.value))}>
+          {monthChoices.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       )}
     </div>

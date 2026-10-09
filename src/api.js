@@ -221,11 +221,13 @@ export const api = {
     return handleResponse(response);
   },
 
-  updateCashPosition: async (id, label, amountEur, currency = 'EUR', note = '') => {
+  // reason 'purchase': the balance moved because a purchase was funded from it (or un-funded),
+  // so the report does not read it as money set aside or taken out.
+  updateCashPosition: async (id, label, amountEur, currency = 'EUR', note = '', reason = null) => {
     const response = await fetch(`${BASE_URL}/cash-positions/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ label, amount_eur: amountEur, currency, note })
+      body: JSON.stringify({ label, amount_eur: amountEur, currency, note, ...(reason ? { reason } : {}) })
     });
     return handleResponse(response);
   },
@@ -239,6 +241,14 @@ export const api = {
   },
 
   // --- Bank ledger (manual money in/out per bank, e.g. Relay) ---
+
+  // Movements of the connected bank (Mercury) since a day: { available, rows: [{date, amount, currency, amount_eur}] }
+  getBankFlows: async (start) => {
+    const response = await fetch(`${BASE_URL}/bank/flows?start=${encodeURIComponent(start)}`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
 
   // Dry-powder movements: [{date, delta, currency, amount_eur, opening}]
   getCashEvents: async () => {

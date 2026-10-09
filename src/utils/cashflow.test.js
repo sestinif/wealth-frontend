@@ -1,117 +1,88 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCashflow, flowSeries } from './cashflow.js';
+import { buildCashflow, flowPeriods, FLOW_START } from './cashflow.js';
 
-const purchases = [
-  { date: '2026-09-11', amount_eur: 483.59 },
-  { date: '2026-09-11', amount_eur: 502 },
-  { date: '2026-10-08', amount_eur: 986.85 },
-  { date: '2025-12-30', amount_eur: 500 },
-];
-const bank = [
-  { date: '2026-09-10', amount: 3498, currency: 'USD' },
-  { date: '2026-09-20', amount: -1000, currency: 'EUR' },
-  { date: '2026-10-05', amount: 1000, currency: 'EUR' },
-  { date: '2025-12-01', amount: 2000, currency: 'EUR' },
-];
+const month = (cf, key) => cf.months.find(m => m.key === key);
 
-test('groups by month, newest first', () => {
-  const { months } = buildCashflow(purchases, bank);
-  assert.deepEqual(months.map(m => m.key), ['2026-10', '2026-09', '2025-12']);
+test('saved is what came into Mercury and the ledger banks, plus dry powder set aside', () => {
+  const cf = buildCashflow({
+    bankFlows: [{ date: '2026-10-03', amount: 3000, currency: 'EUR' }],                  // Mercury
+    bankEntries: [{ date: '2026-10-05', amount: 1000, currency: 'EUR' }],                // Relay, by hand
+    dryEvents: [{ date: '2026-10-07', delta: 2000, currency: 'EUR', kind: 'manual' }],   // put on Degiro
+  });
+  assert.equal(month(cf, '2026-10').saved, 6000);
+  assert.equal(month(cf, '2026-10').invested, 0);
 });
 
-test('in, out, saved and invested per month', () => {
-  const sep = buildCashflow(purchases, bank).months.find(m => m.key === '2026-09');
-  assert.equal(sep.inflow, 3498);       // no rate: USD at face value
-  assert.equal(sep.outflow, 1000);
-  assert.equal(sep.saved, 2498);
-  assert.equal(sep.invested, 985.59);
+test('buying from dry powder is invested, and takes nothing off saved', () => {
+  // 2k on Degiro in September, 1.5k of stock bought from it in October.
+  const cf = buildCashflow({
+    purchases: [{ date: '2026-10-10', amount_eur: 1500 }],
+    dryEvents: [
+      { date: '2026-09-02', delta: 2000, currency: 'EUR', kind: 'manual' },
+      { date: '2026-10-10', delta: -1500, currency: 'EUR', kind: 'purchase' },
+    ],
+  });
+  assert.deepEqual(month(cf, '2026-09'), { key: '2026-09', saved: 2000, invested: 0 });
+  assert.deepEqual(month(cf, '2026-10'), { key: '2026-10', saved: 0, invested: 1500 });
 });
 
-test('USD entries are converted with the rate', () => {
-  const sep = buildCashflow([], [{ date: '2026-09-10', amount: 1100, currency: 'USD' }], 1.1).months[0];
-  assert.equal(sep.inflow, 1000);
+test('the dry powder that was already there, and currency fixes, are not savings', () => {
+  const cf = buildCashflow({ dryEvents: [
+    { date: '2026-10-09', delta: 2500, currency: 'EUR', opening: true, kind: 'manual' },
+    { date: '2026-10-09', delta: -500, currency: 'EUR', kind: 'convert' },
+    { date: '2026-10-09', delta: 550, currency: 'USD', kind: 'convert' },
+    { date: '2026-10-09', delta: 300, currency: 'EUR' },   // rows written before `kind` existed count as manual
+  ] });
+  assert.equal(month(cf, '2026-10').saved, 300);
 });
 
-test('a month with only purchases still shows, saved can be negative', () => {
-  const oct = buildCashflow(purchases, [{ date: '2026-10-02', amount: -200, currency: 'EUR' }]).months.find(m => m.key === '2026-10');
-  assert.equal(oct.inflow, 0);
-  assert.equal(oct.saved, -200);
-  assert.equal(oct.invested, 986.85);
+test('a transfer between two Mercury accounts nets to zero', () => {
+  const cf = buildCashflow({ bankFlows: [
+    { date: '2026-10-01', amount: -2000, currency: 'USD', amount_eur: -1785.08 },
+    { date: '2026-10-01', amount: 2000, currency: 'USD', amount_eur: 1785.08 },
+    { date: '2026-10-02', amount: 1000, currency: 'USD', amount_eur: 892.54 },
+  ] });
+  assert.equal(month(cf, '2026-10').saved, 892.54);
 });
 
-test('years add their months up', () => {
-  const { years, total } = buildCashflow(purchases, bank);
-  assert.deepEqual(years.map(y => y.key), ['2026', '2025']);
-  const y26 = years[0];
-  assert.equal(y26.inflow, 4498);
-  assert.equal(y26.outflow, 1000);
-  assert.equal(y26.saved, 3498);
-  assert.equal(y26.invested, 1972.44);
-  assert.equal(total.inflow, 6498);
+test('dollars use the dated euro value from the server, the live rate only as fallback', () => {
+  const dated = buildCashflow({ bankEntries: [{ date: '2026-09-10', amount: 3498, currency: 'USD', amount_eur: 3011.36 }], rate: 1.1186 });
+  assert.equal(month(dated, '2026-09').saved, 3011.36);
+  const live = buildCashflow({ bankEntries: [{ date: '2026-09-10', amount: 1100, currency: 'USD' }], rate: 1.1 });
+  assert.equal(month(live, '2026-09').saved, 1000);
 });
 
-test('rows with a broken date are ignored, empty input is fine', () => {
-  assert.equal(buildCashflow([{ date: '', amount_eur: 5 }], [{ date: 'x', amount: 5, currency: 'EUR' }]).months.length, 0);
-  assert.equal(buildCashflow().total.saved, 0);
+test('nothing before the start month is counted, in either figure', () => {
+  assert.equal(FLOW_START, '2026-09');
+  const cf = buildCashflow({
+    purchases: [{ date: '2026-08-31', amount_eur: 500 }, { date: '2026-09-01', amount_eur: 100 }, { date: '2025-11-04', amount_eur: 2000 }],
+    bankEntries: [{ date: '2026-06-01', amount: 900, currency: 'EUR' }],
+  });
+  assert.deepEqual(cf.months.map(m => m.key), ['2026-09']);
+  assert.deepEqual(cf.years, [{ key: '2026', saved: 0, invested: 100 }]);
 });
 
-test('a period with no bank movements is flagged, not shown as zero saved', () => {
-  const { months, years } = buildCashflow([{ date: '2025-03-02', amount_eur: 100 }], [{ date: '2026-01-05', amount: 50, currency: 'EUR' }]);
-  assert.equal(months.find(m => m.key === '2025-03').hasBank, false);
-  assert.equal(months.find(m => m.key === '2026-01').hasBank, true);
-  assert.equal(years.find(y => y.key === '2025').hasBank, false);
+test('years add their months up, newest first', () => {
+  const cf = buildCashflow({
+    purchases: [{ date: '2026-09-11', amount_eur: 985.59 }, { date: '2026-10-08', amount_eur: 986.85 }, { date: '2027-01-05', amount_eur: 10 }],
+    bankEntries: [{ date: '2026-09-10', amount: 3011.36, currency: 'EUR' }, { date: '2026-10-05', amount: 892.54, currency: 'EUR' }],
+  });
+  assert.deepEqual(cf.years, [{ key: '2027', saved: 0, invested: 10 }, { key: '2026', saved: 3903.9, invested: 1972.44 }]);
+  assert.deepEqual(cf.months.map(m => m.key), ['2027-01', '2026-10', '2026-09']);
 });
 
-test('the dated euro value from the server wins over the live rate', () => {
-  const m = buildCashflow([], [{ date: '2026-09-10', amount: 3498, currency: 'USD', amount_eur: 3011.36 }], 1.1186).months[0];
-  assert.equal(m.inflow, 3011.36);
+test('broken dates are ignored, empty input is fine', () => {
+  assert.deepEqual(buildCashflow({ purchases: [{ date: '', amount_eur: 5 }], bankEntries: [{ date: 'x', amount: 5, currency: 'EUR' }] }), { months: [], years: [] });
+  assert.deepEqual(buildCashflow(), { months: [], years: [] });
 });
 
-test('dry powder set aside counts as saved, deployed dry powder leaves it', () => {
-  const dry = [
-    { date: '2026-10-02', delta: 1000, currency: 'EUR' },
-    { date: '2026-10-20', delta: -400, currency: 'EUR' },
-  ];
-  const oct = buildCashflow([{ date: '2026-10-20', amount_eur: 400 }], [{ date: '2026-10-05', amount: 500, currency: 'EUR' }], null, dry).months[0];
-  assert.equal(oct.saved, 1100);     // 500 bank + 1000 − 400 dry powder
-  assert.equal(oct.invested, 400);
-});
-
-test('the dry powder that was already there counts in lifetime only', () => {
-  const dry = [
-    { date: '2026-10-09', delta: 2500, currency: 'EUR', opening: true },
-    { date: '2026-10-09', delta: 300, currency: 'EUR', opening: false },
-  ];
-  const { months, years, total } = buildCashflow([], [], null, dry);
-  assert.equal(months[0].saved, 300);
-  assert.equal(years[0].saved, 300);
-  assert.equal(total.saved, 2800);
-  assert.equal(buildCashflow([], [], null, [dry[0]]).total.hasBank, true);
-  assert.equal(buildCashflow([], [], null, [dry[0]]).months.length, 0);
-});
-
-test('dry powder in dollars uses the dated euro value when the server sends it', () => {
-  const m = buildCashflow([], [], 1.1, [{ date: '2026-10-02', delta: 1100, currency: 'USD', amount_eur: 982.14 }]).months[0];
-  assert.equal(m.saved, 982.14);
-});
-
-test('chart bars: lifetime is one per year, oldest first', () => {
-  const cf = buildCashflow(purchases, bank);
-  assert.deepEqual(flowSeries(cf, 'lifetime', 2026, 10).map(b => b.label), ['2025', '2026']);
-});
-
-test('chart bars: a year is always its twelve months, empty ones at zero', () => {
-  const bars = flowSeries(buildCashflow(purchases, bank), 'year', 2026, 10);
-  assert.equal(bars.length, 12);
-  assert.deepEqual(bars.map(b => b.label).slice(0, 3), ['Jan', 'Feb', 'Mar']);
-  assert.equal(bars[8].invested, 985.59);
-  assert.equal(bars[8].saved, 2498);
-  assert.equal(bars[0].invested, 0);
-  assert.ok(bars.every(b => b.selected));
-});
-
-test('chart bars: the month view marks only the chosen month', () => {
-  const bars = flowSeries(buildCashflow(purchases, bank), 'month', 2026, 9);
-  assert.deepEqual(bars.filter(b => b.selected).map(b => b.key), ['2026-09']);
+test('pickable periods run from the start month to today', () => {
+  const p = flowPeriods(new Date(2026, 9, 9));        // 9 October 2026
+  assert.deepEqual(p.years, [2026]);
+  assert.deepEqual(p.monthsOf(2026), [9, 10]);
+  const q = flowPeriods(new Date(2027, 1, 3));        // 3 February 2027
+  assert.deepEqual(q.years, [2026, 2027]);
+  assert.deepEqual(q.monthsOf(2026), [9, 10, 11, 12]);
+  assert.deepEqual(q.monthsOf(2027), [1, 2]);
 });

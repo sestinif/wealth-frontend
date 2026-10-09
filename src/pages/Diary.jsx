@@ -49,7 +49,7 @@ export default function Diary() {
           const cur = (pos.currency || 'EUR').toUpperCase();
           const restored = restoredBalance(pos, p.funded_amount);
           try {
-            await api.updateCashPosition(pos.id, pos.label, restored, cur);
+            await api.updateCashPosition(pos.id, pos.label, restored, cur, '', 'purchase');
             setCashPositions(await api.getCashPositions());
             toast(`Purchase deleted · restored to ${pos.label}`, 'success');
           } catch (e) {

@@ -187,7 +187,7 @@ export default function AddMovement() {
 
       if (plan) {
         try {
-          await api.updateCashPosition(fundPos.id, fundPos.label, plan.newBalance, plan.currency);
+          await api.updateCashPosition(fundPos.id, fundPos.label, plan.newBalance, plan.currency, '', 'purchase');
           setCashPositions(await api.getCashPositions());
           toast(`${formatEUR(parsedAmount)} deployed from ${fundPos.label}`, 'success');
         } catch (e) {
