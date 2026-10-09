@@ -26,6 +26,11 @@ export function installMockApi(api) {
     getPurchases: () => Promise.resolve(state.purchases),
     getCashPositions: () => Promise.resolve(state.cashPositions),
     getBankEntries: () => Promise.resolve(state.bankEntries),
+    getCashEvents: () => Promise.resolve([
+      { date: '2026-10-09', delta: 250, currency: 'EUR', opening: true },
+      { date: '2026-10-03', delta: 400, currency: 'EUR', opening: false },
+      { date: '2026-09-18', delta: -150, currency: 'EUR', opening: false },
+    ]),
     getLifetimeReport: ok(fx.reports.lifetime),
     getAnnualReport: ok(fx.reports.annual),
     getMonthlyReport: ok(fx.reports.monthly),

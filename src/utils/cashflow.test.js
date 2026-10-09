@@ -67,3 +67,31 @@ test('the dated euro value from the server wins over the live rate', () => {
   const m = buildCashflow([], [{ date: '2026-09-10', amount: 3498, currency: 'USD', amount_eur: 3011.36 }], 1.1186).months[0];
   assert.equal(m.inflow, 3011.36);
 });
+
+test('dry powder set aside counts as saved, deployed dry powder leaves it', () => {
+  const dry = [
+    { date: '2026-10-02', delta: 1000, currency: 'EUR' },
+    { date: '2026-10-20', delta: -400, currency: 'EUR' },
+  ];
+  const oct = buildCashflow([{ date: '2026-10-20', amount_eur: 400 }], [{ date: '2026-10-05', amount: 500, currency: 'EUR' }], null, dry).months[0];
+  assert.equal(oct.saved, 1100);     // 500 bank + 1000 − 400 dry powder
+  assert.equal(oct.invested, 400);
+});
+
+test('the dry powder that was already there counts in lifetime only', () => {
+  const dry = [
+    { date: '2026-10-09', delta: 2500, currency: 'EUR', opening: true },
+    { date: '2026-10-09', delta: 300, currency: 'EUR', opening: false },
+  ];
+  const { months, years, total } = buildCashflow([], [], null, dry);
+  assert.equal(months[0].saved, 300);
+  assert.equal(years[0].saved, 300);
+  assert.equal(total.saved, 2800);
+  assert.equal(buildCashflow([], [], null, [dry[0]]).total.hasBank, true);
+  assert.equal(buildCashflow([], [], null, [dry[0]]).months.length, 0);
+});
+
+test('dry powder in dollars uses the dated euro value when the server sends it', () => {
+  const m = buildCashflow([], [], 1.1, [{ date: '2026-10-02', delta: 1100, currency: 'USD', amount_eur: 982.14 }]).months[0];
+  assert.equal(m.saved, 982.14);
+});

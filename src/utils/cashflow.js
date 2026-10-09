@@ -1,6 +1,7 @@
-// Pure cash-flow maths for the Reports "Cash flow" tab: what came into the bank
-// accounts, what went out, what is left (saved) and what went into investments,
-// month by month and year by year. Everything in EUR.
+// Pure cash-flow maths for the Reports "Cash flow" tab, everything in EUR.
+// Invested = purchases. Saved = how much the idle money grew: bank movements plus
+// dry-powder movements (money set aside on a broker counts, money deployed into a
+// purchase leaves it). Month by month, year by year, and lifetime.
 import { toEur } from './networth.js';
 
 const cents = (n) => Math.round(n * 100) / 100;
@@ -11,14 +12,17 @@ const finish = (key, t) => ({
   outflow: cents(t.outflow),
   saved: cents(t.inflow - t.outflow),
   invested: cents(t.invested),
-  // No bank movement at all in the period: "saved" is unknown, not zero.
+  // No bank or dry-powder movement at all in the period: "saved" is unknown, not zero.
   hasBank: t.inflow > 0 || t.outflow > 0,
 });
 
 // purchases: [{date, amount_eur}], bankEntries: [{date, amount, currency, amount_eur?}] (amount > 0 in, < 0 out).
+// dryEvents: [{date, delta, currency, amount_eur?, opening}]. An `opening` row is a balance
+// that was already there when the log started: its real date is unknown, so it counts in
+// the lifetime total only, never in a month or a year.
 // rate: USD per 1 EUR (null = USD counts at face value, like the rest of the app).
 // Returns { months, years, total }, months and years newest first.
-export function buildCashflow(purchases = [], bankEntries = [], rate = null) {
+export function buildCashflow(purchases = [], bankEntries = [], rate = null, dryEvents = []) {
   const months = new Map();
   const slot = (day) => {
     const key = String(day || '').slice(0, 7);
@@ -39,6 +43,15 @@ export function buildCashflow(purchases = [], bankEntries = [], rate = null) {
     const v = Number.isFinite(b.amount_eur) ? b.amount_eur : toEur(b.amount, b.currency, rate);
     if (v >= 0) m.inflow += v; else m.outflow += -v;
   }
+  let opening = 0;
+  let hasOpening = false;
+  for (const e of dryEvents) {
+    const v = Number.isFinite(e.amount_eur) ? e.amount_eur : toEur(e.delta, e.currency, rate);
+    if (e.opening) { opening += v; hasOpening = true; continue; }
+    const m = slot(e.date);
+    if (!m) continue;
+    if (v >= 0) m.inflow += v; else m.outflow += -v;
+  }
 
   const sum = (list) => list.reduce((s, r) => ({
     inflow: s.inflow + r.inflow, outflow: s.outflow + r.outflow, invested: s.invested + r.invested,
@@ -53,5 +66,8 @@ export function buildCashflow(purchases = [], bankEntries = [], rate = null) {
   }
   const yearRows = [...byYear.entries()].map(([k, t]) => finish(k, t)).sort((a, b) => (a.key < b.key ? 1 : -1));
 
-  return { months: monthRows, years: yearRows, total: finish('total', sum([...months.values()])) };
+  const all = sum([...months.values()]);
+  const total = finish('total', { ...all, inflow: all.inflow + Math.max(opening, 0), outflow: all.outflow + Math.max(-opening, 0) });
+  if (hasOpening) total.hasBank = true;
+  return { months: monthRows, years: yearRows, total };
 }

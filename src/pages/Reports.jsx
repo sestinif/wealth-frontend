@@ -44,8 +44,10 @@ export default function Reports() {
     const fetchReport = async () => {
       try {
         if (tab === 'cashflow') {
-          const [purchases, bankEntries, prices] = await Promise.all([api.getPurchases(), api.getBankEntries(), api.getPrices()]);
-          if (!stale) setCashflow(buildCashflow(purchases, bankEntries || [], eurUsdRate(prices)));
+          const [purchases, bankEntries, prices, dryEvents] = await Promise.all([
+            api.getPurchases(), api.getBankEntries(), api.getPrices(), api.getCashEvents().catch(() => []),
+          ]);
+          if (!stale) setCashflow(buildCashflow(purchases, bankEntries || [], eurUsdRate(prices), dryEvents || []));
           return;
         }
         let data;

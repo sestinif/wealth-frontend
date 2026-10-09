@@ -240,6 +240,14 @@ export const api = {
 
   // --- Bank ledger (manual money in/out per bank, e.g. Relay) ---
 
+  // Dry-powder movements: [{date, delta, currency, amount_eur, opening}]
+  getCashEvents: async () => {
+    const response = await fetch(`${BASE_URL}/cash-positions/events`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   getBankEntries: async () => {
     const response = await fetch(`${BASE_URL}/bank-entries`, {
       headers: authHeaders()
