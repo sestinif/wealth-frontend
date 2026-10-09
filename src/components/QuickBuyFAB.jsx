@@ -74,8 +74,18 @@ export default function QuickBuyFAB() {
     try {
       const today = localDay();
       const usd = (currentAsset?.asset_type === 'crypto') ? parseFloat(priceUsd) || 0 : 0;
-      const exactQty = lastEdited === 'qty' ? parseFloat(qty) : null;
-      await api.addPurchase(today, asset, parsedAmount, parsedPrice, notes, usd, null, 0, exactQty);
+      // Shares are bought whole: for a stock or ETF the count is what is stored, and the
+      // amount follows from it, never the other way round.
+      const wholeOnly = currentAsset?.asset_type === 'stock_etf';
+      const shares = Number(qty);
+      if (wholeOnly && !(Number.isInteger(shares) && shares > 0)) {
+        toast('Enter a whole number of shares', 'error');
+        setSubmitting(false);
+        return;
+      }
+      const exactQty = wholeOnly ? shares : (lastEdited === 'qty' ? parseFloat(qty) : null);
+      const amount = wholeOnly ? Number((shares * parsedPrice).toFixed(2)) : parsedAmount;
+      await api.addPurchase(today, asset, amount, parsedPrice, notes, usd, null, 0, exactQty);
       toast(`${asset} purchase recorded`, 'success');
       resetForm();
       setOpen(false);

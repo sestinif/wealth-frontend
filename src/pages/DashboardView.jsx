@@ -194,6 +194,8 @@ export default function DashboardView({
         { label: 'Profit', value: <Money value={summary.pnl * fx} currency={cur} sign />, tone: summary.pnl >= 0 ? 'up' : 'down' },
         { label: 'Return', value: pctText(returnPct), tone: returnPct >= 0 ? 'up' : 'down' },
         { label: 'Invested', value: <Money value={summary.total_invested * fx} currency={cur} /> },
+        // What the investments are worth now, and the share of the net worth they make up.
+        { label: `Total invested · ${Math.round(share(nw.portfolio))}%`, value: <Money value={nw.portfolio * fx} currency={cur} /> },
       ]} />
 
       <div className="m-table__head">

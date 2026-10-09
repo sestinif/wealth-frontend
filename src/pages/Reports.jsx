@@ -16,6 +16,9 @@ import { assetColor } from '../utils/marks';
 
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;
 
+// Everything is entered with care from this month on; earlier figures were rebuilt and may be off.
+const RELIABLE_FROM = '2026-10';
+
 export default function Reports() {
   const [user, setUser] = useState(null);
   const [assets, setAssets] = useState([]);
@@ -155,6 +158,19 @@ export default function Reports() {
   };
 
   const isFlow = tab === 'cashflow';
+  // The period on screen ends before RELIABLE_FROM (a whole year, or a single month).
+  const shownYear = isFlow ? flowYear : year;
+  const shownMonth = isFlow ? flowMonth : month;
+  const yearOnly = isFlow ? flowBy === 'year' : tab === 'annual';
+  const oldPeriod = tab !== 'lifetime' && (yearOnly
+    ? shownYear < parseInt(RELIABLE_FROM.slice(0, 4))
+    : `${shownYear}-${String(shownMonth).padStart(2, '0')}` < RELIABLE_FROM);
+  const oldNotice = oldPeriod && (
+    <div className="m-notice" role="note">
+      <span className="m-notice__dot" />
+      These figures may be inaccurate. Everything is tracked correctly from {formatMonth(`${RELIABLE_FROM}-01`)}.
+    </div>
+  );
   const showYear = isFlow || tab !== 'lifetime';
   const showMonth = isFlow ? flowBy === 'month' : tab === 'monthly';
   const yearChoices = isFlow ? periods.years.map(y => ({ value: y, label: String(y) })) : yearOptions;
@@ -179,6 +195,8 @@ export default function Reports() {
       <Tabs
         tabs={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'annual', label: 'Annual' }, { key: 'monthly', label: 'Monthly' }, { key: 'cashflow', label: 'Cash flow' }]}
         value={tab} onChange={setTab} />
+
+      {oldNotice}
 
       {tab === 'cashflow' ? (cashflow && cashflowView(cashflow)) : report && (
         <>

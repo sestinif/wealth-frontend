@@ -122,6 +122,8 @@ export default function AddMovement() {
   const currentAsset = assets.find(a => a.symbol === asset);
   // Every asset is entered the same way: quantity + date + time, price looked up at that minute.
   const hasAsset = !!currentAsset;
+  // Shares and ETF units are bought whole; crypto is not.
+  const wholeOnly = currentAsset?.asset_type === 'stock_etf';
 
   // Price = market price at the entered date + time (editable); amount = quantity × price.
   // Quantity is typed (what really landed in the account), so it is stored exactly.
@@ -165,6 +167,7 @@ export default function AddMovement() {
   const handleBuySubmit = async (e) => {
     e.preventDefault();
     if (!(parseFloat(qty) > 0)) { setError('Enter the quantity you received'); return; }
+    if (wholeOnly && !Number.isInteger(Number(qty))) { setError('Shares are whole numbers. Enter how many you bought, without decimals.'); return; }
     if (!priceEur) { setError(histState.error || 'Market price not available for that time'); return; }
     if (!date || !asset || !amountEur || !priceEur) { setError('Fill in all fields'); return; }
     const parsedAmount = parseFloat(amountEur);
@@ -304,8 +307,9 @@ export default function AddMovement() {
               </select>
             </Field>
 
-            <Field label="Quantity" hint="The exact amount you received.">
-              <input className="form-input" type="number" step="any" placeholder="0.00000000" value={qty}
+            <Field label={wholeOnly ? 'Shares' : 'Quantity'} hint={wholeOnly ? 'Whole shares only.' : 'The exact amount you received.'}>
+              <input className="form-input" type="number" step={wholeOnly ? 1 : 'any'} min={wholeOnly ? 1 : undefined}
+                inputMode={wholeOnly ? 'numeric' : 'decimal'} placeholder={wholeOnly ? '0' : '0.00000000'} value={qty}
                 onChange={e => setQty(e.target.value)} />
             </Field>
 

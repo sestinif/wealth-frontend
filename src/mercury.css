@@ -412,6 +412,8 @@ button.m-cat { cursor: pointer; }
 .m-table__name--mark { display: flex; align-items: center; gap: 12px; }
 .m-table__sub { display: block; margin-top: 1px; font-size: 12px; color: var(--text-2); }
 .m-table__phone { display: none; }
+.m-notice { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text-2); }
+.m-notice__dot { width: 8px; height: 8px; border-radius: 50%; background: #D4A13E; flex-shrink: 0; }
 .m-flow__head { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 22px; }
 .m-flow__period { font-size: 15px; color: var(--text-1); }
 .m-flow__seg { width: 200px; flex-shrink: 0; }
