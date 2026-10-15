@@ -81,6 +81,9 @@ export default function AddMovement() {
   const [cpCurrency, setCpCurrency] = useState('EUR');
   const [cpEditId, setCpEditId] = useState(null);
   const [cpSubmitting, setCpSubmitting] = useState(false);
+  // Where the money goes: an existing broker's id, or '__new__'; and whether it goes in or out.
+  const [cpTarget, setCpTarget] = useState('');
+  const [cpDirection, setCpDirection] = useState('in');
   const [cashSel, setCashSel] = useState(null);   // broker id open in the sheet
 
   useEffect(() => {
@@ -248,27 +251,48 @@ export default function AddMovement() {
 
   // ============ DRY POWDER (moved verbatim from Diary) ============
 
-  const resetCpForm = () => { setCpLabel(''); setCpAmount(''); setCpCurrency('EUR'); setCpEditId(null); };
+  const resetCpForm = () => { setCpLabel(''); setCpAmount(''); setCpCurrency('EUR'); setCpEditId(null); setCpDirection('in'); };
+
+  // The broker the next movement goes to: the chosen one, else the first, else a new one.
+  const cpPos = cpTarget === '__new__' ? null : (cashPositions.find(p => p.id === cpTarget) || cashPositions[0] || null);
+  const cpIsNew = !cpPos;
+  const cpCur = cpIsNew ? cpCurrency : (cpPos.currency || 'EUR').toUpperCase();
+  const cpRaw = parseFloat(String(cpAmount).replace(',', '.'));
+  const cpAfter = cpPos && cpRaw > 0
+    ? (Number(cpPos.amount_eur) || 0) + (cpDirection === 'out' ? -cpRaw : cpRaw)
+    : null;
 
   const handleCashSubmit = async (e) => {
     e.preventDefault();
-    const amount = parseFloat(cpAmount);
-    if (!cpLabel.trim()) { toast('Enter a broker name', 'error'); return; }
-    if (isNaN(amount) || amount < 0) { toast('Enter a valid amount', 'error'); return; }
+    const amount = parseFloat(String(cpAmount).replace(',', '.'));
     setCpSubmitting(true);
     try {
       if (cpEditId) {
+        // "Edit amount" from the broker sheet: set the exact balance.
+        if (!cpLabel.trim()) { toast('Enter a broker name', 'error'); return; }
+        if (isNaN(amount) || amount < 0) { toast('Enter a valid amount', 'error'); return; }
         await api.updateCashPosition(cpEditId, cpLabel.trim(), amount, cpCurrency);
         toast('Dry powder updated', 'success');
+      } else if (cpIsNew) {
+        if (!cpLabel.trim()) { toast('Enter a broker name', 'error'); return; }
+        if (isNaN(amount) || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+        // A broker with this name and currency already there gets topped up, not duplicated.
+        const saved = await api.addCashPosition(cpLabel.trim(), amount, cpCurrency);
+        setCpTarget(saved?.id || '');
+        toast(`${formatAmount(amount, cpCurrency)} added to ${cpLabel.trim()}`, 'success');
       } else {
-        await api.addCashPosition(cpLabel.trim(), amount, cpCurrency);
-        toast('Dry powder added', 'success');
+        if (isNaN(amount) || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+        if (cpAfter < 0) { toast(`${cpPos.label} only holds ${formatAmount(cpPos.amount_eur, cpCur)}`, 'error'); return; }
+        await api.updateCashPosition(cpPos.id, cpPos.label, Number(cpAfter.toFixed(2)), cpCur);
+        toast(`${formatAmount(amount, cpCur)} ${cpDirection === 'out' ? 'taken out of' : 'added to'} ${cpPos.label}`, 'success');
       }
       setCashPositions(await api.getCashPositions());
       resetCpForm();
     } catch (err) { toast(err.message, 'error'); }
     finally { setCpSubmitting(false); }
   };
+
+  const formatAmount = (v, cur) => ((cur || 'EUR').toUpperCase() === 'USD' ? formatUSD : formatEUR)(v);
 
   const handleCashEdit = (p) => { setCpEditId(p.id); setCpLabel(p.label); setCpAmount(String(p.amount_eur)); setCpCurrency((p.currency || 'EUR').toUpperCase()); };
 
@@ -431,23 +455,59 @@ export default function AddMovement() {
               </>
             )}
 
-            <div className="m-section"><span>{cpEditId ? 'Edit broker' : 'Add a broker'}</span></div>
-            <form onSubmit={handleCashSubmit}>
-              <Field label="Broker">
-                <input className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
-              </Field>
-              <AmountField label="Amount" right={<Pick options={['EUR', 'USD']} value={cpCurrency} onChange={setCpCurrency} />}
-                symbol={cpCurrency === 'USD' ? '$' : '€'} value={cpAmount} onChange={setCpAmount}
-                caption={cpCurrency === 'USD' && parseFloat(cpAmount) > 0 && eurUsdRate
-                  ? `About ${formatEUR(parseFloat(cpAmount) / eurUsdRate)}`
-                  : 'Cash parked on a broker, waiting to be invested.'} />
-              {cpEditId && (
-                <button type="button" className="btn btn--ghost btn--lg btn--full" style={{ marginBottom: 8 }} onClick={resetCpForm}>Cancel</button>
-              )}
-              <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
-                {cpSubmitting ? 'Saving…' : cpEditId ? 'Save changes' : 'Add broker'}
-              </button>
-            </form>
+            {cpEditId ? (
+              <>
+                <div className="m-section"><span>Edit broker</span></div>
+                <form onSubmit={handleCashSubmit}>
+                  <Field label="Broker">
+                    <input className="form-input" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
+                  </Field>
+                  <AmountField label="Balance" right={<Pick options={['EUR', 'USD']} value={cpCurrency} onChange={setCpCurrency} />}
+                    symbol={cpCurrency === 'USD' ? '$' : '€'} value={cpAmount} onChange={setCpAmount}
+                    caption="The exact amount on the broker now." />
+                  <button type="button" className="btn btn--ghost btn--lg btn--full" style={{ marginBottom: 8 }} onClick={resetCpForm}>Cancel</button>
+                  <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
+                    {cpSubmitting ? 'Saving…' : 'Save changes'}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="m-section"><span>Move money</span></div>
+                <form onSubmit={handleCashSubmit}>
+                  {!cpIsNew && (
+                    <Field>
+                      <Segmented options={[{ key: 'in', label: 'Add' }, { key: 'out', label: 'Take out' }]}
+                        value={cpDirection} onChange={setCpDirection} />
+                    </Field>
+                  )}
+                  <Field label="Broker" right={cpPos ? <span>Now {formatAmount(cpPos.amount_eur, cpCur)}</span> : null}>
+                    <select className="form-input" value={cpIsNew ? '__new__' : cpPos.id} onChange={e => { setCpTarget(e.target.value); setCpDirection('in'); }}>
+                      {cashPositions.map(p => (
+                        <option key={p.id} value={p.id}>{`${p.label}${(p.currency || 'EUR').toUpperCase() === 'USD' ? ' (USD)' : ''}`}</option>
+                      ))}
+                      <option value="__new__">New broker…</option>
+                    </select>
+                  </Field>
+                  {cpIsNew && (
+                    <Field label="Broker name">
+                      <input className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
+                    </Field>
+                  )}
+                  <AmountField label={cpDirection === 'out' && !cpIsNew ? 'Amount to take out' : 'Amount to add'}
+                    right={cpIsNew ? <Pick options={['EUR', 'USD']} value={cpCurrency} onChange={setCpCurrency} /> : null}
+                    symbol={cpCur === 'USD' ? '$' : '€'} value={cpAmount} onChange={setCpAmount}
+                    caption={cpAfter !== null
+                      ? `${cpPos.label} will hold ${formatAmount(Math.max(cpAfter, 0), cpCur)}.`
+                      : 'Cash parked on a broker, waiting to be invested.'} />
+                  <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
+                    {cpSubmitting ? 'Saving…'
+                      : cpIsNew ? 'Add broker'
+                      : cpDirection === 'out' ? `Take out of ${cpPos.label}` : `Add to ${cpPos.label}`}
+                  </button>
+                </form>
+              </>
+            )}
           </>
         )}
       </div>
