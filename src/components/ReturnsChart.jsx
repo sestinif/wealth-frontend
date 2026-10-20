@@ -43,6 +43,8 @@ export default function ReturnsChart({ portfolio, options, prices, live, today }
         </div>
       </div>
 
+      <p className="m-explain">How much each one has grown, or shrunk, in percent since the same starting day. White is your whole portfolio, the colours are single assets. Tap a name to show or hide it.</p>
+
       <div className="m-legend">
         <span className="m-legend__item">
           <i style={{ background: PORTFOLIO_COLOR }} />Portfolio

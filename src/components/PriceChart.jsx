@@ -37,6 +37,8 @@ export default function PriceChart({ options, prices, live, purchases, today }) 
         </div>
       </div>
 
+      <p className="m-explain">The price of one asset. The thin line is its average over the last 50 days and the dotted one over 200 days: when the price sits above them, the trend is up. Rings are the days you bought, and the dashed line is what you paid on average.</p>
+
       <div className="m-legend">
         {options.map(o => (
           <button key={o.symbol} type="button" className={`m-legend__item m-legend__btn ${o.symbol === current?.symbol ? '' : 'is-off'}`}

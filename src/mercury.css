@@ -641,3 +641,10 @@ input.form-input:focus, textarea.form-input:focus, select.form-input:focus, .aut
 .m-pricehead { margin: 10px 0 2px; }
 .m-note { margin-top: 14px; }
 .m-nw__chart + .m-note { margin-top: 12px; }
+
+/* One plain sentence under a chart's title saying what it shows. */
+.m-explain { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-2); max-width: 68ch; }
+.m-explain + .m-nw__value { margin-top: 12px; }
+
+/* A pair of cards side by side that should end on the same line. */
+.m-g2--even { align-items: stretch; }

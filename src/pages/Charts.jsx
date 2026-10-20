@@ -10,7 +10,7 @@ import {
   TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE,
 } from '../utils/format';
 import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
-import { MARKET, MARKET_AREA, TONE, assetColor } from '../utils/marks';
+import { TONE, assetColor } from '../utils/marks';
 import { buildPortfolioHistory, periodView } from '../utils/history';
 import ReturnsChart from '../components/ReturnsChart';
 import PriceChart from '../components/PriceChart';
@@ -90,17 +90,6 @@ export default function Charts() {
   );
   const lastValue = trend.series.length ? trend.series[trend.series.length - 1].value : (dashboard.summary?.total_value || 0);
 
-  // Growth by market: per day, every asset that counts toward the totals folded into stock or crypto.
-  const isStock = Object.fromEntries(assets.map(a => [a.symbol, a.asset_type === 'stock_etf']));
-  const growthData = buildAllocation(dashboard, assets, 30).map(day => {
-    let stock = 0, crypto = 0;
-    assets.forEach(a => {
-      if (dashboard.summary?.by_asset?.[a.symbol]?.include_in_totals === false) return;
-      if (isStock[a.symbol]) stock += day[a.symbol] || 0; else crypto += day[a.symbol] || 0;
-    });
-    return { date: day.date, stock, crypto };
-  });
-
   // Distribution: held assets that count toward the totals, largest first.
   const by = dashboard.summary?.by_asset || {};
   const held = Object.entries(by)
@@ -130,6 +119,7 @@ export default function Charts() {
             ))}
           </div>
         </div>
+        <p className="m-explain">What everything you hold is worth, day by day. The change leaves out the money you add, so it only shows what prices did.</p>
         <div className="m-nw__value"><Money value={lastValue} /></div>
         {trend.series.length > 1 ? (
           <>
@@ -167,37 +157,10 @@ export default function Charts() {
         </>
       )}
 
-      <div className="m-g2 m-g2--cards">
-        <div className="m-card">
-          <div className="m-nw__head">
-            <div className="m-label">Growth by Market</div>
-            <div className="m-label">Last 30 days, at today's prices</div>
-          </div>
-          {growthData.length > 1 ? (
-            <>
-              <div className="m-nw__chart">
-                <ResponsiveContainer width="100%" height={120}>
-                  <AreaChart data={growthData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                    <XAxis dataKey="date" hide />
-                    <YAxis hide />
-                    <Tooltip {...tooltipProps} cursor={CURSOR}
-                      formatter={(v, name) => [formatEUR(v), name]}
-                      labelFormatter={(l) => formatDayLong(l)} />
-                    <Area type="monotone" dataKey="stock" name="Stock Market" stackId="m" stroke={MARKET.stock} strokeWidth={1.5} fill={MARKET_AREA.stock} fillOpacity={1} isAnimationActive={false} />
-                    <Area type="monotone" dataKey="crypto" name="Crypto Market" stackId="m" stroke={MARKET.crypto} strokeWidth={1.5} fill={MARKET_AREA.crypto} fillOpacity={1} isAnimationActive={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="m-legend">
-                <span><span className="m-legend__dot" style={{ background: MARKET.stock }} />Stock Market</span>
-                <span><span className="m-legend__dot" style={{ background: MARKET.crypto }} />Crypto Market</span>
-              </div>
-            </>
-          ) : <div className="m-empty">Growth will appear after your first purchases</div>}
-        </div>
-
+      <div className="m-g2 m-g2--cards m-g2--even">
         <div className="m-card">
           <div className="m-label">Distribution</div>
+          <p className="m-explain">How your portfolio is split between assets, by what each one is worth now.</p>
           {held.length > 0 ? held.map(h => {
             const pct = (h.value / heldTotal) * 100;
             return (
@@ -209,11 +172,10 @@ export default function Charts() {
             );
           }) : <div className="m-empty">Nothing held yet</div>}
         </div>
-      </div>
 
-      <div className="m-g2 m-g2--cards">
         <div className="m-card">
-          <div className="m-label">Monthly investments {new Date().getFullYear()}</div>
+          <div className="m-label">Monthly Investments {new Date().getFullYear()}</div>
+          <p className="m-explain">For each month: what you put in (indigo) next to what those purchases are worth today (green if more, pink if less).</p>
           {monthlyData.length > 0 ? (
             <>
               <div className="m-nw__chart">
@@ -240,13 +202,14 @@ export default function Charts() {
           ) : <div className="m-empty">No purchases this year yet</div>}
         </div>
 
-        <div className="m-card">
+        <div className="m-card" style={{ gridColumn: '1 / -1' }}>
           <div className="m-nw__head">
             <div className="m-label">Average Price vs Market</div>
             <select className="m-select" aria-label="Asset" value={dcaAsset} onChange={e => setDcaAsset(e.target.value)}>
               {assets.map(a => <option key={a.symbol} value={a.symbol}>{a.symbol}</option>)}
             </select>
           </div>
+          <p className="m-explain">Each point is one of your purchases of this asset. The line is the average price you have paid so far, and the dashed line is today's price: when the dashed line is above it, you are up on this asset.</p>
           {dcaData.length > 1 ? (
             <>
               <div className="m-nw__chart">
@@ -272,20 +235,6 @@ export default function Charts() {
       </div>
     </PageLayout>
   );
-}
-
-function buildAllocation(d, assets, days) {
-  if (!d?.purchases?.length) return [];
-  const { prices, purchases } = d;
-  const s = [...purchases].sort((a, b) => new Date(a.date) - new Date(b.date));
-  return Array.from({ length: days }, (_, i) => {
-    const dt = new Date(); dt.setDate(dt.getDate() - (days - 1 - i));
-    const ds = localDay(dt);
-    const q = {}; s.filter(p => p.date <= ds).forEach(p => { q[p.asset] = (q[p.asset] || 0) + p.quantity; });
-    const e = { date: ds, label: `${dt.getDate()}/${dt.getMonth() + 1}` };
-    assets.forEach(a => { e[a.symbol] = Math.round((q[a.symbol] || 0) * ((prices[a.symbol] || {}).eur || 0)); });
-    return e;
-  });
 }
 
 function buildMonthly(d) {
