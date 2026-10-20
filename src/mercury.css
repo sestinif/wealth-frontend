@@ -614,3 +614,21 @@ input.form-input:focus, textarea.form-input:focus, select.form-input:focus, .aut
   .page-inner > * { animation: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
+
+
+/* Returns and price charts: legend chips, price header, notes */
+.m-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 10px 0 4px; }
+.m-legend__item { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-1); background: none; border: 0; padding: 4px 0; font-family: inherit; }
+.m-legend__item i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.m-legend__item b { font-weight: 500; font-size: 12px; font-variant-numeric: tabular-nums; }
+.m-legend__btn { cursor: pointer; }
+.m-legend__btn.is-off { color: var(--text-2); }
+.m-legend__btn.is-off i { opacity: 0.35; }
+.m-pricehead { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 2px; font-size: 13px; }
+.m-pricehead__value { font-size: 28px; font-weight: 300; letter-spacing: -0.02em; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.m-note { margin-top: 10px; font-size: 12px; color: var(--text-2); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.m-key { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.m-key--solid { width: 14px; height: 2px; border-radius: 1px; }
+.m-key--line { width: 14px; height: 0; border-top: 1.5px solid rgba(237, 237, 243, 0.7); }
+.m-key--dots { width: 14px; height: 0; border-top: 1.5px dotted #9A9AA8; }
+.m-key--ring { width: 8px; height: 8px; border-radius: 50%; border: 1.75px solid; background: #1B1B24; }

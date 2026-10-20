@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
@@ -11,6 +11,9 @@ import {
 } from '../utils/format';
 import { periodSeries, portfolioSeries30d, PERIODS } from '../utils/networth';
 import { MARKET, MARKET_AREA, TONE, assetColor } from '../utils/marks';
+import { buildPortfolioHistory, periodView } from '../utils/history';
+import ReturnsChart from '../components/ReturnsChart';
+import PriceChart from '../components/PriceChart';
 
 const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
 const CURSOR = { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 };
@@ -34,6 +37,30 @@ export default function Charts() {
   const [dcaAsset, setDcaAsset] = useState('');
   const [period, setPeriod] = useState('1M');
   const [history, setHistory] = useState([]);
+  const [priceHistory, setPriceHistory] = useState(null);
+
+  // Daily closes of every asset. While the server is still fetching them, ask again every 15 s.
+  useEffect(() => {
+    let alive = true, timer;
+    const load = async (n) => {
+      try {
+        const h = await api.getPriceHistory();
+        if (!alive) return;
+        setPriceHistory(h);
+        if (!h.complete && n < 12) timer = setTimeout(() => load(n + 1), 15000);
+      } catch (err) { /* the charts keep what they already have */ }
+    };
+    load(0);
+    return () => { alive = false; clearTimeout(timer); };
+  }, []);
+
+  const today = localDay();
+  const rebuilt = useMemo(
+    () => (priceHistory && dashboard
+      ? buildPortfolioHistory({ purchases: dashboard.purchases, assets, prices: priceHistory.assets, live: dashboard.prices, today })
+      : null),
+    [priceHistory, dashboard, assets, today],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,8 +80,10 @@ export default function Charts() {
   if (loading) return <PageLayout title="Charts" username=""><PageSkeleton rows={6} /></PageLayout>;
   if (!user || !dashboard) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
-  // Portfolio value: recorded history when it is long enough, else the reconstruction.
-  const trend = periodSeries(
+  // Portfolio value: rebuilt day by day from the purchases and the daily closes when those are in;
+  // otherwise the recorded history when it is long enough, else the 30-day reconstruction.
+  const hasRebuilt = !!rebuilt && rebuilt.series.length > 1;
+  const trend = hasRebuilt ? periodView(rebuilt.series, period, today) : periodSeries(
     (history || []).map(h => ({ date: h.date, total: h.portfolio || 0 })).filter(h => h.total > 0),
     portfolioSeries30d(dashboard.purchases, dashboard.prices, assets),
     period,
@@ -82,6 +111,7 @@ export default function Charts() {
     })
     .sort((a, b) => b.value - a.value);
   const heldTotal = held.reduce((s, h) => s + h.value, 0);
+  const chartOptions = held.filter(h => priceHistory?.assets?.[h.symbol]?.points?.length);
 
   const monthlyData = buildMonthly(dashboard);
   const dcaData = buildDCA(dashboard, dcaAsset);
@@ -123,6 +153,20 @@ export default function Charts() {
           </>
         ) : <div className="m-empty">Record purchases to build your portfolio history</div>}
       </div>
+
+      {priceHistory && !priceHistory.complete && (
+        <div className="m-note">Fetching price history. The charts below fill in as it arrives.</div>
+      )}
+      {hasRebuilt && rebuilt.approx.length > 0 && (
+        <div className="m-note">{rebuilt.approx.join(', ')} {rebuilt.approx.length > 1 ? 'are' : 'is'} counted at what you paid: there is no price history for {rebuilt.approx.length > 1 ? 'them' : 'it'}.</div>
+      )}
+
+      {hasRebuilt && chartOptions.length > 0 && (
+        <>
+          <ReturnsChart portfolio={rebuilt.series} options={chartOptions} prices={priceHistory.assets} live={dashboard.prices} today={today} />
+          <PriceChart options={chartOptions} prices={priceHistory.assets} live={dashboard.prices} purchases={dashboard.purchases} today={today} />
+        </>
+      )}
 
       <div className="m-g2 m-g2--cards">
         <div className="m-card">

@@ -5,6 +5,30 @@ import * as fx from './fixtures';
 const ok = (value) => () => Promise.resolve(value);
 let nextId = 1000;
 
+
+// Synthetic daily closes for the preview: a seeded random walk bent so it ends on `end`.
+function synth(seed, days, start, end, vol, skipWeekends = false) {
+  let a = seed >>> 0;
+  const rnd = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const out = [];
+  const now = new Date();
+  let level = 0;
+  const raw = [];
+  for (let i = days; i >= 1; i--) {
+    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - i));
+    if (skipWeekends && (d.getUTCDay() === 0 || d.getUTCDay() === 6)) continue;
+    level += (rnd() - 0.48) * vol;
+    raw.push([d.toISOString().slice(0, 10), level]);
+  }
+  const lastLevel = raw[raw.length - 1][1];
+  const g = Math.log(end / start);
+  raw.forEach(([day, lv], i) => {
+    const bend = g * (i / (raw.length - 1)) - (lastLevel * (i / (raw.length - 1)));
+    out.push([day, Number((start * Math.exp(lv + bend)).toPrecision(8))]);
+  });
+  return out;
+}
+
 export function installMockApi(api) {
   const state = {
     purchases: [...fx.purchases],
@@ -20,6 +44,14 @@ export function installMockApi(api) {
     getDashboard: () => Promise.resolve({ ...fx.dashboard, purchases: state.purchases }),
     getNetWorth: ok(fx.networth),
     getNetworthHistory: ok(fx.history),
+    getPriceHistory: ok({
+      as_of: new Date().toISOString().slice(0, 10), complete: true, missing: [],
+      assets: {
+        BTC: { points: synth(11, 730, 47000, 75500, 0.03) },
+        AERO: { points: synth(23, 727, 1.1, 0.74, 0.045) },
+        VUAA: { points: synth(37, 457, 108, 133.5, 0.012, true) },
+      },
+    }),
     postNetworthSnapshot: ok({}),
     getMarketInfo: ok(fx.marketInfo),
     getAssets: () => Promise.resolve(state.assets),

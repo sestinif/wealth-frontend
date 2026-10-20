@@ -196,6 +196,15 @@ export const api = {
     return handleResponse(response);
   },
 
+  // Daily closing prices (EUR) of every asset, ~2 years. `complete: false` means the server is still
+  // fetching: ask again in a little while.
+  getPriceHistory: async () => {
+    const response = await fetch(`${BASE_URL}/history/prices`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   getNetworthHistory: async () => {
     const response = await fetch(`${BASE_URL}/networth/history`, {
       headers: authHeaders()
