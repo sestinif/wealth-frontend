@@ -81,8 +81,8 @@ export default function Calculator() {
   const tValid = tDca > 0 && tPrice > 0 && !tReason;
 
   return (
-    <PageLayout title="DCA calculator" username={user.username} size="md">
-      <PageHead title="DCA calculator">
+    <PageLayout title="DCA Calculator" username={user.username} size="md">
+      <PageHead title="DCA Calculator">
         {heldAssets.length > 0 && (
           <select className="m-select" aria-label="Asset" value={symbol} onChange={e => setSymbol(e.target.value)}>
             {heldAssets.map(a => <option key={a.symbol} value={a.symbol}>{a.symbol}</option>)}
@@ -93,20 +93,20 @@ export default function Calculator() {
       {heldAssets.length === 0 ? (
         <div className="m-empty">
           <div>No holdings yet</div>
-          <Link to="/add" className="btn btn--primary">Add movement</Link>
+          <Link to="/add" className="btn btn--primary">Add Movement</Link>
         </div>
       ) : (
         <>
           <StatRow items={[
-            { label: 'Your average', value: fmt(dca) },
+            { label: 'Your Average', value: fmt(dca) },
             { label: 'Quantity', value: qtyFmt(qty) },
-            { label: 'Market price', value: fmt(curPrice) },
+            { label: 'Market Price', value: fmt(curPrice) },
             { label: 'Unrealized', value: pctText(pnlPct), tone: pnlPct >= 0 ? 'up' : 'down' },
           ]} />
 
           <div className="m-g2 m-g2--cards">
             <div className="m-card">
-              <div className="m-label" style={{ marginBottom: 14 }}>What-if buy</div>
+              <div className="m-label" style={{ marginBottom: 14 }}>What-If Buy</div>
               <Field label={`Amount (${ccy})`}>
                 <input type="number" step="any" className="form-input" value={buyAmount} onChange={e => setBuyAmount(e.target.value)} placeholder="1000" />
               </Field>
@@ -114,7 +114,7 @@ export default function Calculator() {
                 <input type="number" step="any" className="form-input" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
               </Field>
               <div className="m-result">
-                <div className="m-label">New average</div>
+                <div className="m-label">New Average</div>
                 <div className="m-result__value">{bValid ? fmt(bNewDca) : '—'}</div>
                 {bValid && (
                   <div className="m-result__meta">
@@ -125,7 +125,7 @@ export default function Calculator() {
             </div>
 
             <div className="m-card">
-              <div className="m-label" style={{ marginBottom: 14 }}>Reach a target average</div>
+              <div className="m-label" style={{ marginBottom: 14 }}>Reach a Target Average</div>
               <Field label={`Target average (${ccy})`}>
                 <input type="number" step="any" className="form-input" value={targetDca} onChange={e => setTargetDca(e.target.value)} placeholder={dca ? String(Math.round(dca * 0.9)) : '0'} />
               </Field>
@@ -133,7 +133,7 @@ export default function Calculator() {
                 <input type="number" step="any" className="form-input" value={targetPrice} onChange={e => setTargetPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
               </Field>
               <div className="m-result">
-                <div className="m-label">You need to invest</div>
+                <div className="m-label">You Need to Invest</div>
                 <div className="m-result__value">{tValid ? fmt(tNeed) : '—'}</div>
                 {tValid && <div className="m-result__meta">+{qtyFmt(tAddQty)} {symbol} at {fmt(tPrice)}</div>}
                 {tReason && <div className="m-result__warn">{tReason}</div>}

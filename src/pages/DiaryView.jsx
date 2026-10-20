@@ -19,7 +19,7 @@ const TABS = [
 
 const qty = (n, max) => Number(n).toLocaleString('en-US', { maximumFractionDigits: max, useGrouping: 'always' });
 const bankMoney = (en) => ((en.currency || 'USD').toUpperCase() === 'USD' ? formatUSD : formatEUR)(Math.abs(Number(en.amount) || 0));
-const direction = (en) => (Number(en.amount) >= 0 ? 'Money in' : 'Money out');
+const direction = (en) => (Number(en.amount) >= 0 ? 'Money In' : 'Money Out');
 
 // Pure view: every purchase and bank movement in one ledger.
 export default function DiaryView({ purchases, assets, bankEntries, cashPositions, onDeletePurchase, onDeleteBankEntry }) {
@@ -73,22 +73,22 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
           { label: 'Date', value: formatDayLong(p.date) },
           { label: 'Quantity', value: `${qty(p.quantity, 8)} ${p.asset}` },
           { label: 'Price', value: formatPrice(p.price_eur) },
-          { label: 'Funded from', value: brokerOf(p) },
+          { label: 'Funded From', value: brokerOf(p) },
           { label: 'Note', value: p.notes },
         ],
-        danger: { label: 'Delete purchase', onConfirm: async () => { await onDeletePurchase(p.id); setSelected(null); } },
+        danger: { label: 'Delete Purchase', onConfirm: async () => { await onDeletePurchase(p.id); setSelected(null); } },
       };
     }
     const en = current.item;
     return {
-      avatar: d.avatar, title: d.title, subtitle: 'Bank movement',
+      avatar: d.avatar, title: d.title, subtitle: 'Bank Movement',
       amount: d.amount,
       rows: [
         { label: 'Date', value: formatDayLong(en.date) },
         { label: 'Type', value: direction(en) },
         { label: 'Note', value: en.note },
       ],
-      danger: { label: 'Delete movement', onConfirm: async () => { await onDeleteBankEntry(en.id); setSelected(null); } },
+      danger: { label: 'Delete Movement', onConfirm: async () => { await onDeleteBankEntry(en.id); setSelected(null); } },
     };
   })();
 
@@ -96,20 +96,20 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
 
   return (
     <>
-      <PageHead title="Diary" action={{ to: '/add', label: 'Add movement' }} />
+      <PageHead title="Diary" action={{ to: '/add', label: 'Add Movement' }} />
 
       <StatRow variant="hero"
         items={[
-          { label: 'Total invested', value: <Money value={stats.invested} /> },
+          { label: 'Total Invested', value: <Money value={stats.invested} /> },
           { label: 'Transactions', value: stats.count },
-          { label: 'Last purchase', value: last || '—' },
+          { label: 'Last Purchase', value: last || '—' },
         ]}
         note={`${stats.count} transactions${last ? ` · last purchase ${last}` : ''}`} />
 
       <Tabs tabs={TABS} value={tab} onChange={setTab}
         right={tab !== 'bank' && (
           <select className="m-select" aria-label="Filter by asset" value={asset} onChange={(e) => setAsset(e.target.value)}>
-            <option value="ALL">All assets</option>
+            <option value="ALL">All Assets</option>
             {assets.map(a => <option key={a.symbol} value={a.symbol}>{a.symbol}</option>)}
           </select>
         )} />
@@ -117,7 +117,7 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
       {groups.length === 0 ? (
         <div className="m-empty">
           <div>{ledger.length === 0 ? 'No transactions yet' : 'No transactions for this filter'}</div>
-          {ledger.length === 0 && <Link to="/add" className="btn btn--primary">Add movement</Link>}
+          {ledger.length === 0 && <Link to="/add" className="btn btn--primary">Add Movement</Link>}
         </div>
       ) : groups.map(g => (
         <section key={g.key}>

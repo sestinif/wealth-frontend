@@ -30,7 +30,7 @@ const localTime = () => { const d = new Date(); return `${String(d.getHours()).p
 const TABS = [
   { key: 'buy', label: 'Purchase' },
   { key: 'bank', label: 'Bank' },
-  { key: 'dry', label: 'Dry powder' },
+  { key: 'dry', label: 'Dry Powder' },
 ];
 
 export default function AddMovement() {
@@ -307,7 +307,7 @@ export default function AddMovement() {
 
   const dryPowderTotal = cashPositions.reduce((s, p) => s + toEur(Number(p.amount_eur) || 0, p.currency), 0);
 
-  if (loading) return <PageLayout title="Add movement" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
+  if (loading) return <PageLayout title="Add Movement" username="" size="md"><PageSkeleton rows={6} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Failed to load</div></div>;
 
   const curFmt = (cur) => ((cur || 'EUR').toUpperCase() === 'USD' ? formatUSD : formatEUR);
@@ -316,8 +316,8 @@ export default function AddMovement() {
   const bankIn = bankSheetEntry ? Number(bankSheetEntry.amount) >= 0 : false;
 
   return (
-    <PageLayout title="Add movement" username={user.username} size="md">
-      <PageHead title="Add movement" />
+    <PageLayout title="Add Movement" username={user.username} size="md">
+      <PageHead title="Add Movement" />
       <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
       <div className="m-form" style={{ marginTop: 22 }}>
@@ -325,7 +325,7 @@ export default function AddMovement() {
         {/* === PURCHASE === */}
         {tab === 'buy' && (
           <form onSubmit={handleBuySubmit}>
-            <Field label="Asset" right={<button type="button" className="m-link" onClick={() => setShowAddAsset(true)}>New asset</button>}>
+            <Field label="Asset" right={<button type="button" className="m-link" onClick={() => setShowAddAsset(true)}>New Asset</button>}>
               <select className="form-input" value={asset} onChange={e => setAsset(e.target.value)}>
                 {assets.map(a => <option key={a.symbol} value={a.symbol}>{`${a.name || a.symbol} · ${a.symbol}`}</option>)}
               </select>
@@ -351,13 +351,13 @@ export default function AddMovement() {
                 <input className="form-input" type="number" step="any" value={priceEur} placeholder="—"
                   onChange={e => { setPriceEur(e.target.value); setPriceUsd(''); setHistState(h => ({ ...h, error: '', note: 'Typed by you' })); }} />
               </Field>
-              <Field label="Amount invested" hint="Quantity × market price">
+              <Field label="Amount Invested" hint="Quantity × market price">
                 <input className="form-input" type="text" readOnly value={amountEur ? formatEUR(parseFloat(amountEur)) : ''} placeholder="—" />
               </Field>
             </div>
 
             {cashPositions.length > 0 && (
-              <Field label="Funded from" hint={fundedFrom ? 'Deducted from this broker’s dry powder.' : undefined}>
+              <Field label="Funded From" hint={fundedFrom ? 'Deducted from this broker’s dry powder.' : undefined}>
                 <select className="form-input" value={fundedFrom} onChange={e => setFundedFrom(e.target.value)}>
                   <option value="">None</option>
                   {cashPositions.map(p => (
@@ -373,7 +373,7 @@ export default function AddMovement() {
 
             <AlertMessage type="error" message={error} />
             <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
-              {submitting ? 'Adding…' : 'Add purchase'}
+              {submitting ? 'Adding…' : 'Add Purchase'}
             </button>
           </form>
         )}
@@ -383,7 +383,7 @@ export default function AddMovement() {
           <>
             <form onSubmit={handleBankSubmit}>
               <Field>
-                <Segmented options={[{ key: 'in', label: 'Money in' }, { key: 'out', label: 'Money out' }]}
+                <Segmented options={[{ key: 'in', label: 'Money In' }, { key: 'out', label: 'Money Out' }]}
                   value={beDirection} onChange={setBeDirection} />
               </Field>
 
@@ -391,12 +391,12 @@ export default function AddMovement() {
                 right={activeBank && !isNewBank ? <span>Balance {curFmt(beCurrency)(bankBalance)}</span> : null}>
                 <select className="form-input" value={bank} onChange={e => setBank(e.target.value)}>
                   {ledgerBanks.map(b => <option key={b} value={b}>{b}</option>)}
-                  <option value="__new__">New bank…</option>
+                  <option value="__new__">New Bank…</option>
                 </select>
               </Field>
 
               {isNewBank && (
-                <Field label="Bank name">
+                <Field label="Bank Name">
                   <input className="form-input" type="text" placeholder="Wise" value={newBank} onChange={e => setNewBank(e.target.value)} />
                 </Field>
               )}
@@ -425,7 +425,7 @@ export default function AddMovement() {
                 {bankRecent.map(en => {
                   const enFmt = curFmt(en.currency || 'USD');
                   const isIn = Number(en.amount) >= 0;
-                  const kind = isIn ? 'Money in' : 'Money out';
+                  const kind = isIn ? 'Money In' : 'Money Out';
                   return (
                     <LedgerRow key={en.id} date={formatDay(en.date)} avatar={<Avatar label={en.bank} />}
                       title={en.note || kind} sub={en.note ? kind : ''}
@@ -457,7 +457,7 @@ export default function AddMovement() {
 
             {cpEditId ? (
               <>
-                <div className="m-section"><span>Edit broker</span></div>
+                <div className="m-section"><span>Edit Broker</span></div>
                 <form onSubmit={handleCashSubmit}>
                   <Field label="Broker">
                     <input className="form-input" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
@@ -473,11 +473,11 @@ export default function AddMovement() {
               </>
             ) : (
               <>
-                <div className="m-section"><span>Move money</span></div>
+                <div className="m-section"><span>Move Money</span></div>
                 <form onSubmit={handleCashSubmit}>
                   {!cpIsNew && (
                     <Field>
-                      <Segmented options={[{ key: 'in', label: 'Add' }, { key: 'out', label: 'Take out' }]}
+                      <Segmented options={[{ key: 'in', label: 'Add' }, { key: 'out', label: 'Take Out' }]}
                         value={cpDirection} onChange={setCpDirection} />
                     </Field>
                   )}
@@ -486,11 +486,11 @@ export default function AddMovement() {
                       {cashPositions.map(p => (
                         <option key={p.id} value={p.id}>{`${p.label}${(p.currency || 'EUR').toUpperCase() === 'USD' ? ' (USD)' : ''}`}</option>
                       ))}
-                      <option value="__new__">New broker…</option>
+                      <option value="__new__">New Broker…</option>
                     </select>
                   </Field>
                   {cpIsNew && (
-                    <Field label="Broker name">
+                    <Field label="Broker Name">
                       <input className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
                     </Field>
                   )}
@@ -514,15 +514,15 @@ export default function AddMovement() {
 
       <DetailSheet open={!!bankSheetEntry} onClose={() => setBankSel(null)}
         avatar={bankSheetEntry ? <Avatar label={bankSheetEntry.bank} /> : null}
-        title={bankSheetEntry?.bank} subtitle="Bank movement"
+        title={bankSheetEntry?.bank} subtitle="Bank Movement"
         amount={bankSheetEntry ? `${bankIn ? '+' : '−'}${curFmt(bankSheetEntry.currency || 'USD')(Math.abs(Number(bankSheetEntry.amount) || 0))}` : null}
         rows={bankSheetEntry ? [
           { label: 'Date', value: formatDayLong(bankSheetEntry.date) },
-          { label: 'Type', value: bankIn ? 'Money in' : 'Money out' },
+          { label: 'Type', value: bankIn ? 'Money In' : 'Money Out' },
           { label: 'Note', value: bankSheetEntry.note },
         ] : []}
         danger={bankSheetEntry ? {
-          label: 'Delete movement',
+          label: 'Delete Movement',
           onConfirm: async () => { await handleBankEntryDelete(bankSheetEntry.id); setBankSel(null); },
         } : undefined} />
 
@@ -532,12 +532,12 @@ export default function AddMovement() {
         amount={cashSheetPos ? curFmt(cashSheetPos.currency)(cashSheetPos.amount_eur) : null}
         rows={cashSheetPos ? [{ label: 'Currency', value: (cashSheetPos.currency || 'EUR').toUpperCase() }] : []}
         danger={cashSheetPos ? {
-          label: 'Delete broker',
+          label: 'Delete Broker',
           onConfirm: async () => { await handleCashDelete(cashSheetPos.id); setCashSel(null); },
         } : undefined}>
         {cashSheetPos && (
           <button type="button" className="btn btn--ghost btn--full" style={{ marginTop: 14 }}
-            onClick={() => { handleCashEdit(cashSheetPos); setCashSel(null); }}>Edit amount</button>
+            onClick={() => { handleCashEdit(cashSheetPos); setCashSel(null); }}>Edit Amount</button>
         )}
       </DetailSheet>
 

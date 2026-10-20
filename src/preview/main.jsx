@@ -46,19 +46,19 @@ function ComponentsDemo() {
   const [open, setOpen] = React.useState(new URLSearchParams(window.location.search).has('sheet'));
   return (
     <Frame title="Components" size="md">
-      <PageHead title="Components" action={{ to: '/add', label: 'Add movement' }} />
+      <PageHead title="Components" action={{ to: '/add', label: 'Add Movement' }} />
       <StatRow variant="hero" note="70 transactions · last purchase Sep 11" items={[
-        { label: 'Total invested', value: <Money value={63195.72} /> },
+        { label: 'Total Invested', value: <Money value={63195.72} /> },
         { label: 'Transactions', value: 70 },
-        { label: 'Last purchase', value: 'Sep 11' },
+        { label: 'Last Purchase', value: 'Sep 11' },
       ]} />
       <Tabs tabs={[{ key: 'all', label: 'All' }, { key: 'purchases', label: 'Purchases' }, { key: 'bank', label: 'Bank' }]}
         value={tab} onChange={setTab}
-        right={<select className="m-select" aria-label="Filter by asset"><option>All assets</option><option>BTC</option></select>} />
+        right={<select className="m-select" aria-label="Filter by asset"><option>All Assets</option><option>BTC</option></select>} />
       <div className="m-month"><span>September 2026</span><span>€483.59 invested</span></div>
       <LedgerRow date="Sep 11" avatar={<Avatar asset="BTC" />} title="Bitcoin"
         sub="0.00729397 BTC at €66,300.00" subShort="0.00729 BTC · €66,300" amount="€483.59" onClick={() => setOpen(true)} />
-      <LedgerRow date="Sep 10" avatar={<Avatar label="Relay" />} title="Relay" sub="Money in" amount="+$3,498.00" tone="in" onClick={() => setOpen(true)} />
+      <LedgerRow date="Sep 10" avatar={<Avatar label="Relay" />} title="Relay" sub="Money In" amount="+$3,498.00" tone="in" onClick={() => setOpen(true)} />
       <LedgerRow date="Sep 2" avatar={<Avatar asset="VUAA" />} title="Vanguard FTSE All-World UCITS ETF"
         sub="28.99721699 VUAA at €111.39 · from Degiro" subShort="28.99722 VUAA · €111" amount="€3,230.00" onClick={() => setOpen(true)} />
       <StatRow items={[
@@ -69,7 +69,7 @@ function ComponentsDemo() {
       <DetailSheet open={open} onClose={() => setOpen(false)} avatar={<Avatar asset="BTC" />}
         title="Bitcoin" subtitle="Purchase" amount={<Money value={483.59} />}
         rows={[{ label: 'Date', value: 'Sep 11, 2026' }, { label: 'Quantity', value: '0.00729397 BTC' }, { label: 'Price', value: '€66,300.00' }, { label: 'Note', value: '' }]}
-        danger={{ label: 'Delete purchase', onConfirm: () => setOpen(false) }} />
+        danger={{ label: 'Delete Purchase', onConfirm: () => setOpen(false) }} />
     </Frame>
   );
 }
@@ -114,8 +114,8 @@ function FormsDemo() {
     <Frame title="Forms" size="md">
       <PageHead title="Forms" />
       <div className="m-form">
-        <Field><Segmented options={[{ key: 'in', label: 'Money in' }, { key: 'out', label: 'Money out' }]} value={dir} onChange={setDir} /></Field>
-        <Field label="Asset" right={<button type="button" className="m-link">New asset</button>}>
+        <Field><Segmented options={[{ key: 'in', label: 'Money In' }, { key: 'out', label: 'Money Out' }]} value={dir} onChange={setDir} /></Field>
+        <Field label="Asset" right={<button type="button" className="m-link">New Asset</button>}>
           <select className="form-input"><option>Bitcoin · BTC</option><option>Vanguard FTSE All-World UCITS ETF · VUAA</option></select>
         </Field>
         <AmountField label="Amount" right={<Pick options={['EUR', 'USD']} value={cur} onChange={setCur} />}
@@ -126,15 +126,15 @@ function FormsDemo() {
             <input className="form-input" type="number" defaultValue="66300" disabled={live} />
           </Field>
         </div>
-        <Switch label="Use live price" checked={live} onChange={setLive} />
+        <Switch label="Use Live Price" checked={live} onChange={setLive} />
         <Field label="Note"><input className="form-input" placeholder="Optional" /></Field>
-        <button type="button" className="btn btn--primary btn--lg btn--full">Add purchase</button>
+        <button type="button" className="btn btn--primary btn--lg btn--full">Add Purchase</button>
       </div>
       <StatRow items={[
-        { label: 'Your average', value: '€57,697.13' }, { label: 'Quantity', value: '0.0208' },
-        { label: 'Market price', value: '€76,000.00' }, { label: 'Unrealized', value: '+31.7%', tone: 'up' },
+        { label: 'Your Average', value: '€57,697.13' }, { label: 'Quantity', value: '0.0208' },
+        { label: 'Market Price', value: '€76,000.00' }, { label: 'Unrealized', value: '+31.7%', tone: 'up' },
       ]} />
-      <LedgerRow date="Oct 5" avatar={<Avatar label="Relay" />} title="Relay" sub="Money in" amount="+$1,000.00" tone="in" />
+      <LedgerRow date="Oct 5" avatar={<Avatar label="Relay" />} title="Relay" sub="Money In" amount="+$1,000.00" tone="in" />
     </Frame>
   );
 }

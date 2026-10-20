@@ -159,17 +159,17 @@ export default function Settings() {
           <AlertMessage type="error" message={assetError} />
           <AlertMessage type="success" message={assetSuccess} />
 
-          <div className="m-section"><span>Tracked assets</span><span>{assets.length}</span></div>
+          <div className="m-section"><span>Tracked Assets</span><span>{assets.length}</span></div>
           {assets.map(asset => (
             <LedgerRow key={asset.symbol} date="" avatar={<Avatar asset={asset.symbol} color={assetColor(asset)} />}
               title={asset.name || asset.symbol} sub={asset.name ? asset.symbol : ''}
               amount={getPrice(asset)} onClick={() => setAssetSel(asset.symbol)} />
           ))}
 
-          <div className="m-section"><span>Add an asset</span></div>
+          <div className="m-section"><span>Add an Asset</span></div>
           <div className="m-form">
             <Field>
-              <Segmented options={[{ key: 'crypto', label: 'Crypto' }, { key: 'dex', label: 'DEX and meme' }, { key: 'stock', label: 'Stocks and ETFs' }]}
+              <Segmented options={[{ key: 'crypto', label: 'Crypto' }, { key: 'dex', label: 'DEX and Meme' }, { key: 'stock', label: 'Stocks and ETFs' }]}
                 value={searchType}
                 onChange={(k) => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }} />
             </Field>
@@ -208,7 +208,7 @@ export default function Settings() {
               { label: 'Type', value: typeLabel(sheetAsset.asset_type) },
             ] : []}
             danger={sheetAsset ? {
-              label: 'Remove asset',
+              label: 'Remove Asset',
               onConfirm: async () => { await handleRemoveAsset(sheetAsset.symbol); setAssetSel(null); },
             } : undefined}>
             {sheetAsset && (
@@ -229,18 +229,18 @@ export default function Settings() {
       {tab === 'account' && (
         <div className="m-form">
           <div className="m-section"><span>Account</span></div>
-          <FormInput label="Display name" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
+          <FormInput label="Display Name" placeholder={user.username} value={nameInput} onChange={e => setNameInput(e.target.value)} />
           <div className="form-hint m-after">How you'd like to be greeted on the dashboard (for example Federico)</div>
-          <button className="btn btn--primary" onClick={handleSaveName} style={{ marginBottom: 20 }}>Save name</button>
+          <button className="btn btn--primary" onClick={handleSaveName} style={{ marginBottom: 20 }}>Save Name</button>
           <FormInput label="Username" value={user.username} disabled />
           <FormInput label="Email" type="email" value={user.email} disabled />
           <div className="m-caption">Member since {formatDayLong(user.created_at)}</div>
 
           <div className="m-section"><span>Password</span></div>
           <form onSubmit={handleChangePassword}>
-            <FormInput label="Current password" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
-            <FormInput label="New password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-            <FormInput label="Confirm password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <FormInput label="Current Password" type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
+            <FormInput label="New Password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+            <FormInput label="Confirm Password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
             <AlertMessage type="error" message={error} />
             <AlertMessage type="success" message={success} />
             <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>

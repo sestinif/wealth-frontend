@@ -102,8 +102,8 @@ export default function QuickBuyFAB() {
       <button
         className="fab"
         onClick={() => setOpen(true)}
-        title="Quick buy"
-        aria-label="Quick buy"
+        title="Quick Buy"
+        aria-label="Quick Buy"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" />
@@ -114,11 +114,11 @@ export default function QuickBuyFAB() {
       {open && (
         <>
           <div className="fab-overlay" onClick={() => setOpen(false)} />
-          <div className="fab-modal" role="dialog" aria-label="Quick buy">
+          <div className="fab-modal" role="dialog" aria-label="Quick Buy">
             <div className="fab-modal__header">
               <div>
-                <div className="fab-modal__eyebrow">Quick buy</div>
-                <div className="fab-modal__title">Record a new purchase</div>
+                <div className="fab-modal__eyebrow">Quick Buy</div>
+                <div className="fab-modal__title">Record a New Purchase</div>
               </div>
               <button className="fab-modal__close" onClick={() => setOpen(false)} aria-label="Close"><Icon name="x" size={16} /></button>
             </div>
@@ -161,7 +161,7 @@ export default function QuickBuyFAB() {
               <div className="fab-price-row">
                 <label className="checkbox-wrapper">
                   <input type="checkbox" checked={useLivePrice} onChange={e => setUseLivePrice(e.target.checked)} />
-                  <span className="checkbox-label">Use live price</span>
+                  <span className="checkbox-label">Use Live Price</span>
                 </label>
                 {livePrice && (
                   <div className="fab-price-display">
@@ -197,7 +197,7 @@ export default function QuickBuyFAB() {
               )}
 
               <div className="form-group">
-                <label className="form-label">Notes (optional)</label>
+                <label className="form-label">Notes (Optional)</label>
                 <input
                   type="text" className="form-input"
                   value={notes} onChange={e => setNotes(e.target.value)}

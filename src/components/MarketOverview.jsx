@@ -18,7 +18,7 @@ export default function MarketOverview({ assets, prices, marketInfo }) {
             <th className="text-right">7d</th>
             <th className="text-right">ATH</th>
             <th className="text-right">From ATH</th>
-            <th className="text-right">Market cap</th>
+            <th className="text-right">Market Cap</th>
             <th className="text-right">Rank</th>
           </tr>
         </thead>

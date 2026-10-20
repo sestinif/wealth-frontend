@@ -52,11 +52,11 @@ export default function DashboardView({
   const byValue = (list) => [...list].sort((a, b) => (by[b.symbol]?.value || 0) - (by[a.symbol]?.value || 0));
   const assetLines = (list) => byValue(list).map(a => ({ key: a.symbol, name: a.name || a.symbol, value: money(by[a.symbol].value) }));
   const cats = [
-    { key: 'stock', label: 'Stock market', color: 'var(--stock)', value: nw.stock, lines: assetLines(nw.stockAssets) },
+    { key: 'stock', label: 'Stock Market', color: 'var(--stock)', value: nw.stock, lines: assetLines(nw.stockAssets) },
     { key: 'cash', label: 'Cash', color: 'var(--cash)', value: nw.cash,
       lines: nw.accounts.map((acc, i) => ({ key: `${acc.name}-${i}`, name: acc.name, value: ownMoney(acc.balance, acc.currency) })) },
-    { key: 'crypto', label: 'Crypto market', color: 'var(--crypto)', value: nw.crypto, lines: assetLines(nw.cryptoAssets) },
-    { key: 'dry', label: 'Dry powder', color: 'var(--dry)', value: nw.dry,
+    { key: 'crypto', label: 'Crypto Market', color: 'var(--crypto)', value: nw.crypto, lines: assetLines(nw.cryptoAssets) },
+    { key: 'dry', label: 'Dry Powder', color: 'var(--dry)', value: nw.dry,
       lines: (cashPositions || []).map(p => ({ key: p.id, name: p.label, value: ownMoney(p.amount_eur, p.currency) })) },
   ].sort((a, b) => b.value - a.value);
 
@@ -94,10 +94,10 @@ export default function DashboardView({
   const change24 = sheetAsset ? marketInfo[sheetAsset.symbol]?.change_24h : undefined;
   const sheetRows = sd ? [
     { label: 'Price', value: priceOf(sheetAsset.symbol) },
-    { label: 'Average price', value: isUsd
+    { label: 'Average Price', value: isUsd
       ? formatPrice(sd.avg_price_usd || (sd.avg_price || 0) * fx, 'USD')
       : formatPrice(sd.avg_price || 0, 'EUR') },
-    { label: '24h change', value: change24 == null ? '' : pctText(change24) },
+    { label: '24h Change', value: change24 == null ? '' : pctText(change24) },
     { label: 'Quantity', value: `${formatQty(sd.qty, sheetAsset.decimals)} ${sheetAsset.symbol}` },
     { label: 'Invested', value: money(sd.invested) },
     { label: 'Profit', value: `${signed(sd.pnl)} (${pctText(sd.invested > 0 ? (sd.value / sd.invested - 1) * 100 : 0)})` },
@@ -123,7 +123,7 @@ export default function DashboardView({
       <div className="m-top">
         <div className="m-card">
           <div className="m-nw__head">
-            <div className="m-label">Net worth</div>
+            <div className="m-label">Net Worth</div>
             <div className="m-periods">
               {PERIODS.map(([k]) => (
                 <button key={k} type="button" className={`m-periods__btn ${period === k ? 'is-active' : ''}`} onClick={() => setPeriod(k)}>{k}</button>
@@ -143,7 +143,7 @@ export default function DashboardView({
                     <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE}
                       cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }}
-                      formatter={(v) => [money(v), trend.usingHistory ? 'Net worth' : 'Portfolio']}
+                      formatter={(v) => [money(v), trend.usingHistory ? 'Net Worth' : 'Portfolio']}
                       labelFormatter={(l) => formatDayLong(l)} />
                     <Area type="monotone" dataKey="value" stroke="#8D9BFF" strokeWidth={1.5} strokeLinecap="round" fill="none"
                       dot={false} activeDot={{ r: 3.5, fill: '#8D9BFF', stroke: '#1B1B24', strokeWidth: 1.5 }}
@@ -214,7 +214,7 @@ export default function DashboardView({
       )}
 
       <div className="m-section">
-        <span>Market overview</span>
+        <span>Market Overview</span>
         <button type="button" className="m-link" onClick={() => setShowMarket(s => !s)}>{showMarket ? 'Hide' : 'Show'}</button>
       </div>
       {showMarket && <MarketOverview assets={assets} prices={prices} marketInfo={marketInfo} />}
@@ -234,9 +234,9 @@ export default function DashboardView({
         rows={sheetRows}>
         {sd && (
           <div className="m-sheet__row">
-            <span>Include in totals</span>
+            <span>Include in Totals</span>
             <label className="toggle">
-              <input type="checkbox" aria-label="Include in totals" checked={sheetIncluded}
+              <input type="checkbox" aria-label="Include in Totals" checked={sheetIncluded}
                 onChange={() => onToggleTracking(sheetAsset.symbol, sheetIncluded)} />
               <span className="toggle__slider" />
             </label>

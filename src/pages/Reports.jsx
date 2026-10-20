@@ -193,7 +193,7 @@ export default function Reports() {
       <PageHead title="Reports">{filters}</PageHead>
 
       <Tabs
-        tabs={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'annual', label: 'Annual' }, { key: 'monthly', label: 'Monthly' }, { key: 'cashflow', label: 'Cash flow' }]}
+        tabs={[{ key: 'lifetime', label: 'Lifetime' }, { key: 'annual', label: 'Annual' }, { key: 'monthly', label: 'Monthly' }, { key: 'cashflow', label: 'Cash Flow' }]}
         value={tab} onChange={setTab} />
 
       {oldNotice}
@@ -203,7 +203,7 @@ export default function Reports() {
           <div style={{ paddingTop: 20 }}>
             <StatRow items={[
               { label: 'Invested', value: <Money value={report.total_invested} /> },
-              { label: 'Current value', value: <Money value={report.total_value} /> },
+              { label: 'Current Value', value: <Money value={report.total_value} /> },
               { label: `Profit · ${pctText(report.pnl_pct)}`, value: <Money value={report.pnl} sign />, tone: report.pnl >= 0 ? 'up' : 'down' },
             ]} />
           </div>
@@ -213,7 +213,7 @@ export default function Reports() {
           ) : (
             <>
               <div className="m-table__head">
-                <span>Breakdown by asset</span><span>Invested</span><span>Value</span><span>Profit</span>
+                <span>Breakdown by Asset</span><span>Invested</span><span>Value</span><span>Profit</span>
               </div>
               {assetData.map(breakdownRow)}
             </>

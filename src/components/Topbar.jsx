@@ -18,7 +18,7 @@ export default function Topbar({ title, username, onMenu }) {
           {isMac ? '⌘' : 'Ctrl+'}K
         </span>
         <span className="topbar__username">{username}</span>
-        <button type="button" className="m-topbtn" onClick={() => setAccountsOpen(true)} aria-label="Accounts" title="Banks and brokers">
+        <button type="button" className="m-topbtn" onClick={() => setAccountsOpen(true)} aria-label="Accounts" title="Banks and Brokers">
           <Icon name="bank" size={18} />
         </button>
       </div>

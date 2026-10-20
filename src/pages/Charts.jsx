@@ -93,7 +93,7 @@ export default function Charts() {
 
       <div className="m-card">
         <div className="m-nw__head">
-          <div className="m-label">Portfolio value</div>
+          <div className="m-label">Portfolio Value</div>
           <div className="m-periods">
             {PERIODS.map(([k]) => (
               <button key={k} type="button" className={`m-periods__btn ${period === k ? 'is-active' : ''}`} onClick={() => setPeriod(k)}>{k}</button>
@@ -127,7 +127,7 @@ export default function Charts() {
       <div className="m-g2 m-g2--cards">
         <div className="m-card">
           <div className="m-nw__head">
-            <div className="m-label">Growth by market</div>
+            <div className="m-label">Growth by Market</div>
             <div className="m-label">Last 30 days, at today's prices</div>
           </div>
           {growthData.length > 1 ? (
@@ -140,14 +140,14 @@ export default function Charts() {
                     <Tooltip {...tooltipProps} cursor={CURSOR}
                       formatter={(v, name) => [formatEUR(v), name]}
                       labelFormatter={(l) => formatDayLong(l)} />
-                    <Area type="monotone" dataKey="stock" name="Stock market" stackId="m" stroke={MARKET.stock} strokeWidth={1.5} fill={MARKET_AREA.stock} fillOpacity={1} isAnimationActive={false} />
-                    <Area type="monotone" dataKey="crypto" name="Crypto market" stackId="m" stroke={MARKET.crypto} strokeWidth={1.5} fill={MARKET_AREA.crypto} fillOpacity={1} isAnimationActive={false} />
+                    <Area type="monotone" dataKey="stock" name="Stock Market" stackId="m" stroke={MARKET.stock} strokeWidth={1.5} fill={MARKET_AREA.stock} fillOpacity={1} isAnimationActive={false} />
+                    <Area type="monotone" dataKey="crypto" name="Crypto Market" stackId="m" stroke={MARKET.crypto} strokeWidth={1.5} fill={MARKET_AREA.crypto} fillOpacity={1} isAnimationActive={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
               <div className="m-legend">
-                <span><span className="m-legend__dot" style={{ background: MARKET.stock }} />Stock market</span>
-                <span><span className="m-legend__dot" style={{ background: MARKET.crypto }} />Crypto market</span>
+                <span><span className="m-legend__dot" style={{ background: MARKET.stock }} />Stock Market</span>
+                <span><span className="m-legend__dot" style={{ background: MARKET.crypto }} />Crypto Market</span>
               </div>
             </>
           ) : <div className="m-empty">Growth will appear after your first purchases</div>}
@@ -182,7 +182,7 @@ export default function Charts() {
                       formatter={(v, name) => [formatEUR(v), name]} />
                     <Bar dataKey="invested" name="Invested" fill="#8D9BFF" barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false} />
                     {/* Green when the month is worth more today than what went in, pink when it is worth less. */}
-                    <Bar dataKey="value" name="Current value" fill={TONE.up} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                    <Bar dataKey="value" name="Current Value" fill={TONE.up} barSize={10} radius={[2, 2, 0, 0]} isAnimationActive={false}>
                       {monthlyData.map(m => <Cell key={m.month} fill={m.value >= m.invested ? TONE.up : TONE.down} />)}
                     </Bar>
                   </BarChart>
@@ -190,8 +190,8 @@ export default function Charts() {
               </div>
               <div className="m-legend">
                 <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Invested</span>
-                <span><span className="m-legend__dot" style={{ background: TONE.up }} />Worth more now</span>
-                <span><span className="m-legend__dot" style={{ background: TONE.down }} />Worth less now</span>
+                <span><span className="m-legend__dot" style={{ background: TONE.up }} />Worth More Now</span>
+                <span><span className="m-legend__dot" style={{ background: TONE.down }} />Worth Less Now</span>
               </div>
             </>
           ) : <div className="m-empty">No purchases this year yet</div>}
@@ -199,7 +199,7 @@ export default function Charts() {
 
         <div className="m-card">
           <div className="m-nw__head">
-            <div className="m-label">Average price vs market</div>
+            <div className="m-label">Average Price vs Market</div>
             <select className="m-select" aria-label="Asset" value={dcaAsset} onChange={e => setDcaAsset(e.target.value)}>
               {assets.map(a => <option key={a.symbol} value={a.symbol}>{a.symbol}</option>)}
             </select>
@@ -215,12 +215,12 @@ export default function Charts() {
                       formatter={(v, name) => [formatPrice(v), name]}
                       labelFormatter={(n) => `Purchase #${n}`} />
                     <Line type="monotone" dataKey="market" name="Market" stroke="#9A9AA8" strokeWidth={1} strokeDasharray="4 4" dot={false} isAnimationActive={false} />
-                    <Line type="monotone" dataKey="dca" name="Your average" stroke="#8D9BFF" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="dca" name="Your Average" stroke="#8D9BFF" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="m-legend">
-                <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Your average {formatPrice(lastDca.dca)}</span>
+                <span><span className="m-legend__dot" style={{ background: '#8D9BFF' }} />Your Average {formatPrice(lastDca.dca)}</span>
                 <span><span className="m-legend__dot" style={{ background: '#9A9AA8' }} />Market {formatPrice(lastDca.market)}</span>
               </div>
             </>

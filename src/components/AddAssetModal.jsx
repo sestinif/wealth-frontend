@@ -59,7 +59,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
         <div className="m-dialog">
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-1)' }}>Add new asset</div>
+              <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-1)' }}>Add New Asset</div>
               <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Search on CoinGecko or Yahoo Finance</div>
             </div>
             <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Close"><Icon name="x" size={14} /></button>
@@ -67,7 +67,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
 
           <div style={{ padding: 20 }}>
             <div style={{ marginBottom: 12 }}>
-              <Segmented options={[{ key: 'crypto', label: 'Crypto' }, { key: 'dex', label: 'DEX and meme' }, { key: 'stock', label: 'Stocks and ETFs' }]}
+              <Segmented options={[{ key: 'crypto', label: 'Crypto' }, { key: 'dex', label: 'DEX and Meme' }, { key: 'stock', label: 'Stocks and ETFs' }]}
                 value={type} onChange={(k) => { setType(k); setResults([]); setQuery(''); }} />
             </div>
 

@@ -4,11 +4,11 @@ import { ACCOUNT_GROUPS } from '../utils/accounts';
 
 const COMMANDS = [
   { label: 'Dashboard', path: '/dashboard', keys: 'D' },
-  { label: 'Add movement', path: '/add', keys: 'A' },
-  { label: 'Diary — history', path: '/diary', keys: 'H' },
+  { label: 'Add Movement', path: '/add', keys: 'A' },
+  { label: 'Diary — History', path: '/diary', keys: 'H' },
   { label: 'Reports', path: '/reports', keys: 'R' },
   { label: 'Charts', path: '/charts', keys: 'G' },
-  { label: 'Settings — manage assets', path: '/settings', keys: 'S' },
+  { label: 'Settings — Manage Assets', path: '/settings', keys: 'S' },
 ];
 
 // One "Open …" entry per bank and broker: opens the provider's login page in a new tab.

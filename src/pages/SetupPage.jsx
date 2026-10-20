@@ -44,7 +44,7 @@ export default function SetupPage({ onComplete }) {
       <div className="auth-card">
         <div className="auth-logo"><BrandMark size={52} /></div>
         <h1 className="auth-title">Wealth</h1>
-        <p className="auth-subtitle">Create your account</p>
+        <p className="auth-subtitle">Create Your Account</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -57,7 +57,7 @@ export default function SetupPage({ onComplete }) {
             <input type="password" className="form-input form-input--lg" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
           <div className="form-group">
-            <input type="password" className="form-input form-input--lg" placeholder="Confirm password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <input type="password" className="form-input form-input--lg" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
           </div>
 
           <div className="req-list">

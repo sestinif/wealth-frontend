@@ -21,7 +21,7 @@ export default function AccountsSheet({ open, onClose }) {
   }, [open]);
 
   return (
-    <DetailSheet open={open} onClose={onClose} title="Accounts" subtitle="Banks and brokers">
+    <DetailSheet open={open} onClose={onClose} title="Accounts" subtitle="Banks and Brokers">
       {ACCOUNT_GROUPS.map(group => (
         <section key={group.key}>
           <div className="m-sheet__group">{group.label}</div>

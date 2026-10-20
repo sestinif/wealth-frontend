@@ -13,7 +13,7 @@ export default function Sidebar({ username, open = false, onClose }) {
     },
     {
       label: 'Add',
-      items: [{ path: '/add', label: 'Add movement', icon: <PlusIcon />, accent: true }],
+      items: [{ path: '/add', label: 'Add Movement', icon: <PlusIcon />, accent: true }],
     },
     {
       label: 'Track',
@@ -101,7 +101,7 @@ export default function Sidebar({ username, open = false, onClose }) {
         </Link>
         <div className="sidebar__footer-row">
           <span className="sidebar__user">{username}</span>
-          <button type="button" className="sidebar__logout" onClick={handleLogout}>Log out</button>
+          <button type="button" className="sidebar__logout" onClick={handleLogout}>Log Out</button>
         </div>
       </div>
     </div>

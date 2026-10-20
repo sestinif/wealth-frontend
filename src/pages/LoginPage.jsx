@@ -47,7 +47,7 @@ export default function LoginPage({ onLogin }) {
           <AlertMessage type="error" message={error} />
 
           <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'Signing In…' : 'Sign In'}
           </button>
         </form>
       </div>
