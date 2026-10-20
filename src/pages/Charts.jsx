@@ -152,14 +152,13 @@ export default function Charts() {
             </div>
           </>
         ) : <div className="m-empty">Record purchases to build your portfolio history</div>}
+        {priceHistory && !priceHistory.complete && (
+          <div className="m-note">Fetching price history. The charts below fill in as it arrives.</div>
+        )}
+        {hasRebuilt && rebuilt.approx.length > 0 && (
+          <div className="m-note">{rebuilt.approx.join(', ')} {rebuilt.approx.length > 1 ? 'are' : 'is'} counted at what you paid: there is no price history for {rebuilt.approx.length > 1 ? 'them' : 'it'}.</div>
+        )}
       </div>
-
-      {priceHistory && !priceHistory.complete && (
-        <div className="m-note">Fetching price history. The charts below fill in as it arrives.</div>
-      )}
-      {hasRebuilt && rebuilt.approx.length > 0 && (
-        <div className="m-note">{rebuilt.approx.join(', ')} {rebuilt.approx.length > 1 ? 'are' : 'is'} counted at what you paid: there is no price history for {rebuilt.approx.length > 1 ? 'them' : 'it'}.</div>
-      )}
 
       {hasRebuilt && chartOptions.length > 0 && (
         <>

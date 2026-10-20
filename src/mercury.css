@@ -632,3 +632,12 @@ input.form-input:focus, textarea.form-input:focus, select.form-input:focus, .aut
 .m-key--line { width: 14px; height: 0; border-top: 1.5px solid rgba(237, 237, 243, 0.7); }
 .m-key--dots { width: 14px; height: 0; border-top: 1.5px dotted #9A9AA8; }
 .m-key--ring { width: 8px; height: 8px; border-radius: 50%; border: 1.75px solid; background: #1B1B24; }
+
+/* Cards stacked one under the other on a page keep the same 14px as the grids of cards. */
+.page-inner > .m-card + .m-card { margin-top: 14px; }
+
+/* Inside the history cards: head, legend, price, chart and note each get room. */
+.m-legend { margin: 14px 0 6px; }
+.m-pricehead { margin: 10px 0 2px; }
+.m-note { margin-top: 14px; }
+.m-nw__chart + .m-note { margin-top: 12px; }
