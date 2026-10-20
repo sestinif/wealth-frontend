@@ -71,7 +71,7 @@ export default function SetupPage({ onComplete }) {
           <AlertMessage type="error" message={error} />
 
           <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading || !allMet} style={{ opacity: allMet && !loading ? 1 : 0.5 }}>
-            {loading ? 'Creating…' : 'Create account'}
+            {loading ? 'Creating…' : 'Create Account'}
           </button>
         </form>
       </div>

@@ -222,7 +222,7 @@ export default function DashboardView({
       <div className="m-foot">
         <span>Prices {cacheAge != null ? `updated ${Math.round(cacheAge / 60)} min ago` : 'loading'}</span>
         <button type="button" className="m-link" onClick={onRefresh} disabled={refreshing}>
-          {refreshing ? 'Refreshing…' : 'Refresh now'}
+          {refreshing ? 'Refreshing…' : 'Refresh Now'}
         </button>
       </div>
 

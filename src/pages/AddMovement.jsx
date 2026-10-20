@@ -415,7 +415,7 @@ export default function AddMovement() {
               </div>
 
               <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={beSubmitting}>
-                {beSubmitting ? 'Saving…' : beDirection === 'out' ? 'Add money out' : 'Add money in'}
+                {beSubmitting ? 'Saving…' : beDirection === 'out' ? 'Add Money Out' : 'Add Money In'}
               </button>
             </form>
 
@@ -467,7 +467,7 @@ export default function AddMovement() {
                     caption="The exact amount on the broker now." />
                   <button type="button" className="btn btn--ghost btn--lg btn--full" style={{ marginBottom: 8 }} onClick={resetCpForm}>Cancel</button>
                   <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
-                    {cpSubmitting ? 'Saving…' : 'Save changes'}
+                    {cpSubmitting ? 'Saving…' : 'Save Changes'}
                   </button>
                 </form>
               </>
@@ -494,7 +494,7 @@ export default function AddMovement() {
                       <input className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
                     </Field>
                   )}
-                  <AmountField label={cpDirection === 'out' && !cpIsNew ? 'Amount to take out' : 'Amount to add'}
+                  <AmountField label={cpDirection === 'out' && !cpIsNew ? 'Amount to Take Out' : 'Amount to Add'}
                     right={cpIsNew ? <Pick options={['EUR', 'USD']} value={cpCurrency} onChange={setCpCurrency} /> : null}
                     symbol={cpCur === 'USD' ? '$' : '€'} value={cpAmount} onChange={setCpAmount}
                     caption={cpAfter !== null
@@ -502,8 +502,8 @@ export default function AddMovement() {
                       : 'Cash parked on a broker, waiting to be invested.'} />
                   <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={cpSubmitting}>
                     {cpSubmitting ? 'Saving…'
-                      : cpIsNew ? 'Add broker'
-                      : cpDirection === 'out' ? `Take out of ${cpPos.label}` : `Add to ${cpPos.label}`}
+                      : cpIsNew ? 'Add Broker'
+                      : cpDirection === 'out' ? `Take Out of ${cpPos.label}` : `Add to ${cpPos.label}`}
                   </button>
                 </form>
               </>

@@ -144,7 +144,7 @@ export default function Settings() {
   if (loading) return <PageLayout title="Settings" username="" size="md"><PageSkeleton rows={5} /></PageLayout>;
   if (!user) return <div className="loading-screen"><div className="loading-error">Error</div></div>;
 
-  const typeLabel = (t) => (t === 'crypto' ? 'Crypto' : t === 'dex_token' ? 'DEX token' : 'Stock or ETF');
+  const typeLabel = (t) => (t === 'crypto' ? 'Crypto' : t === 'dex_token' ? 'DEX Token' : 'Stock or ETF');
   const sheetAsset = assets.find(a => a.symbol === assetSel) || null;
 
   return (
@@ -244,7 +244,7 @@ export default function Settings() {
             <AlertMessage type="error" message={error} />
             <AlertMessage type="success" message={success} />
             <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={submitting}>
-              {submitting ? 'Saving…' : 'Update password'}
+              {submitting ? 'Saving…' : 'Update Password'}
             </button>
           </form>
 
@@ -253,7 +253,7 @@ export default function Settings() {
             Logs out this and all other devices. You'll need to sign in again.
           </div>
           <button className="btn btn--danger" onClick={handleLogoutAll}>
-            {logoutArmed ? 'Tap again to confirm' : 'Log out all devices'}
+            {logoutArmed ? 'Tap Again to Confirm' : 'Log Out All Devices'}
           </button>
 
           <div className="m-section"><span>About</span></div>

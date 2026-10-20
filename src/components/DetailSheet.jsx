@@ -90,7 +90,7 @@ export default function DetailSheet({ open, onClose, avatar, title, subtitle, am
         {danger && (
           <button type="button" className={`m-sheet__danger ${armed ? 'is-armed' : ''}`}
             onClick={onDanger} disabled={busy}>
-            {armed ? (danger.confirmLabel || 'Confirm delete') : danger.label}
+            {armed ? (danger.confirmLabel || 'Confirm Delete') : danger.label}
           </button>
         )}
       </div>

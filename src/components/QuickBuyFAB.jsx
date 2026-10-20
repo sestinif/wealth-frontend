@@ -208,7 +208,7 @@ export default function QuickBuyFAB() {
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
                 <button type="button" className="btn btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
                 <button type="submit" className="btn btn--primary" disabled={submitting}>
-                  {submitting ? 'Adding…' : 'Record purchase'}
+                  {submitting ? 'Adding…' : 'Record Purchase'}
                 </button>
               </div>
             </form>
