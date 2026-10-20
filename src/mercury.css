@@ -482,3 +482,131 @@ button.m-cat { cursor: pointer; }
 .m-muted, .m-table__sub.m-muted { color: var(--text-2); }
 .m-up, .m-table__sub.m-up { color: var(--green); }
 .m-down, .m-table__sub.m-down { color: var(--red); }
+
+
+/* ================================================================
+   Sign-in — the layout shared by Personals, Wealth, Numbers and Calendar
+   360px column · 48px mark · 24px name · 13px subtitle · card with 28px
+   padding · 12px labels above 44px fields (16px text, no zoom on iPhone)
+   · 44px button · 13px error.
+   Scoped to .auth-col so the account-setup page keeps its own layout.
+   ================================================================ */
+.auth-col { width: 100%; max-width: 360px; }
+.auth-head { text-align: center; margin-bottom: 28px; }
+.auth-head .auth-mark { display: block; margin: 0 auto 16px; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.55)); }
+.auth-head .auth-title { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; margin: 0; color: var(--text-1); }
+.auth-head .auth-subtitle { font-size: 13px; letter-spacing: 0; margin: 4px 0 0; color: var(--text-2); }
+.auth-col .auth-card { max-width: none; padding: 28px; text-align: left; }
+.auth-col .form-group { margin-bottom: 16px; }
+.auth-col .form-input { height: 44px; font-size: 16px; padding: 0 12px; }
+.auth-col .btn--lg { height: 44px; padding: 0 20px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
+.auth-col .alert, .auth-col [role="alert"] { font-size: 13px; }
+
+/* ================================================================
+   Premium layer — depth, material, light (on top of Mercury)
+   Light comes from above: a faint wash on the page and a 1px highlight on
+   top edges. Shadows are black and layered, never coloured glows; indigo
+   shows in a shadow only under the primary button, at low opacity.
+   No grain, no orbs, nothing that moves unless the user did something.
+   ================================================================ */
+:root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); }
+
+.page-content, .auth-wrapper {
+  background:
+    radial-gradient(900px 420px at 55% -90px, rgba(141, 155, 255, 0.075), transparent 70%),
+    var(--bg);
+}
+.topbar { background: rgba(20, 20, 27, 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+.panel, .card, .m-card, .auth-card {
+  background: linear-gradient(180deg, #1F1F29 0%, #1A1A23 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 14px 32px -16px rgba(0, 0, 0, 0.6);
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #181821 0%, #13131A 100%);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04), 10px 0 28px -18px rgba(0, 0, 0, 0.7);
+}
+.nav-item.active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.045));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.m-sheet, .m-dialog, .fab-modal {
+  background: linear-gradient(180deg, #22222D 0%, #1C1C26 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 30px 70px -20px rgba(0, 0, 0, 0.75),
+    0 8px 24px -8px rgba(0, 0, 0, 0.5);
+}
+.m-sheet__backdrop, .m-overlay, .fab-overlay {
+  background: rgba(8, 8, 12, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Primary button: a lit edge on top, a soft indigo shadow underneath */
+.btn--primary, .auth-card .btn--primary, .fab, .fab:hover {
+  background-image: linear-gradient(180deg, #A9B4FF 0%, #8D9BFF 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 18px -8px rgba(141, 155, 255, 0.5);
+  transition: filter 0.2s var(--ease-out), transform 0.15s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.btn--primary:hover, .auth-card .btn--primary:hover, .fab:hover { filter: brightness(1.07); }
+.btn--primary:active, .auth-card .btn--primary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.btn--primary:disabled { filter: none; box-shadow: none; }
+
+/* Fields sit slightly inside the surface; focus lights a soft ring.
+   (select keeps its own arrow background, so it only gets the shadow.) */
+input.form-input, textarea.form-input, .auth-card .form-input {
+  background-color: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s, box-shadow 0.2s var(--ease-out), background-color 0.15s;
+}
+select.form-input { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35); }
+input.form-input:focus, textarea.form-input:focus, select.form-input:focus, .auth-card .form-input:focus {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(141, 155, 255, 0.16);
+}
+
+/* Big amounts: light weight, tight tracking, a faint top-to-bottom fade */
+.m-nw__value {
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #D6D9E8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.m-nw__value .m-money__cents { -webkit-text-fill-color: #6F7083; }
+
+.m-avatar {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 60%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.m-seg__btn.is-active {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Sections of a page arrive one after the other (opacity only: a transform
+   would make .page-inner the containing block of the fixed dialogs). */
+@keyframes m-arrive { from { opacity: 0; } to { opacity: 1; } }
+.page-inner > * { animation: m-arrive 0.5s var(--ease-out) both; }
+.page-inner > *:nth-child(2) { animation-delay: 0.05s; }
+.page-inner > *:nth-child(3) { animation-delay: 0.1s; }
+.page-inner > *:nth-child(4) { animation-delay: 0.15s; }
+.page-inner > *:nth-child(n+5) { animation-delay: 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-inner > * { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}

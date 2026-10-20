@@ -24,32 +24,39 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="auth-wrapper">
-      <div className="auth-card">
-        <div className="auth-logo"><BrandMark size={52} /></div>
-        <h1 className="auth-title">Wealth</h1>
+      <div className="auth-col">
+        <header className="auth-head">
+          <BrandMark size={48} className="auth-mark" />
+          <h1 className="auth-title">Wealth</h1>
+          <p className="auth-subtitle">Sign in to your account</p>
+        </header>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <input
-              type="text" className="form-input form-input--lg"
-              placeholder="Username" value={username}
-              onChange={e => setUsername(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <input
-              type="password" className="form-input form-input--lg"
-              placeholder="Password" value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
-          </div>
+        <div className="auth-card">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="login-username">Username</label>
+              <input
+                id="login-username" type="text" className="form-input"
+                placeholder="Your username" value={username} required autoFocus autoComplete="username"
+                onChange={e => setUsername(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="login-password">Password</label>
+              <input
+                id="login-password" type="password" className="form-input"
+                placeholder="Your password" value={password} required autoComplete="current-password"
+                onChange={e => setPassword(e.target.value)}
+              />
+            </div>
 
-          <AlertMessage type="error" message={error} />
+            <AlertMessage type="error" message={error} />
 
-          <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading}>
-            {loading ? 'Signing In…' : 'Sign In'}
-          </button>
-        </form>
+            <button type="submit" className="btn btn--primary btn--full btn--lg" disabled={loading}>
+              {loading ? 'Signing In…' : 'Sign In'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
