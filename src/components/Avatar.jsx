@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { coinIconUrl, ASSET_LOGOS } from './AssetBadge';
+import { coinIconUrl } from './AssetBadge';
 import { accountLogo } from '../utils/accounts';
 import { colorFor } from '../utils/marks';
 
@@ -14,7 +14,6 @@ const seen = new Map();
 // The initials show from the first paint; the logo takes their place once it has loaded.
 export default function Avatar({ asset, label, src, color }) {
   const image = src || (asset ? coinIconUrl(asset) : accountLogo(label));
-  const fill = !!(asset && ASSET_LOGOS[String(asset).toUpperCase()]?.fill);
   const [, redraw] = useState(0);
 
   useEffect(() => {
@@ -31,7 +30,7 @@ export default function Avatar({ asset, label, src, color }) {
 
   if (image && seen.get(image)) {
     return (
-      <span className={`m-avatar${fill ? ' m-avatar--fill' : ''}`}>
+      <span className="m-avatar">
         <img src={image} alt="" decoding="async" referrerPolicy="no-referrer" />
       </span>
     );

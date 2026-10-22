@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 
 // Logos the icon set does not have, kept in /public/logos so they never depend on another site.
-// `fill`: the logo is a square brand mark, so it covers the whole circle instead of sitting inside it.
 export const ASSET_LOGOS = {
-  VUAA: { src: '/logos/vanguard.png', fill: true },
+  VUAA: { src: '/logos/vanguard.png' },
   AERO: { src: '/logos/aero.png' },
   BRETT: { src: '/logos/brett.png' },
 };
