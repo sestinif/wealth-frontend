@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 
-// Coin logo from the cryptocurrency-icons CDN. Unknown symbols 404, and the caller falls back.
+// Logos the icon set does not have, kept in /public/logos so they never depend on another site.
+// `fill`: the logo is a square brand mark, so it covers the whole circle instead of sitting inside it.
+export const ASSET_LOGOS = {
+  VUAA: { src: '/logos/vanguard.png', fill: true },
+  AERO: { src: '/logos/aero.png' },
+  BRETT: { src: '/logos/brett.png' },
+};
+
+// Coin logo: our own file when there is one, else the cryptocurrency-icons CDN
+// (unknown symbols 404, and the caller falls back to initials).
 export const coinIconUrl = (symbol) => {
+  const own = ASSET_LOGOS[String(symbol || '').toUpperCase()];
+  if (own) return own.src;
   const slug = String(symbol || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   return `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${slug}.svg`;
 };

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ACCOUNT_GROUPS, balanceFor, logoUrl } from './accounts.js';
+import { ACCOUNT_GROUPS, balanceFor, logoUrl, accountLogo } from './accounts.js';
 
 const external = [
   { name: 'Mercury Checking ••1234', currency: 'USD', balance: 28000 },
@@ -36,4 +36,15 @@ test('every account has a name, an https login url and a domain', () => {
 
 test('logoUrl asks for one domain icon', () => {
   assert.equal(logoUrl('mercury.com'), 'https://www.google.com/s2/favicons?domain=mercury.com&sz=64');
+});
+
+test('accountLogo finds the bank or broker named in a free label', () => {
+  assert.equal(accountLogo('Degiro'), logoUrl('degiro.com'));
+  assert.equal(accountLogo('Relay'), logoUrl('relayfi.com'));
+  assert.equal(accountLogo('Mercury Checking ••1234'), logoUrl('mercury.com'));
+  assert.equal(accountLogo('Revolut'), logoUrl('revolut.com'));
+  assert.equal(accountLogo('Trade Republic'), null);
+  assert.equal(accountLogo('Re'), null);
+  assert.equal(accountLogo(''), null);
+  assert.equal(accountLogo(undefined), null);
 });

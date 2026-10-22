@@ -161,6 +161,7 @@ body::before, body::after { content: none; }
   background: var(--bg-elev); color: var(--text-2); font-size: 12px; font-weight: 500;
 }
 .m-avatar img { width: 20px; height: 20px; display: block; object-fit: contain; }
+.m-avatar--fill img { width: 100%; height: 100%; object-fit: cover; }
 /* Initials wear the colour of the asset or the bank they stand for (--mark, set by Avatar). */
 .m-avatar--text {
   background: color-mix(in srgb, var(--mark) 24%, transparent);

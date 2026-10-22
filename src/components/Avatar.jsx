@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { coinIconUrl } from './AssetBadge';
+import { coinIconUrl, ASSET_LOGOS } from './AssetBadge';
+import { accountLogo } from '../utils/accounts';
 import { colorFor } from '../utils/marks';
 
 // Image url → true (it loaded) or false (it is missing). Shared by every avatar,
@@ -8,10 +9,12 @@ const seen = new Map();
 
 // 32px round mark: a logo, or two initials in the colour of who they stand for.
 // Pass `asset` (a symbol) for a coin logo, `src` for any other logo, `label` for the initials.
+// A `label` that names a known bank or broker (Degiro, Relay, Mercury…) shows its logo too.
 // `color` is the asset's own colour; without it the name picks a steady tint.
 // The initials show from the first paint; the logo takes their place once it has loaded.
 export default function Avatar({ asset, label, src, color }) {
-  const image = src || (asset ? coinIconUrl(asset) : null);
+  const image = src || (asset ? coinIconUrl(asset) : accountLogo(label));
+  const fill = !!(asset && ASSET_LOGOS[String(asset).toUpperCase()]?.fill);
   const [, redraw] = useState(0);
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function Avatar({ asset, label, src, color }) {
 
   if (image && seen.get(image)) {
     return (
-      <span className="m-avatar">
+      <span className={`m-avatar${fill ? ' m-avatar--fill' : ''}`}>
         <img src={image} alt="" decoding="async" referrerPolicy="no-referrer" />
       </span>
     );

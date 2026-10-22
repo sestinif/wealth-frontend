@@ -21,6 +21,22 @@ export const ACCOUNT_GROUPS = [
 ];
 
 // The site's icon, by domain. If it does not load, the avatar falls back to initials.
+// The logo of a bank or broker named by a free label ("Degiro", "Relay", "Mercury Checking"):
+// the first known account whose name or match word is in it. Null for anything else.
+export function accountLogo(label) {
+  const text = String(label || '').toLowerCase();
+  if (!text) return null;
+  for (const group of ACCOUNT_GROUPS) {
+    for (const item of group.items || []) {
+      // The match word, the full name, and the name's first word ("Revolut" for "Revolut Business").
+      const words = [item.match, item.name, String(item.name || '').split(' ')[0]]
+        .filter(w => w && w.length >= 3).map(w => String(w).toLowerCase());
+      if (words.some(w => text.includes(w))) return logoUrl(item.logoDomain || item.domain);
+    }
+  }
+  return null;
+}
+
 export const logoUrl = (domain) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
 
 // One figure for an account, from the external balances Wealth tracks
