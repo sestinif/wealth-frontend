@@ -5,6 +5,7 @@ import AssetBadge from './AssetBadge';
 import Icon from './Icon';
 import { formatPrice, localDay } from '../utils/format';
 import { assetColor } from '../utils/marks';
+import { noAutofill } from '../utils/noAutofill';
 
 export default function QuickBuyFAB() {
   const toast = useToast();
@@ -142,7 +143,7 @@ export default function QuickBuyFAB() {
               <div className="form-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
                 <div className="form-group">
                   <label className="form-label">Amount in EUR</label>
-                  <input
+                  <input {...noAutofill('wealth-buy-amount-eur')}
                     type="number" step="any" className="form-input"
                     value={amountEur} onChange={e => handleAmount(e.target.value)}
                     placeholder="0.00" autoFocus
@@ -150,7 +151,7 @@ export default function QuickBuyFAB() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">{asset} quantity</label>
-                  <input
+                  <input {...noAutofill('wealth-buy-quantity')}
                     type="number" step="any" className="form-input"
                     value={qty} onChange={e => handleQty(e.target.value)}
                     placeholder="0.00"
@@ -175,7 +176,7 @@ export default function QuickBuyFAB() {
               {!useLivePrice && (
                 <div className="form-group">
                   <label className="form-label">Price in EUR</label>
-                  <input
+                  <input {...noAutofill('wealth-buy-price-eur')}
                     type="number" step="any" className="form-input"
                     value={priceEur}
                     onChange={e => {
@@ -198,7 +199,7 @@ export default function QuickBuyFAB() {
 
               <div className="form-group">
                 <label className="form-label">Notes (Optional)</label>
-                <input
+                <input {...noAutofill('wealth-buy-notes')}
                   type="text" className="form-input"
                   value={notes} onChange={e => setNotes(e.target.value)}
                   placeholder="Weekly DCA, Binance, etc."

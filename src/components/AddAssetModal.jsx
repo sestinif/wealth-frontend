@@ -5,6 +5,7 @@ import Segmented from './Segmented';
 import Avatar from './Avatar';
 import EmptyState from './EmptyState';
 import { formatUSD, formatEUR } from '../utils/format';
+import { noAutofill } from '../utils/noAutofill';
 
 export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
   const [query, setQuery] = useState('');
@@ -71,7 +72,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
                 value={type} onChange={(k) => { setType(k); setResults([]); setQuery(''); }} />
             </div>
 
-            <input
+            <input {...noAutofill('wealth-asset-search')} inputMode="search" enterKeyHint="search"
               ref={inputRef}
               type="text"
               className="form-input form-input--lg"

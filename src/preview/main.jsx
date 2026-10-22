@@ -34,6 +34,7 @@ import Switch from '../components/Switch';
 import Pick from '../components/Pick';
 import '../styles.css';
 import '../mercury.css';
+import { noAutofill } from '../utils/noAutofill';
 
 installMockApi(api);
 
@@ -121,13 +122,13 @@ function FormsDemo() {
         <AmountField label="Amount" right={<Pick options={['EUR', 'USD']} value={cur} onChange={setCur} />}
           symbol={cur === 'USD' ? '$' : '€'} value={amount} onChange={setAmount} caption="You get 0.00754148 BTC" />
         <div className="m-g2">
-          <Field label="Quantity"><input className="form-input" type="number" defaultValue="0.00754148" /></Field>
+          <Field label="Quantity"><input {...noAutofill('wealth-preview-quantity')} className="form-input" type="number" defaultValue="0.00754148" /></Field>
           <Field label="Price" right={<Pick options={['EUR', 'USD']} value="EUR" onChange={() => {}} disabledKeys={['USD']} />} hint="Live price">
-            <input className="form-input" type="number" defaultValue="66300" disabled={live} />
+            <input {...noAutofill('wealth-preview-price')} className="form-input" type="number" defaultValue="66300" disabled={live} />
           </Field>
         </div>
         <Switch label="Use Live Price" checked={live} onChange={setLive} />
-        <Field label="Note"><input className="form-input" placeholder="Optional" /></Field>
+        <Field label="Note"><input {...noAutofill('wealth-preview-note')} className="form-input" placeholder="Optional" /></Field>
         <button type="button" className="btn btn--primary btn--lg btn--full">Add Purchase</button>
       </div>
       <StatRow items={[

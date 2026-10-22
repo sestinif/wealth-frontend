@@ -1,9 +1,12 @@
 import React, { useId } from 'react';
+import { noAutofill } from '../utils/noAutofill';
 
 export default function FormInput({
   label, type = 'text', value, onChange, placeholder,
-  disabled, options, className = '', size = '', ...rest
+  disabled, options, className = '', size = '', autofill = false, ...rest
 }) {
+  // Password fields (and anything passing autofill) keep password-manager support.
+  const guard = autofill || type === 'password' ? {} : noAutofill(`wealth-${String(label || placeholder || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`);
   const inputClass = `form-input ${size === 'lg' ? 'form-input--lg' : ''} ${className}`;
   const inputId = useId();
 
@@ -21,6 +24,7 @@ export default function FormInput({
     if (type === 'textarea') {
       return (
         <textarea
+          {...guard}
           id={inputId}
           className={inputClass}
           value={value}
@@ -34,6 +38,7 @@ export default function FormInput({
 
     return (
       <input
+        {...guard}
         id={inputId}
         type={type}
         className={inputClass}

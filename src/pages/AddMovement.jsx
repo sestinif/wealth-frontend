@@ -16,6 +16,7 @@ import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatEUR, formatUSD, formatPrice, formatDay, formatDayLong, localDay } from '../utils/format';
 import { planFunding } from '../utils/purchase';
+import { noAutofill } from '../utils/noAutofill';
 
 // Says when the looked-up price is from, if it is not the exact minute asked (markets closed, daily data only).
 const priceNote = (p, ts) => {
@@ -332,27 +333,27 @@ export default function AddMovement() {
             </Field>
 
             <Field label={wholeOnly ? 'Shares' : 'Quantity'} hint={wholeOnly ? 'Whole shares only.' : 'The exact amount you received.'}>
-              <input className="form-input" type="number" step={wholeOnly ? 1 : 'any'} min={wholeOnly ? 1 : undefined}
+              <input {...noAutofill('wealth-quantity')} className="form-input" type="number" step={wholeOnly ? 1 : 'any'} min={wholeOnly ? 1 : undefined}
                 inputMode={wholeOnly ? 'numeric' : 'decimal'} placeholder={wholeOnly ? '0' : '0.00000000'} value={qty}
                 onChange={e => setQty(e.target.value)} />
             </Field>
 
             <div className="m-g2">
               <Field label="Date">
-                <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+                <input {...noAutofill('wealth-date')} className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
               </Field>
               <Field label="Time">
-                <input className="form-input" type="time" value={time} onChange={e => setTime(e.target.value)} />
+                <input {...noAutofill('wealth-time')} className="form-input" type="time" value={time} onChange={e => setTime(e.target.value)} />
               </Field>
             </div>
 
             <div className="m-g2">
               <Field label="Price (€)" hint={histState.error || (histState.loading ? 'Looking up the price…' : histState.note)}>
-                <input className="form-input" type="number" step="any" value={priceEur} placeholder="—"
+                <input {...noAutofill('wealth-price-eur')} className="form-input" type="number" step="any" value={priceEur} placeholder="—"
                   onChange={e => { setPriceEur(e.target.value); setPriceUsd(''); setHistState(h => ({ ...h, error: '', note: 'Typed by you' })); }} />
               </Field>
               <Field label="Amount Invested" hint="Quantity × market price">
-                <input className="form-input" type="text" readOnly value={amountEur ? formatEUR(parseFloat(amountEur)) : ''} placeholder="—" />
+                <input {...noAutofill('wealth-amount-eur-readonly')} className="form-input" type="text" readOnly value={amountEur ? formatEUR(parseFloat(amountEur)) : ''} placeholder="—" />
               </Field>
             </div>
 
@@ -368,7 +369,7 @@ export default function AddMovement() {
             )}
 
             <Field label="Note">
-              <input className="form-input" type="text" placeholder="Optional" value={notes} onChange={e => setNotes(e.target.value)} />
+              <input {...noAutofill('wealth-notes')} className="form-input" type="text" placeholder="Optional" value={notes} onChange={e => setNotes(e.target.value)} />
             </Field>
 
             <AlertMessage type="error" message={error} />
@@ -397,7 +398,7 @@ export default function AddMovement() {
 
               {isNewBank && (
                 <Field label="Bank Name">
-                  <input className="form-input" type="text" placeholder="Wise" value={newBank} onChange={e => setNewBank(e.target.value)} />
+                  <input {...noAutofill('wealth-bank-name')} className="form-input" type="text" placeholder="Wise" value={newBank} onChange={e => setNewBank(e.target.value)} />
                 </Field>
               )}
 
@@ -407,10 +408,10 @@ export default function AddMovement() {
 
               <div className="m-g2">
                 <Field label="Date">
-                  <input className="form-input" type="date" value={beDate} onChange={e => setBeDate(e.target.value)} />
+                  <input {...noAutofill('wealth-balance-date')} className="form-input" type="date" value={beDate} onChange={e => setBeDate(e.target.value)} />
                 </Field>
                 <Field label="Note">
-                  <input className="form-input" type="text" placeholder="Optional" value={beNote} onChange={e => setBeNote(e.target.value)} />
+                  <input {...noAutofill('wealth-balance-note')} className="form-input" type="text" placeholder="Optional" value={beNote} onChange={e => setBeNote(e.target.value)} />
                 </Field>
               </div>
 
@@ -460,7 +461,7 @@ export default function AddMovement() {
                 <div className="m-section"><span>Edit Broker</span></div>
                 <form onSubmit={handleCashSubmit}>
                   <Field label="Broker">
-                    <input className="form-input" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
+                    <input {...noAutofill('wealth-broker-label')} className="form-input" type="text" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
                   </Field>
                   <AmountField label="Balance" right={<Pick options={['EUR', 'USD']} value={cpCurrency} onChange={setCpCurrency} />}
                     symbol={cpCurrency === 'USD' ? '$' : '€'} value={cpAmount} onChange={setCpAmount}
@@ -491,7 +492,7 @@ export default function AddMovement() {
                   </Field>
                   {cpIsNew && (
                     <Field label="Broker Name">
-                      <input className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
+                      <input {...noAutofill('wealth-broker-name')} className="form-input" type="text" placeholder="Trade Republic" value={cpLabel} onChange={e => setCpLabel(e.target.value)} />
                     </Field>
                   )}
                   <AmountField label={cpDirection === 'out' && !cpIsNew ? 'Amount to Take Out' : 'Amount to Add'}

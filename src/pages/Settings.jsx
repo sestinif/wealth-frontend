@@ -174,6 +174,7 @@ export default function Settings() {
                 onChange={(k) => { setSearchType(k); setSearchResults([]); setSearchQuery(''); }} />
             </Field>
             <FormInput
+              name="wealth-asset-search" inputMode="search" enterKeyHint="search"
               placeholder={
                 searchType === 'crypto' ? 'Search crypto (ethereum, solana…)'
                 : searchType === 'dex' ? 'Search meme coins (brett, pepe, wif…)'

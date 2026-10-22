@@ -7,6 +7,7 @@ import Field from '../components/Field';
 import { PageSkeleton } from '../components/Skeleton';
 import { api } from '../api.js';
 import { formatPrice, pctText } from '../utils/format';
+import { noAutofill } from '../utils/noAutofill';
 
 export default function Calculator() {
   const [user, setUser] = useState(null);
@@ -108,10 +109,10 @@ export default function Calculator() {
             <div className="m-card">
               <div className="m-label" style={{ marginBottom: 14 }}>What-If Buy</div>
               <Field label={`Amount (${ccy})`}>
-                <input type="number" step="any" className="form-input" value={buyAmount} onChange={e => setBuyAmount(e.target.value)} placeholder="1000" />
+                <input {...noAutofill('wealth-calc-buy-amount')} type="number" step="any" className="form-input" value={buyAmount} onChange={e => setBuyAmount(e.target.value)} placeholder="1000" />
               </Field>
               <Field label={`Buy price (${ccy})`} hint="Leave empty to use the market price.">
-                <input type="number" step="any" className="form-input" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
+                <input {...noAutofill('wealth-calc-buy-price')} type="number" step="any" className="form-input" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
               </Field>
               <div className="m-result">
                 <div className="m-label">New Average</div>
@@ -127,10 +128,10 @@ export default function Calculator() {
             <div className="m-card">
               <div className="m-label" style={{ marginBottom: 14 }}>Reach a Target Average</div>
               <Field label={`Target average (${ccy})`}>
-                <input type="number" step="any" className="form-input" value={targetDca} onChange={e => setTargetDca(e.target.value)} placeholder={dca ? String(Math.round(dca * 0.9)) : '0'} />
+                <input {...noAutofill('wealth-calc-target-dca')} type="number" step="any" className="form-input" value={targetDca} onChange={e => setTargetDca(e.target.value)} placeholder={dca ? String(Math.round(dca * 0.9)) : '0'} />
               </Field>
               <Field label={`Buy price (${ccy})`} hint="Leave empty to use the market price.">
-                <input type="number" step="any" className="form-input" value={targetPrice} onChange={e => setTargetPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
+                <input {...noAutofill('wealth-calc-target-price')} type="number" step="any" className="form-input" value={targetPrice} onChange={e => setTargetPrice(e.target.value)} placeholder={curPrice ? String(Math.round(curPrice)) : '0'} />
               </Field>
               <div className="m-result">
                 <div className="m-label">You Need to Invest</div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ACCOUNT_GROUPS } from '../utils/accounts';
+import { noAutofill } from '../utils/noAutofill';
 
 const COMMANDS = [
   { label: 'Dashboard', path: '/dashboard', keys: 'D' },
@@ -74,7 +75,7 @@ export default function CommandPalette() {
       }}>
         <div className="m-dialog">
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
-            <input
+            <input {...noAutofill('wealth-search')} inputMode="search" enterKeyHint="search"
               ref={inputRef}
               value={query}
               onChange={e => { setQuery(e.target.value); setSelected(0); }}
