@@ -8,15 +8,13 @@ export const ACCOUNT_GROUPS = [
     items: [
       { name: 'Mercury', url: 'https://app.mercury.com/login', domain: 'mercury.com', match: 'mercury', owner: 'Scaling Catalyst' },
       { name: 'Relay', url: 'https://app.relayfi.com/login', domain: 'relayfi.com', match: 'relay', owner: 'Scaling Catalyst' },
-      { name: 'Revolut Business', url: 'https://business.revolut.com/', domain: 'business.revolut.com', logoDomain: 'revolut.com' },
-      { name: 'Wise', url: 'https://wise.com/login', domain: 'wise.com' },
     ],
   },
   {
     key: 'brokers', label: 'Brokers',
     items: [
       { name: 'DeGiro', url: 'https://www.degiro.com/', domain: 'degiro.com', owner: 'Personal' },
-      { name: 'Bybit', url: 'https://www.bybit.com/en/login', domain: 'bybit.com' },
+      { name: 'Bybit', url: 'https://www.bybit.com/en/login', domain: 'bybit.com', owner: 'Personal' },
     ],
   },
 ];
@@ -29,7 +27,7 @@ export function accountFor(label) {
   if (!text) return null;
   for (const group of ACCOUNT_GROUPS) {
     for (const item of group.items || []) {
-      // The match word, the full name, and the name's first word ("Revolut" for "Revolut Business").
+      // The match word, the full name, and the name's first word ("Revolut" for a "Revolut Business").
       const words = [item.match, item.name, String(item.name || '').split(' ')[0]]
         .filter(w => w && w.length >= 3).map(w => String(w).toLowerCase());
       if (words.some(w => text.includes(w))) return item;

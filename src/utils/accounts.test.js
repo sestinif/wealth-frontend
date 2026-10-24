@@ -25,7 +25,7 @@ test('balanceFor gives nothing when it cannot give one honest figure', () => {
 
 test('every account has a name, an https login url and a domain', () => {
   const items = ACCOUNT_GROUPS.flatMap(g => g.items);
-  assert.equal(items.length, 6);
+  assert.equal(items.length, 4);   // Mercury, Relay, DeGiro, Bybit
   for (const it of items) {
     assert.ok(it.name && it.domain, it.name);
     assert.match(it.url, /^https:\/\//);
@@ -42,7 +42,9 @@ test('accountLogo finds the bank or broker named in a free label', () => {
   assert.equal(accountLogo('Degiro'), logoUrl('degiro.com'));
   assert.equal(accountLogo('Relay'), logoUrl('relayfi.com'));
   assert.equal(accountLogo('Mercury Checking ••1234'), logoUrl('mercury.com'));
-  assert.equal(accountLogo('Revolut'), logoUrl('revolut.com'));
+  assert.equal(accountLogo('Bybit Funding'), logoUrl('bybit.com'));
+  assert.equal(accountLogo('Revolut'), null);
+  assert.equal(accountLogo('Wise'), null);
   assert.equal(accountLogo('Trade Republic'), null);
   assert.equal(accountLogo('Re'), null);
   assert.equal(accountLogo(''), null);
@@ -53,6 +55,7 @@ test('ownerOf says whose account it is', () => {
   assert.equal(ownerOf('Mercury Checking ••1234'), 'Scaling Catalyst');
   assert.equal(ownerOf('Relay'), 'Scaling Catalyst');
   assert.equal(ownerOf('Degiro'), 'Personal');
+  assert.equal(ownerOf('Bybit'), 'Personal');
   assert.equal(ownerOf('Trade Republic'), null);
   assert.equal(ownerOf(''), null);
 });
