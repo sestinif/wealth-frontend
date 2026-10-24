@@ -15,7 +15,7 @@ import { buildPortfolioHistory, periodView } from '../utils/history';
 import ReturnsChart from '../components/ReturnsChart';
 import PriceChart from '../components/PriceChart';
 
-const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
+const AXIS_TICK = { fill: '#9A9AA8', fontSize: 13 };
 const CURSOR = { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 };
 const tooltipProps = { contentStyle: TOOLTIP_STYLE, labelStyle: TOOLTIP_LABEL_STYLE, itemStyle: TOOLTIP_ITEM_STYLE };
 const signedEUR = (v) => `${v >= 0 ? '+' : ''}${formatEUR(v)}`;

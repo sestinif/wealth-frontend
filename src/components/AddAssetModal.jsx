@@ -60,8 +60,8 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
         <div className="m-dialog">
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-1)' }}>Add New Asset</div>
-              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Search on CoinGecko or Yahoo Finance</div>
+              <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-1)' }}>Add New Asset</div>
+              <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2 }}>Search on CoinGecko or Yahoo Finance</div>
             </div>
             <button onClick={onClose} className="btn btn--ghost btn--sm" aria-label="Close"><Icon name="x" size={14} /></button>
           </div>
@@ -86,7 +86,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
               style={{ marginBottom: 12 }}
             />
 
-            {loading && <div style={{ fontSize: 12, color: 'var(--text-2)', textAlign: 'center', padding: 12 }}>Searching…</div>}
+            {loading && <div style={{ fontSize: 13, color: 'var(--text-2)', textAlign: 'center', padding: 12 }}>Searching…</div>}
 
             <div style={{ maxHeight: 380, overflowY: 'auto' }}>
               {results.map(r => (

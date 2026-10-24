@@ -31,7 +31,7 @@ export function ToastProvider({ children }) {
             style={{
               padding: '10px 18px',
               borderRadius: 10,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 500,
               color: '#14141B',
               background: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--accent)',

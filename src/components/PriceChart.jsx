@@ -3,7 +3,7 @@ import { ComposedChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, ReferenceDot
 import { buildPriceChart, RANGES } from '../utils/history';
 import { formatDay, formatDayLong, formatEUR, pctText, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE } from '../utils/format';
 
-const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
+const AXIS_TICK = { fill: '#9A9AA8', fontSize: 13 };
 
 // Prices below €1 (dex tokens) need decimals; everything else reads better without.
 const eurTick = (v) => {

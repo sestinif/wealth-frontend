@@ -4,7 +4,7 @@ import { buildComparison, RANGES } from '../utils/history';
 import { formatDay, formatDayLong, pctText, TOOLTIP_STYLE, TOOLTIP_LABEL_STYLE, TOOLTIP_ITEM_STYLE } from '../utils/format';
 import { TONE } from '../utils/marks';
 
-const AXIS_TICK = { fill: '#9A9AA8', fontSize: 12 };
+const AXIS_TICK = { fill: '#9A9AA8', fontSize: 13 };
 const PORTFOLIO_COLOR = '#EDEDF3';
 
 // Returns laid over each other: the portfolio and any assets you switch on, all at 0 % on the

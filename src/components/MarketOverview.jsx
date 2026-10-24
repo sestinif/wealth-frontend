@@ -5,7 +5,7 @@ import { formatPrice } from '../utils/format';
 
 export default function MarketOverview({ assets, prices, marketInfo }) {
   if (Object.keys(marketInfo).length === 0) {
-    return <div className="m-card m-muted" style={{ fontSize: 13 }}>Loading data…</div>;
+    return <div className="m-card m-muted" style={{ fontSize: 14 }}>Loading data…</div>;
   }
   return (
     <div className="card overflow-auto" style={{ padding: 0 }}>

@@ -83,7 +83,7 @@ export default function CommandPalette() {
               placeholder="Search or navigate…"
               style={{
                 width: '100%', background: 'none', border: 'none', outline: 'none',
-                color: 'var(--text-1)', fontSize: 14, fontFamily: 'inherit',
+                color: 'var(--text-1)', fontSize: 15, fontFamily: 'inherit',
               }}
             />
           </div>
@@ -101,26 +101,26 @@ export default function CommandPalette() {
                 }}
                 onMouseEnter={() => setSelected(i)}
               >
-                <span style={{ fontSize: 14, color: i === selected ? 'var(--text-1)' : 'var(--text-2)', fontWeight: i === selected ? 500 : 400 }}>
+                <span style={{ fontSize: 15, color: i === selected ? 'var(--text-1)' : 'var(--text-2)', fontWeight: i === selected ? 500 : 400 }}>
                   {cmd.label}
                 </span>
                 {cmd.keys && (
-                  <span style={{ fontSize: 12, color: 'var(--text-2)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-2)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4 }}>
                     {cmd.keys}
                   </span>
                 )}
               </div>
             ))}
             {filtered.length === 0 && (
-              <div style={{ padding: '16px 12px', fontSize: 13, color: 'var(--text-2)', textAlign: 'center' }}>
+              <div style={{ padding: '16px 12px', fontSize: 14, color: 'var(--text-2)', textAlign: 'center' }}>
                 No results
               </div>
             )}
           </div>
           <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>↑↓ navigate</span>
-            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>↵ select</span>
-            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>esc close</span>
+            <span style={{ fontSize: 13, color: 'var(--text-2)' }}>↑↓ navigate</span>
+            <span style={{ fontSize: 13, color: 'var(--text-2)' }}>↵ select</span>
+            <span style={{ fontSize: 13, color: 'var(--text-2)' }}>esc close</span>
           </div>
         </div>
       </div>

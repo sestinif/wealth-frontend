@@ -154,7 +154,7 @@ const PAGES = {
           <button className="btn btn--danger">Danger</button>
           <label className="toggle"><input type="checkbox" defaultChecked /><span className="toggle__slider" /></label>
         </div>
-        <p style={{ marginTop: 16, color: 'var(--text-2)', fontSize: 13 }}>
+        <p style={{ marginTop: 16, color: 'var(--text-2)', fontSize: 14 }}>
           Gain <span style={{ color: 'var(--green)' }}>+€342.59</span> · loss <span style={{ color: 'var(--red)' }}>−€99.64</span> · 1234567890
         </p>
       </div>

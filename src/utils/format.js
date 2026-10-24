@@ -69,6 +69,6 @@ export const TOOLTIP_STYLE = {
   fontVariantNumeric: 'tabular-nums',
   boxShadow: 'none',
 };
-export const TOOLTIP_LABEL_STYLE = { color: '#9A9AA8', fontSize: 12, marginBottom: 2 };
-export const TOOLTIP_ITEM_STYLE = { color: '#EDEDF3', fontSize: 13 };
+export const TOOLTIP_LABEL_STYLE = { color: '#9A9AA8', fontSize: 13, marginBottom: 2 };
+export const TOOLTIP_ITEM_STYLE = { color: '#EDEDF3', fontSize: 14 };
 
