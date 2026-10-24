@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ACCOUNT_GROUPS, balanceFor, logoUrl, accountLogo } from './accounts.js';
+import { ACCOUNT_GROUPS, balanceFor, logoUrl, accountLogo, ownerOf } from './accounts.js';
 
 const external = [
   { name: 'Mercury Checking ••1234', currency: 'USD', balance: 28000 },
@@ -47,4 +47,12 @@ test('accountLogo finds the bank or broker named in a free label', () => {
   assert.equal(accountLogo('Re'), null);
   assert.equal(accountLogo(''), null);
   assert.equal(accountLogo(undefined), null);
+});
+
+test('ownerOf says whose account it is', () => {
+  assert.equal(ownerOf('Mercury Checking ••1234'), 'Scaling Catalyst');
+  assert.equal(ownerOf('Relay'), 'Scaling Catalyst');
+  assert.equal(ownerOf('Degiro'), 'Personal');
+  assert.equal(ownerOf('Trade Republic'), null);
+  assert.equal(ownerOf(''), null);
 });

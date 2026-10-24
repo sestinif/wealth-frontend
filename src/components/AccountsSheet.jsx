@@ -32,7 +32,7 @@ export default function AccountsSheet({ open, onClose }) {
                 <Avatar src={logoUrl(item.logoDomain || item.domain)} label={item.name} />
                 <span className="m-acct__main">
                   <span className="m-acct__name">{item.name}</span>
-                  <span className="m-acct__domain">{item.domain}</span>
+                  <span className="m-acct__domain">{item.owner ? `${item.owner} · ${item.domain}` : item.domain}</span>
                 </span>
                 <span className="m-acct__bal">{bal ? (bal.currency === 'USD' ? formatUSD : formatEUR)(bal.amount) : ''}</span>
                 <span className="m-acct__go"><Icon name="external" size={15} /></span>

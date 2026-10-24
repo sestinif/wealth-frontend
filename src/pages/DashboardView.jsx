@@ -6,6 +6,7 @@ import DetailSheet from '../components/DetailSheet';
 import Avatar from '../components/Avatar';
 import Money from '../components/Money';
 import Icon from '../components/Icon';
+import { ownerOf } from '../utils/accounts';
 import MarketOverview from '../components/MarketOverview';
 import {
   formatEUR, formatUSD, formatQty, formatPrice, formatDayLong, pctText,
@@ -54,10 +55,10 @@ export default function DashboardView({
   const cats = [
     { key: 'stock', label: 'Stock Market', color: 'var(--stock)', value: nw.stock, lines: assetLines(nw.stockAssets) },
     { key: 'cash', label: 'Cash', color: 'var(--cash)', value: nw.cash,
-      lines: nw.accounts.map((acc, i) => ({ key: `${acc.name}-${i}`, name: acc.name, value: ownMoney(acc.balance, acc.currency) })) },
+      lines: nw.accounts.map((acc, i) => ({ key: `${acc.name}-${i}`, name: acc.name, owner: ownerOf(acc.name), value: ownMoney(acc.balance, acc.currency) })) },
     { key: 'crypto', label: 'Crypto Market', color: 'var(--crypto)', value: nw.crypto, lines: assetLines(nw.cryptoAssets) },
     { key: 'dry', label: 'Dry Powder', color: 'var(--dry)', value: nw.dry,
-      lines: (cashPositions || []).map(p => ({ key: p.id, name: p.label, value: ownMoney(p.amount_eur, p.currency) })) },
+      lines: (cashPositions || []).map(p => ({ key: p.id, name: p.label, owner: ownerOf(p.label), value: ownMoney(p.amount_eur, p.currency) })) },
   ].sort((a, b) => b.value - a.value);
 
   const returnPct = summary.total_invested > 0 ? (summary.pnl / summary.total_invested) * 100 : 0;
@@ -180,7 +181,7 @@ export default function DashboardView({
                 </Tag>
                 {open && c.lines.map(l => (
                   <div className="m-sub" key={l.key}>
-                    <span className="m-sub__name">{l.name}</span>
+                    <span className="m-sub__name">{l.name}{l.owner && <span className="m-sub__owner">{l.owner}</span>}</span>
                     <span className="m-sub__val">{l.value}</span>
                   </div>
                 ))}

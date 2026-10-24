@@ -1,12 +1,13 @@
 // Login pages of the banks and brokers. Links only: Wealth never sees a credential.
 // To add or remove an account, edit this list and nothing else.
 // `match` (optional) ties an account to the balances Wealth already tracks (see balanceFor).
+// `owner`: who the account belongs to (a company, or Personal). Shown next to the account.
 export const ACCOUNT_GROUPS = [
   {
     key: 'banks', label: 'Banks',
     items: [
-      { name: 'Mercury', url: 'https://app.mercury.com/login', domain: 'mercury.com', match: 'mercury' },
-      { name: 'Relay', url: 'https://app.relayfi.com/login', domain: 'relayfi.com', match: 'relay' },
+      { name: 'Mercury', url: 'https://app.mercury.com/login', domain: 'mercury.com', match: 'mercury', owner: 'Scaling Catalyst' },
+      { name: 'Relay', url: 'https://app.relayfi.com/login', domain: 'relayfi.com', match: 'relay', owner: 'Scaling Catalyst' },
       { name: 'Revolut Business', url: 'https://business.revolut.com/', domain: 'business.revolut.com', logoDomain: 'revolut.com' },
       { name: 'Wise', url: 'https://wise.com/login', domain: 'wise.com' },
     ],
@@ -14,16 +15,16 @@ export const ACCOUNT_GROUPS = [
   {
     key: 'brokers', label: 'Brokers',
     items: [
-      { name: 'DeGiro', url: 'https://www.degiro.com/', domain: 'degiro.com' },
+      { name: 'DeGiro', url: 'https://www.degiro.com/', domain: 'degiro.com', owner: 'Personal' },
       { name: 'Bybit', url: 'https://www.bybit.com/en/login', domain: 'bybit.com' },
     ],
   },
 ];
 
 // The site's icon, by domain. If it does not load, the avatar falls back to initials.
-// The logo of a bank or broker named by a free label ("Degiro", "Relay", "Mercury Checking"):
-// the first known account whose name or match word is in it. Null for anything else.
-export function accountLogo(label) {
+// The known bank or broker named by a free label ("Degiro", "Relay", "Mercury Checking"):
+// the first account whose match word or name (or the name's first word) is in it. Null otherwise.
+export function accountFor(label) {
   const text = String(label || '').toLowerCase();
   if (!text) return null;
   for (const group of ACCOUNT_GROUPS) {
@@ -31,10 +32,21 @@ export function accountLogo(label) {
       // The match word, the full name, and the name's first word ("Revolut" for "Revolut Business").
       const words = [item.match, item.name, String(item.name || '').split(' ')[0]]
         .filter(w => w && w.length >= 3).map(w => String(w).toLowerCase());
-      if (words.some(w => text.includes(w))) return logoUrl(item.logoDomain || item.domain);
+      if (words.some(w => text.includes(w))) return item;
     }
   }
   return null;
+}
+
+// Its logo, or null.
+export function accountLogo(label) {
+  const item = accountFor(label);
+  return item ? logoUrl(item.logoDomain || item.domain) : null;
+}
+
+// Who it belongs to ("Scaling Catalyst", "Personal"…), or null when not set.
+export function ownerOf(label) {
+  return accountFor(label)?.owner || null;
 }
 
 export const logoUrl = (domain) => `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;

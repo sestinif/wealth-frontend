@@ -395,6 +395,7 @@ button.m-cat { cursor: pointer; }
 .m-cat.is-open .m-cat__chev { transform: rotate(180deg); }
 .m-sub { display: flex; justify-content: space-between; gap: 12px; padding: 0 24px 10px 18px; font-size: 13px; color: var(--text-2); }
 .m-sub__name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-sub__owner { display: block; margin-top: 1px; font-size: 11px; color: var(--text-2); opacity: 0.7; overflow: hidden; text-overflow: ellipsis; }
 .m-sub__val { color: var(--text-1); white-space: nowrap; }
 
 .m-table__head, .m-table__row { display: grid; grid-template-columns: minmax(0, 1.6fr) 1fr 1fr 1.1fr; gap: 12px; align-items: center; }
