@@ -65,7 +65,7 @@ export const TOOLTIP_STYLE = {
   border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: '8px',
   padding: '8px 12px',
-  fontFamily: "'Inter', sans-serif",
+  fontFamily: "'Hanken Grotesk', sans-serif",
   fontVariantNumeric: 'tabular-nums',
   boxShadow: 'none',
 };

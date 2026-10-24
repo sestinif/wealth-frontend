@@ -15,7 +15,7 @@ html {
 body {
   background: var(--bg);
   color: var(--text-2);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.55;
   letter-spacing: -0.01em;
   font-feature-settings: "cv05" 1, "ss01" 1;
@@ -85,7 +85,7 @@ body::after {
   --stock-bg: rgba(251,191,36,0.14);
   --dry: #5EEAD4;            /* teal — dry powder (uninvested broker cash) */
   --dry-bg: rgba(94,234,212,0.14);
-  --font-num: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-num: 'Space Grotesk', 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   /* THE serif — exactly one editorial voice against the all-sans chrome
      (same signature as Calendar's month title). Do not use it elsewhere. */
   --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
@@ -103,7 +103,7 @@ body::after {
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
 }
 
-/* Tabular figures everywhere numbers live — proportional Inter digits that
+/* Tabular figures everywhere numbers live — proportional Inter-style digits that
    still align in columns (the Linear/Mercury approach, not monospace). */
 .data-table td, .num__affix {
   font-variant-numeric: tabular-nums;

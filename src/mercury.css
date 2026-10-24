@@ -45,8 +45,8 @@
   --crypto: #D4A13E;
   --dry: #9C9CA8;
   --dry-bg: rgba(255,255,255,0.04);
-  --font-num: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-num: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   --radius: 12px;
   --radius-sm: 8px;
   --elev-1: 0 0 0 0 transparent;
