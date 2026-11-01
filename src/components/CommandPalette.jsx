@@ -71,7 +71,7 @@ export default function CommandPalette() {
       <div style={{
         position: 'fixed', top: '20%', left: 0, right: 0, margin: '0 auto',
         width: '100%', maxWidth: 440, zIndex: 9999,
-        animation: 'fadeUp 0.2s cubic-bezier(0.16,1,0.3,1)',
+        animation: 'fadeUp 300ms ease-out',
       }}>
         <div className="m-dialog">
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
@@ -87,7 +87,7 @@ export default function CommandPalette() {
               }}
             />
           </div>
-          <div ref={listRef} style={{ padding: '6px 6px', maxHeight: 280, overflowY: 'auto' }}>
+          <div ref={listRef} style={{ padding: '6px 6px', maxHeight: 280, overflowY: 'auto', overscrollBehavior: 'contain' }}>
             {filtered.map((cmd, i) => (
               <div
                 key={cmd.label}

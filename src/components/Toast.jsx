@@ -14,7 +14,7 @@ export function ToastProvider({ children }) {
     setToasts(prev => [...prev, { id, message, type, exiting: false }]);
     setTimeout(() => {
       setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));
-      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 300);
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 150);
     }, 2500);
   }, []);
 
@@ -36,7 +36,7 @@ export function ToastProvider({ children }) {
               color: '#14141B',
               background: toast.type === 'error' ? 'var(--red)' : toast.type === 'success' ? 'var(--green)' : 'var(--accent)',
               boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-              animation: toast.exiting ? 'toastOut 0.3s ease forwards' : 'toastIn 0.3s ease both',
+              animation: toast.exiting ? 'toastOut 150ms ease-out forwards' : 'toastIn 300ms ease-out both',
               pointerEvents: 'auto',
             }}
           >
@@ -44,10 +44,6 @@ export function ToastProvider({ children }) {
           </div>
         ))}
       </div>
-      <style>{`
-        @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-8px) scale(0.95); } }
-      `}</style>
     </ToastContext.Provider>
   );
 }

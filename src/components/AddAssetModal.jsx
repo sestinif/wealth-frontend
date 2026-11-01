@@ -55,7 +55,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
       <div style={{
         position: 'fixed', top: '12%', left: 0, right: 0, margin: '0 auto',
         width: '92%', maxWidth: 500, zIndex: 9999,
-        animation: 'fadeUp 0.25s cubic-bezier(0.16,1,0.3,1)',
+        animation: 'fadeUp 300ms ease-out',
       }}>
         <div className="m-dialog">
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -88,7 +88,7 @@ export default function AddAssetModal({ existingAssets, onClose, onAdded }) {
 
             {loading && <div style={{ fontSize: 13, color: 'var(--text-2)', textAlign: 'center', padding: 12 }}>Searching…</div>}
 
-            <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 380, overflowY: 'auto', overscrollBehavior: 'contain' }}>
               {results.map(r => (
                 <div key={r.symbol + (r.coingecko_id || r.yfinance_symbols || '')} className="m-setrow">
                   {r.thumb

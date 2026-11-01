@@ -700,3 +700,33 @@ input.form-input:focus, textarea.form-input:focus, select.form-input:focus, .aut
   .m-stats:not(.m-stats--hero) .m-stat { padding: 14px 12px; }
   .m-stats:not(.m-stats--hero) .m-stat__value { font-size: 16px; letter-spacing: -0.01em; }
 }
+
+/* ---------- better-ui: motion, icons, hit areas ---------- */
+/* Stale press from the legacy sheet: the 0.96 above is the only press now. */
+.fab:active { transform: none; }
+
+/* Toast: enter 300ms, exit 150ms (opacity + 4px blur + 12px), moves only when motion is welcome. */
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateY(0); filter: blur(0); } to { opacity: 0; transform: translateY(-12px); filter: blur(4px); } }
+
+/* Reduced motion: the same entrances as a plain opacity fade, never an instant jump. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes fadeUp { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fabModalIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes toastIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes mSheetUp { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mSheetIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pageFade { from { opacity: 0; } to { opacity: 1; } }
+}
+
+/* Icons: stroke follows the text beside them and stays the same at any size
+   (1.5px next to regular text, 2px next to medium/active text and on buttons). */
+svg[stroke="currentColor"] { stroke-width: 1.5; }
+svg[stroke="currentColor"] :is(path, line, polyline, polygon, circle, ellipse, rect) { vector-effect: non-scaling-stroke; }
+.nav-item.active svg, .btn svg, .fab svg, .applink__arrow { stroke-width: 2; }
+
+/* 44px hit areas behind small controls (the drawn size stays). */
+.topbar__menu, .currency-toggle__btn, .fab-modal__close, .m-sheet__close { position: relative; }
+.topbar__menu::after, .fab-modal__close::after, .m-sheet__close::after { content: ''; position: absolute; inset: -6px; }
+.currency-toggle__btn::after { content: ''; position: absolute; inset: -8px -2px; }
