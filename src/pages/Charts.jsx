@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
 import Money from '../components/Money';
@@ -124,18 +124,23 @@ export default function Charts() {
         {trend.series.length > 1 ? (
           <>
             <div className="m-nw__delta">
-              <span className={trend.delta >= 0 ? 'm-up' : 'm-down'}>{signedEUR(trend.delta)} ({pctText(trend.deltaPct)})</span> · {trend.label}
+              <span className={`m-chip ${trend.delta >= 0 ? 'm-chip--up' : 'm-chip--down'}`}>{signedEUR(trend.delta)} · {pctText(trend.deltaPct)}</span>
+              <span>{trend.label}</span>
             </div>
             <div className="m-nw__chart">
               <ResponsiveContainer width="100%" height={140}>
-                <AreaChart data={trend.series} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                <AreaChart data={trend.series} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="date" hide />
                   <YAxis hide domain={[(min) => min * 0.985, (max) => max * 1.01]} />
                   <Tooltip {...tooltipProps} cursor={CURSOR}
                     formatter={(v) => [formatEUR(v), 'Portfolio']}
                     labelFormatter={(l) => formatDayLong(l)} />
-                  <Area type="monotone" dataKey="value" stroke="#8D9BFF" strokeWidth={1.5} strokeLinecap="round" fill="none"
-                    dot={false} activeDot={{ r: 3.5, fill: '#8D9BFF', stroke: '#1B1B24', strokeWidth: 1.5 }}
+                  <Area type="monotone" dataKey="value" stroke="#8D9BFF" strokeWidth={1.5} strokeLinecap="round" fill="rgba(141,155,255,0.10)"
+                    dot={({ cx, cy, index }) => (index === trend.series.length - 1
+                      ? <circle key="end" cx={cx} cy={cy} r={3.5} fill="#8D9BFF" stroke="#1B1B24" strokeWidth={2} />
+                      : <g key={index} />)}
+                    activeDot={{ r: 3.5, fill: '#8D9BFF', stroke: '#1B1B24', strokeWidth: 1.5 }}
                     isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>

@@ -676,7 +676,7 @@ input.form-input:focus, textarea.form-input:focus, select.form-input:focus, .aut
 .m-periods__btn::after { content: ''; position: absolute; inset: -8px -2px; }
 .m-periods__btn.is-active { background: var(--bg-elev); }
 
-.m-nw__delta { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+.m-nw__delta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 8px; font-size: 13px; }
 .m-chip { padding: 3px 8px; border-radius: 6px; font-size: 13px; font-weight: 500; }
 .m-chip--up { background: var(--green-bg); color: var(--green); }
 .m-chip--down { background: var(--red-bg); color: var(--red); }
