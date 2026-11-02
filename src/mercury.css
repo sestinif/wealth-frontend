@@ -105,7 +105,7 @@ body::before, body::after { content: none; }
 /* ---------- 4. Base controls ---------- */
 .btn {
   font-size: 14px; font-weight: 500; text-transform: none; letter-spacing: 0;
-  padding: 8px 14px; border-radius: 8px;
+  padding: 8px 16px; border-radius: 999px;
 }
 .btn:active {transform: none;}
 @media (hover: hover) { .btn:hover {transform: none;} }
@@ -113,8 +113,8 @@ body::before, body::after { content: none; }
 @media (hover: hover) { .btn--primary:hover, .auth-card .btn--primary:hover {background: var(--accent); color: var(--bg); box-shadow: none;} }
 @media (hover: hover) { .btn--primary:hover, .auth-card .btn--primary:hover {background: #A3AEFF;} }
 .btn--ghost.active { background: var(--bg-elev); border-color: var(--border-hover); color: var(--text-1); }
-.btn--sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; }
-.btn--lg { padding: 11px 20px; font-size: 15px; border-radius: 8px; }
+.btn--sm { padding: 6px 12px; font-size: 13px; border-radius: 999px; }
+.btn--lg { padding: 11px 22px; font-size: 15px; border-radius: 999px; }
 
 .panel, .card { background: var(--bg-card); border: 1px solid var(--border); box-shadow: none; }
 
