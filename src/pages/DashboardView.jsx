@@ -5,6 +5,7 @@ import StatRow from '../components/StatRow';
 import DetailSheet from '../components/DetailSheet';
 import Avatar from '../components/Avatar';
 import Money from '../components/Money';
+import AssetPriceChart from '../components/AssetPriceChart';
 import Icon from '../components/Icon';
 import { ownerOf } from '../utils/accounts';
 import MarketOverview from '../components/MarketOverview';
@@ -237,7 +238,9 @@ export default function DashboardView({
         title={sheetAsset ? (sheetAsset.name || sheetAsset.symbol) : ''}
         subtitle={sheetAsset?.symbol}
         amount={sd && <Money value={sd.value * fx} currency={cur} />}
-        rows={sheetRows}>
+        rows={sheetRows}
+        chart={sheetAsset && <AssetPriceChart key={sheetAsset.symbol} symbol={sheetAsset.symbol}
+          color={assetColor(sheetAsset)} live={prices[sheetAsset.symbol]?.eur} />}>
         {sd && (
           <div className="m-sheet__row">
             <span>Include in Totals</span>

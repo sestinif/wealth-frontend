@@ -5,7 +5,7 @@ import Icon from './Icon';
 // One place for a row's details and its destructive action.
 // Phone (≤640px): sheet rising from the bottom. Desktop: panel on the right.
 // Closes on backdrop tap, Esc, or dragging the handle down.
-export default function DetailSheet({ open, onClose, avatar, title, subtitle, amount, rows = [], danger, children }) {
+export default function DetailSheet({ open, onClose, avatar, title, subtitle, amount, chart, rows = [], danger, children }) {
   const sheetRef = useRef(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -81,6 +81,7 @@ export default function DetailSheet({ open, onClose, avatar, title, subtitle, am
           </div>
         </div>
         {amount && <div className="m-sheet__amount">{amount}</div>}
+        {chart}
         <dl className="m-sheet__rows">
           {rows.filter(r => r && r.value != null && r.value !== '').map(r => (
             <div className="m-sheet__row" key={r.label}><dt>{r.label}</dt><dd>{r.value}</dd></div>

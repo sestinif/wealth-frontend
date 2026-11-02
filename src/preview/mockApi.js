@@ -52,6 +52,13 @@ export function installMockApi(api) {
         VUAA: { points: synth(37, 457, 108, 133.5, 0.012, true) },
       },
     }),
+    getIntradayPrices: (symbol, range) => {
+      const n = range === '1D' ? 96 : 168, step = range === '1D' ? 900000 : 3600000;
+      const base = { BTC: 75500, AERO: 0.74, VUAA: 133.5 }[symbol] || 100;
+      const pts = [];
+      for (let i = n; i >= 0; i--) pts.push([Date.now() - i * step, Number((base * (1 + Math.sin(i / 9) * 0.012 + (i / n) * 0.01)).toPrecision(8))]);
+      return Promise.resolve({ symbol, range, points: pts });
+    },
     postNetworthSnapshot: ok({}),
     getMarketInfo: ok(fx.marketInfo),
     getAssets: () => Promise.resolve(state.assets),

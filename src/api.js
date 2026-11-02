@@ -205,6 +205,14 @@ export const api = {
     return handleResponse(response);
   },
 
+  // Price (EUR) of one asset over the last day or week: { symbol, range, points: [[epoch_ms, price], ...] }.
+  getIntradayPrices: async (symbol, range) => {
+    const response = await fetch(`${BASE_URL}/history/intraday?symbol=${encodeURIComponent(symbol)}&range=${range}`, {
+      headers: authHeaders()
+    });
+    return handleResponse(response);
+  },
+
   getNetworthHistory: async () => {
     const response = await fetch(`${BASE_URL}/networth/history`, {
       headers: authHeaders()
