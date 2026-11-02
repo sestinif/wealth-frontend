@@ -7,6 +7,12 @@ export const ASSET_LOGOS = {
   BRETT: { src: '/logos/brett.png' },
   'EIMI.L': { src: '/logos/ishares.png' },
   'IS3N.DE': { src: '/logos/ishares.png' },
+  // iShares Edge MSCI USA Momentum Factor (IE00BD1F4N50), whichever listing the asset was saved with.
+  IUMO: { src: '/logos/ishares.png' },
+  'IUMO.L': { src: '/logos/ishares.png' },
+  'IUMO.SW': { src: '/logos/ishares.png' },
+  'IUMO.MI': { src: '/logos/ishares.png' },
+  'IUMO.DE': { src: '/logos/ishares.png' },
 };
 
 // Coin logo: our own file when there is one, else the cryptocurrency-icons CDN
