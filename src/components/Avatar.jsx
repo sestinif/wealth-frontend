@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { coinIconUrl } from './AssetBadge';
+import { coinIconUrl, useAssetLogos } from './AssetBadge';
 import { accountLogo } from '../utils/accounts';
 import { colorFor } from '../utils/marks';
 
@@ -13,6 +13,7 @@ const seen = new Map();
 // `color` is the asset's own colour; without it the name picks a steady tint.
 // The initials show from the first paint; the logo takes their place once it has loaded.
 export default function Avatar({ asset, label, src, color }) {
+  useAssetLogos();
   const image = src || (asset ? coinIconUrl(asset) : accountLogo(label));
   const [, redraw] = useState(0);
 

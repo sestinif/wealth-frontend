@@ -1,5 +1,6 @@
 import { readResponse } from './utils/http.js';
 import { purchaseBody } from './utils/purchase.js';
+import { registerAssets } from './utils/assetLogos.js';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
@@ -326,7 +327,9 @@ export const api = {
     const response = await fetch(`${BASE_URL}/assets`, {
       headers: authHeaders()
     });
-    return handleResponse(response);
+    const assets = await handleResponse(response);
+    registerAssets(assets);
+    return assets;
   },
 
   addAsset: async (assetData) => {
