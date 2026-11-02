@@ -26,7 +26,7 @@ const priceNote = (p, ts) => {
   return 'At that date and time';
 };
 
-const localTime = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const localTime = () => { const d = new Date(); return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':'); };
 
 const TABS = [
   { key: 'buy', label: 'Purchase' },
@@ -343,7 +343,7 @@ export default function AddMovement() {
                 <input {...noAutofill('wealth-date')} className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
               </Field>
               <Field label="Time">
-                <input {...noAutofill('wealth-time')} className="form-input" type="time" value={time} onChange={e => setTime(e.target.value)} />
+                <input {...noAutofill('wealth-time')} className="form-input" type="time" step="1" value={time} onChange={e => setTime(e.target.value)} />
               </Field>
             </div>
 
