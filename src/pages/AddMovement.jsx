@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PageLayout from '../components/PageLayout';
 import PageHead from '../components/PageHead';
 import Tabs from '../components/Tabs';
@@ -54,6 +54,7 @@ export default function AddMovement() {
   const [asset, setAsset] = useState('');
   const [amountEur, setAmountEur] = useState('');
   const [priceEur, setPriceEur] = useState('');
+  const priceTyped = useRef(false);
   const [priceUsd, setPriceUsd] = useState('');
   const [notes, setNotes] = useState('');
   const [qty, setQty] = useState('');
@@ -136,16 +137,20 @@ export default function AddMovement() {
     const ts = new Date(`${date}T${time}`).getTime() / 1000;
     if (!ts) return;
     let cancelled = false;
+    priceTyped.current = false;
     setHistState({ loading: true, error: '', note: '' });
     const t = setTimeout(async () => {
       try {
         const p = await api.getHistoricalPrice(asset, ts);
         if (cancelled) return;
+        // A price typed while the lookup was running wins over the looked-up one.
+        if (priceTyped.current) { setHistState({ loading: false, error: '', note: 'Typed by you' }); return; }
         setPriceEur(String(p.eur));
         setPriceUsd(p.usd ? String(p.usd) : '');
         setHistState({ loading: false, error: '', note: priceNote(p, ts) });
       } catch (err) {
         if (cancelled) return;
+        if (priceTyped.current) { setHistState({ loading: false, error: '', note: 'Typed by you' }); return; }
         setPriceEur(''); setPriceUsd('');
         setHistState({ loading: false, error: `${err.message}. Type the price yourself.`, note: '' });
       }
@@ -350,7 +355,7 @@ export default function AddMovement() {
             <div className="m-g2">
               <Field label="Price (€)" hint={histState.error || (histState.loading ? 'Looking up the price…' : histState.note)}>
                 <input {...noAutofill('wealth-price-eur')} className="form-input" type="number" step="any" value={priceEur} placeholder="—"
-                  onChange={e => { setPriceEur(e.target.value); setPriceUsd(''); setHistState(h => ({ ...h, error: '', note: 'Typed by you' })); }} />
+                  onChange={e => { priceTyped.current = true; setPriceEur(e.target.value); setPriceUsd(''); setHistState(h => ({ ...h, error: '', note: 'Typed by you' })); }} />
               </Field>
               <Field label="Amount Invested" hint="Quantity × market price">
                 <input {...noAutofill('wealth-amount-eur-readonly')} className="form-input" type="text" readOnly value={amountEur ? formatEUR(parseFloat(amountEur)) : ''} placeholder="—" />
