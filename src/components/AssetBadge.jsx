@@ -5,6 +5,8 @@ export const ASSET_LOGOS = {
   VUAA: { src: '/logos/vanguard.png' },
   AERO: { src: '/logos/aero.png' },
   BRETT: { src: '/logos/brett.png' },
+  'EIMI.L': { src: '/logos/ishares.png' },
+  'IS3N.DE': { src: '/logos/ishares.png' },
 };
 
 // Coin logo: our own file when there is one, else the cryptocurrency-icons CDN
