@@ -46,9 +46,13 @@ export default function Dashboard() {
       if (!snapshotDone.current && nw && cp) {
         try {
           const n = computeNetWorth({ summary: d.summary, assets: a, prices: d.prices || {}, networth: nw, cashPositions: cp });
-          // Mercury off (or answering empty) while the last saved day had a bank balance:
-          // the total would be saved too low. Skip; the next refresh tries again.
-          const lastSaved = (await api.getNetworthHistory().catch(() => []) || []).slice(-1)[0];
+          // A held asset with no price counts as 0 and drags the day far too low (the Nov 15 dip).
+          // Skip until every price is in; the next refresh tries again.
+          const by = d.summary?.by_asset || {};
+          if (Object.values(by).some(x => x.qty > 0 && !(x.value > 0))) return;
+          // Same for the bank: Mercury disconnected (or answering empty) while the last saved day
+          // had a bank balance. Skip; the next refresh tries again.
+          const lastSaved = ((await api.getNetworthHistory().catch(() => [])) || []).slice(-1)[0];
           if (lastSaved && lastSaved.cash > 0 && n.cash === 0) return;
           await api.postNetworthSnapshot({ total: n.total, portfolio: n.portfolio, cash: n.cash, dry: n.dry });
           snapshotDone.current = true;
