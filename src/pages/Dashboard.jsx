@@ -46,6 +46,10 @@ export default function Dashboard() {
       if (!snapshotDone.current && nw && cp) {
         try {
           const n = computeNetWorth({ summary: d.summary, assets: a, prices: d.prices || {}, networth: nw, cashPositions: cp });
+          // Mercury off (or answering empty) while the last saved day had a bank balance:
+          // the total would be saved too low. Skip; the next refresh tries again.
+          const lastSaved = (await api.getNetworthHistory().catch(() => []) || []).slice(-1)[0];
+          if (lastSaved && lastSaved.cash > 0 && n.cash === 0) return;
           await api.postNetworthSnapshot({ total: n.total, portfolio: n.portfolio, cash: n.cash, dry: n.dry });
           snapshotDone.current = true;
           api.getNetworthHistory().then(h => setHistory(h || [])).catch(() => {});
