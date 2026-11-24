@@ -22,10 +22,38 @@ const bankMoney = (en) => ((en.currency || 'USD').toUpperCase() === 'USD' ? form
 const direction = (en) => (Number(en.amount) >= 0 ? 'Money In' : 'Money Out');
 
 // Pure view: every purchase and bank movement in one ledger.
-export default function DiaryView({ purchases, assets, bankEntries, cashPositions, onDeletePurchase, onDeleteBankEntry }) {
+export default function DiaryView({ purchases, assets, bankEntries, cashPositions, onDeletePurchase, onEditPurchase, onDeleteBankEntry }) {
   const [tab, setTab] = useState('all');
   const [asset, setAsset] = useState('ALL');
   const [selected, setSelected] = useState(null);   // ledger row id
+  const [form, setForm] = useState(null);           // purchase edit draft, null = not editing
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const close = () => { setSelected(null); setForm(null); setError(''); };
+
+  const startEdit = (p) => {
+    setError('');
+    setForm({ date: p.date, quantity: String(p.quantity), amount: String(p.amount_eur), price: String(p.price_eur), notes: p.notes || '' });
+  };
+  const setField = (k, v) => setForm(f => {
+    const n = { ...f, [k]: v };
+    // Price follows amount / quantity until it is typed by hand.
+    if (k === 'quantity' || k === 'amount') {
+      const q = parseFloat(n.quantity), a = parseFloat(n.amount);
+      if (q > 0 && a > 0) n.price = String(Math.round((a / q) * 100) / 100);
+    }
+    return n;
+  });
+  const save = async (p) => {
+    const v = { date: form.date, quantity: parseFloat(form.quantity), amount: parseFloat(form.amount), price: parseFloat(form.price), notes: form.notes };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date) || !(v.quantity > 0) || !(v.amount > 0) || !(v.price > 0)) {
+      setError('Date, quantity, amount and price are all required.'); return;
+    }
+    setSaving(true); setError('');
+    try { await onEditPurchase(p, v); setForm(null); }
+    catch (e) { setError(e.message || 'Could not save.'); }
+    finally { setSaving(false); }
+  };
 
   const assetOf = (sym) => assets.find(a => a.symbol === sym) || { symbol: sym, name: sym };
   const brokerOf = (p) => cashPositions.find(x => x.id === p.funded_from)?.label;
@@ -76,7 +104,22 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
           { label: 'Funded From', value: brokerOf(p) },
           { label: 'Note', value: p.notes },
         ],
-        danger: { label: 'Delete Purchase', onConfirm: async () => { await onDeletePurchase(p.id); setSelected(null); } },
+        edit: form ? null : { label: 'Edit Purchase', onClick: () => startEdit(p) },
+        danger: form ? null : { label: 'Delete Purchase', onConfirm: async () => { await onDeletePurchase(p.id); close(); } },
+        form: form && (
+          <div className="m-edit">
+            <label className="m-edit__f">Date<input className="form-input" type="date" value={form.date} onChange={e => setField('date', e.target.value)} /></label>
+            <label className="m-edit__f">Quantity ({p.asset})<input className="form-input" inputMode="decimal" value={form.quantity} onChange={e => setField('quantity', e.target.value)} /></label>
+            <label className="m-edit__f">Amount (EUR)<input className="form-input" inputMode="decimal" value={form.amount} onChange={e => setField('amount', e.target.value)} /></label>
+            <label className="m-edit__f">Price (EUR)<input className="form-input" inputMode="decimal" value={form.price} onChange={e => setField('price', e.target.value)} /></label>
+            <label className="m-edit__f">Note<input className="form-input" value={form.notes} onChange={e => setField('notes', e.target.value)} /></label>
+            {error && <div className="m-edit__err" role="alert">{error}</div>}
+            <div className="m-edit__actions">
+              <button type="button" className="m-sheet__edit" onClick={() => { setForm(null); setError(''); }} disabled={saving}>Cancel</button>
+              <button type="button" className="m-sheet__save" onClick={() => save(p)} disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</button>
+            </div>
+          </div>
+        ),
       };
     }
     const en = current.item;
@@ -88,7 +131,7 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
         { label: 'Type', value: direction(en) },
         { label: 'Note', value: en.note },
       ],
-      danger: { label: 'Delete Movement', onConfirm: async () => { await onDeleteBankEntry(en.id); setSelected(null); } },
+      danger: { label: 'Delete Movement', onConfirm: async () => { await onDeleteBankEntry(en.id); close(); } },
     };
   })();
 
@@ -136,9 +179,11 @@ export default function DiaryView({ purchases, assets, bankEntries, cashPosition
         </section>
       ))}
 
-      <DetailSheet open={!!sheet} onClose={() => setSelected(null)}
+      <DetailSheet open={!!sheet} onClose={close}
         avatar={sheet?.avatar} title={sheet?.title} subtitle={sheet?.subtitle}
-        amount={sheet?.amount} rows={sheet?.rows} danger={sheet?.danger} />
+        amount={sheet?.amount} rows={sheet?.form ? [] : sheet?.rows} edit={sheet?.edit} danger={sheet?.danger}>
+        {sheet?.form}
+      </DetailSheet>
     </>
   );
 }

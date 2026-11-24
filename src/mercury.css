@@ -253,6 +253,18 @@ body::before, body::after { content: none; }
   width: 100%; margin-top: 14px; padding: 11px; font: inherit; font-size: 15px; cursor: pointer;
   color: var(--red); background: transparent; border: 1px solid var(--border); border-radius: 10px;
 }
+.m-sheet__edit, .m-sheet__save {
+  width: 100%; margin-top: 14px; padding: 11px; font: inherit; font-size: 15px; cursor: pointer;
+  color: var(--text-1); background: transparent; border: 1px solid var(--border-hover); border-radius: 10px;
+}
+.m-sheet__save { color: #0B0F1A; background: var(--accent); border-color: var(--accent); }
+.m-sheet__edit:disabled, .m-sheet__save:disabled { opacity: 0.5; cursor: default; }
+.m-edit { margin-top: 12px; }
+.m-edit__f { display: block; margin-bottom: 12px; font-size: 13px; color: var(--text-2); }
+.m-edit__f .form-input { display: block; margin-top: 6px; }
+.m-edit__err { margin: 4px 0 0; font-size: 13px; color: var(--red); }
+.m-edit__actions { display: flex; gap: 10px; }
+.m-edit__actions > button { margin-top: 10px; }
 .m-sheet__danger.is-armed { background: var(--red-bg); border-color: rgba(245,138,155,0.4); }
 
 /* Forms — the legacy form classes, restyled once for every page */

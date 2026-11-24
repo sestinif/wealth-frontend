@@ -66,6 +66,14 @@ export default function Diary() {
     } catch (err) { toast(err.message, 'error'); }
   };
 
+  const handleEdit = async (p, v) => {
+    // Keep the stored USD/EUR rate of the purchase so editing never zeroes price_usd.
+    const usd = p.price_usd && p.price_eur ? v.price * (p.price_usd / p.price_eur) : null;
+    const updated = await api.updatePurchase(p.id, v.date, p.asset, v.amount, v.price, v.notes, usd, v.quantity);
+    setPurchases(prev => prev.map(x => x.id === p.id ? { ...x, ...updated } : x));
+    toast('Purchase updated', 'success');
+  };
+
   const handleBankEntryDelete = async (id) => {
     try {
       await api.deleteBankEntry(id);
@@ -80,7 +88,7 @@ export default function Diary() {
   return (
     <PageLayout title="Diary" username={user.username} size="md">
       <DiaryView purchases={purchases} assets={assets} bankEntries={bankEntries} cashPositions={cashPositions}
-        onDeletePurchase={handleDelete} onDeleteBankEntry={handleBankEntryDelete} />
+        onDeletePurchase={handleDelete} onEditPurchase={handleEdit} onDeleteBankEntry={handleBankEntryDelete} />
     </PageLayout>
   );
 }

@@ -148,8 +148,9 @@ export const api = {
     return handleResponse(response);
   },
 
-  updatePurchase: async (id, date, asset, amountEur, priceEur, notes = '', priceUsd = null) => {
+  updatePurchase: async (id, date, asset, amountEur, priceEur, notes = '', priceUsd = null, quantity = null) => {
     const body = { date, asset, amount_eur: amountEur, price_eur: priceEur, notes };
+    if (quantity) body.quantity = quantity;
     // Only send price_usd when the caller has it, so editing never zeroes a stored value
     if (priceUsd !== null && priceUsd !== undefined) body.price_usd = priceUsd;
     const response = await fetch(`${BASE_URL}/purchases/${id}`, {
